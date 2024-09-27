@@ -1,0 +1,40 @@
+# Vivado specific
+*.log
+*.jou
+*.str
+*.rpt
+*.csv
+*.xml
+*.html
+*.runs
+*.ip_user_files
+*.Xil
+*.cache
+*.hw
+*.sim
+*.ipdefs
+*.bit
+*.bin
+*.pdi
+*.prj
+*.wdb
+*.xpr
+*.xise
+*.wcfg
+
+# SDK specific
+.sdk
+*.elf
+*.lib
+*.ds
+*.mcs
+*.mem
+*.cmd
+*.log
+*.o
+*.pl
+
+# Other
+*.xsa
+*.webtalk
+*.sysdef

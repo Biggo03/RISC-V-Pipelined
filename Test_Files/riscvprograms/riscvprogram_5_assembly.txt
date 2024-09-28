@@ -1,0 +1,33 @@
+Instruction               Description                                  Address
+lui x18, 709518           #x18 = -1388781568 (0xAD38E000)              0
+addi x18, x18, 2000  	  #x18 = -1388779568  (0xAD38E7D0)             4
+sw x18, 40(x0)		  #mem[40] = 0xAD38E7D0                        8
+lh x19, 40(x0)            #x19 = -6192  (0xFFFFE7D0)                   12
+lhu x20, 42(x0)		  #x20 = 44344 (0x0000AD38)                    16
+sltu x21, x20, x19        #unsigned(x20) < unsigned(x19), x21 = 1      20
+bne x0, x21, branch       #x21 != x0, therefore should branch          24
+add x19, x0, x0	          #shoudln't run (x19 = 0)                     28
+branch:
+xor x19, x19, x20	  #x19 = -46360 (0xFFFF4AE8)                   32
+auipc x20, 4              #x20 = (36 + 16384) = 16420 (0x00004024)     36
+addi x19, x19, -1516      #x19 = -47876 (0xFFFF44FC)                   40
+slti x21, x19, 20	  #signed(x19) < 20, x21 = 1                   44
+sltiu x22, x19, 20        #unsigned(x19) > 20, x22 = 0                 48
+add x21, x21, x22         #x21 = 1                                     52
+add x20, x19, x20	  #x20 = 16420 + (-47876) = -31456             56
+add x20, x20, x21         #x20 = -31456 + 1 = -31455 (0xFFFF8521)      60 
+jalr x21, x0, 72						       64
+addi x20, x0, 0           #Shouldn't run (x20 = 0)                     68
+srli x20, x20, 22         #x20 = 1023 (0x000003FF)                     72
+sub x20, x20, x21         #x20 = 1023 - 68 = 955                       76
+addi x20, x20, -930       #x20 = 959 - 934 = 25                        80
+sw x20, 100(x0)           #mem[100] = 25                               84       
+beq x0, x0, done          #infinite loop                               88
+
+
+
+
+
+
+
+

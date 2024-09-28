@@ -1,0 +1,19 @@
+Assembly                 Description                           Address
+addi x18, x0, 15         #x18 = 15                             0      
+addi x19, x0, 14         #x19 = 14                             4
+bne x19, x18, branch1    #should branch                        8
+addi x20, x0, -1         #shouldn't run                        12
+branch1: 
+sll x20, x18, x19        #x20 = 15 << 14 = 229376              16
+srl x20, x20, x18        #x20 = 229376 >> 15 = 7               20
+addi x20, x20, 18        #x20 = 7+18 = 25                      24
+addi x22, x0, -1         #x22 = -1                             28
+sra x22, x22, x19        #x22 = -1 >>> 14 = -1                 32
+blt x22, x18, store      #should branch                        36
+addi x20, x0, 2          #Shouldn't run                        40
+sw x20, 100(x0)          #Shouldn't run                        44
+store: 
+sw x20, 100(x0)          #store x20 at address 100             48
+done: 
+beq x0, x0, done         #infinite loop                        52
+

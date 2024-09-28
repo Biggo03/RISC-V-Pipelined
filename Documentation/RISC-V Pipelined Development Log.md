@@ -69,4 +69,30 @@ The only control hazard that needs to be dealt with initially is that caused by 
 ### **Creation of Pipeline (September 26th \- ):**
 
 ### **Initial Design (September 26th \-)**  
-As mentioned before, the pipelined architecture will be based on the single-cycle architecture that has already been constructed. As such the main change will be splitting  
+The pipelined architecture is built on the single-cycle architecture that has already been constructed. The main task in this phase is to insert pipeline registers and ensure all signals reach their correct destination. Each pipeline stage's schematic design will be discussed in this section.
+
+In some cases, signals need to be routed back to earlier stages. These will be addressed in the stage where they are generated, rather than the stage they are routed back to. This approach mirrors the design process and provides a clearer picture of signal flow.
+
+#### **Fetch Stage (September 27th)**
+This stage contains the PC register, the instruction memory, an addition unit for calculating PCPlus4, and a multiplexer to determine if a branch address is to be jumped to or not. This largely remained the same as the single cycle, but with the following signals being routed to the **decode** stages pipeline register: Instr, PC, and PCPlus4. The PCTarget address is calculated in the **execution** section, and as such will be covered there.
+
+#### **Decode Stage (September 27th)**
+This stage contains the register file, control unit, and extension unit. In this stage, the register file handles all read operations, while writes occur in the **writeback** stage.
+
+One challenge was deciding how to handle branching logic, which is detailed in [Challenges Section #1](#1-reworking-branching-logic-september-27th). To determine proper branching, the funct3 field of the instruction and BranchOp signal are routed to the **execute** stage. The extension unit receives the appropriate portions of the instruction word along with ImmSrc.
+
+The following signals are routed to the **execute** stage's pipeline register: RD1, RD2 (also called WriteData), PC, Rd (destination register for writes), ImmExt, PCPlus4, funct3, BranchOp, and all control signals except ImmSrc.
+
+#### **Execute Stage (September 27th)**
+This stage contains the ALU, the branch decoder, and the addition unit for calculating the PCTarget address. In this stage, the ALU performs arithmetic operations, and generates flags, the branch decoder determines if a branch is to occur or not, and the PC target address is calculated.
+
+The same multiplexers used in the single-cycle design are used here. One determines if an immediate or a register is to be the second input to the ALU. The other determines the base that is to be added onto PC to calculate the PC target address (this will either be PC or RD1).
+
+The following signals are routed to the **memory** stage's pipeline register: ALUResult, WriteData, Rd (destination register for writes), PCTarget, PCPlus4, WidthSrc, ResultSrc MemWrite, and RegWrite.
+
+## **Challenges**
+
+### **#1 Reworking Branching Logic (September 27th)**
+This was quite a challenge, as my initial design of the branching decoder relied on having both funct3, BranchOp, and the flags available at the same time. However, as the pipelined design calculates the flags in the Execution stage, if the branch decoder remained the same, it would use the flags from the execution stage, but the instruction from the decode stage. 
+
+Ultimately I decided to route the funct3 and BranchOp signals to the **execute** stages pipeline register, and determine PCSrc there. Then I needed to decide how to represent this on the schematic. I could either route the signals in the **exectution** stage back to the control unit, or display the branch decoder as it's own module within the **execute** stage. I decided on the later, as this reduces the sprawl of the schematic. Even though it leads to a subsection of the control unit not being within the control unit, I believe the clarity it provides is worth the tradeoff.

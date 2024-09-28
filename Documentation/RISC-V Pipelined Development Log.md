@@ -86,7 +86,17 @@ This stage contains the ALU, the branch decoder, and the addition unit for calcu
 
 The same multiplexers used in the single-cycle design are used here. One determines if an immediate or a register is to be the second input to the ALU. The other determines the base that is to be added onto PC to calculate the PC target address (this will either be PC or RD1).
 
-The following signals are routed to the **memory** stage's pipeline register: ALUResult, WriteData, Rd (destination register for writes), PCTarget, PCPlus4, WidthSrc, ResultSrc MemWrite, and RegWrite.
+The following signals are routed to the **memory** stage's pipeline register: ALUResult, WriteData, Rd (destination register for writes), PCTarget, PCPlus4, WidthSrc, ResultSrc MemWrite, RegWrite, and ImmExt.
+
+### **Memory Stage (September 28th)**
+This stage contains the data memory and the reduce unit, which adjusts the width of fetched data as necessary. In this stage, data is either stored in or retrieved from memory, with the control signals MemWrite and WidthSrc governing these actions.
+
+The following signals are routed to the **writeback** stage's pipeline register: ResultSrc, RegWrite, ALUResult, ReducedData (the result after any necessary width adjustment), Rd (destination register for writes), PCTarget, PCPlus4, and ImmExt.
+
+### Writeback Stage (September 28th)**
+This stage contains the result multiplexer and interacts with the register file. In this stage, the result multiplexer selects the appropriate value ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget to be written back to the register file, provided that RegWrite is enabled. The possible values are: ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget
+
+As this is the final stage in the pipeline, no signals from this stage are routed to any further sections.
 
 # **Challenges**
 

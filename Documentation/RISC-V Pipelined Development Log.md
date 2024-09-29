@@ -59,17 +59,19 @@ To resolve this issue, **forwarding** can be employed. **Forwarding** allows the
 
 For example, consider an instruction in the **execute** stage that needs the value of x4, while x4 is being written to in the **writeback** stage. Without forwarding, the **execute** stage would use an outdated value of x4. By sending the current value from the **writeback** stage to the **execute** stage, the correct value of x4 is utilized.
 
-Forwarding is sufficient to deal with cases where the result is calculated in the **execute** stage, however loads don’t have the data available until the end of the memory stage. Because of this, the pipeline must be **stalled** in order to allow the data to be fetched from memory. A **stall** is when instructions repeat the same pipeline stage for an extra clock cycle. This requires pipeline registers to either be frozen (stages prior to stall), or cleared (stages post stall). This prevents new instructions from being sent to the pipeline, reducing the efficiency of the processor, but this is necessary in order to ensure data integrity.
+Forwarding is sufficient to deal with cases where the result is calculated in the **execute** stage, however loads don’t have the data available until the end of the memory stage. This means if the instruction directly following a load uses the register the load writes to, the pipeline must be **stalled** in order to allow the data to be fetched from memory. A **stall** is when instructions repeat the same pipeline stage for an extra clock cycle. This requires pipeline registers to either be frozen (stages prior to stall), or cleared (stages post stall). This prevents new instructions from being sent to the pipeline, reducing the efficiency of the processor, but this is necessary in order to ensure data integrity.
 
 Effectively managing RAW hazards through techniques like forwarding and stalling is crucial for maintaining pipeline efficiency and ensuring correct program execution.
 
 ### **Control Hazards:**  
 The only control hazard that needs to be dealt with initially is that caused by branching instructions. Because branches are conditional and depend on the result calculated in the **execute** stage, a prediction must be made on which instructions are to begin execution in the preceding **fetch** and **decode** stages. If the prediction is incorrect, then the pipeline registers in these sections must be flushed, and the correct PC address must be fetched. This leads to a delay of two clock cycles, as incorrect instructions are flushed. However, this is better than delay caused by simply stalling and waiting for the correct branch to be calculated as the prediction can be correct, allowing for the steady flow of instructions through the pipeline. This processor will begin with always assuming that no branch is taken. This approach has the simplest level of complexity but also results in the highest number of mispredictions. More sophisticated branch prediction will be added later in development, which will decrease misprediction rate, and improve pipeline efficiency.
 
-## **Initial Design (September 26th \-)**  
+## **Initial Design (September 26th \- 28th)**  
 The pipelined architecture is built on the single-cycle architecture that has already been constructed. The main task in this phase is to insert pipeline registers and ensure all signals reach their correct destination. Each pipeline stage's schematic design will be discussed in this section.
 
 In some cases, signals need to be routed back to earlier stages. These will be addressed in the stage where they are generated, rather than the stage they are routed back to. This approach mirrors the design process and provides a clearer picture of signal flow.
+
+Also note that in this section, signal names will not have a suffix implying the stage they're in, as it is implyed, however in later section a suffix will denote the stage that signal originated from.
 
 ### **Fetch Stage (September 27th)**
 This stage contains the PC register, the instruction memory, an addition unit for calculating PCPlus4, and a multiplexer to determine if a branch address is to be jumped to or not. This largely remained the same as the single cycle, but with the following signals being routed to the **decode** stages pipeline register: Instr, PC, and PCPlus4. The PCTarget address is calculated in the **execution** section, and as such will be covered there.
@@ -97,6 +99,55 @@ The following signals are routed to the **writeback** stage's pipeline register:
 This stage contains the result multiplexer and interacts with the register file. In this stage, the result multiplexer selects the appropriate value ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget to be written back to the register file, provided that RegWrite is enabled. The possible values are: ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget
 
 As this is the final stage in the pipeline, no signals from this stage are routed to any further sections.
+
+## **Hazard Unit Design (September 29th \-)**
+The design of the hazard unit is largely based on the design of the hazard unit within Digital Design and Computer Architecture by David and Sarah L. Harris. It will deal with the hazards discussed in the [Hazard Overview Section](Hazard-Overview-September-26th). The specific type of handelling for each type of hazard will be discussed here.
+
+Signals are referred to with a suffix indicating the stage they originated from (for example, RdE for a signal from the execute stage) for clarity in tracking data as it progresses through the pipeline stages.
+
+### **Forwarding (September 29th \-)**
+Forwarding is employed to resolve RAW (Read After Write) hazards wherever possible, except for hazards caused by load instructions. When forwarding is possible, the value of a destination register currently in the **memory** or **writeback** stage is forwarded to the **execution** stage, provided the RegWrite signal is active. If RegWrite is inactive, the destination register is not modified, and no forwarding is needed.
+
+Since the execution stage can receive forwarded data from either the **memory** or **writeback** stages, a three-input multiplexer is required to select the correct data for each operand of the ALU. The sources for operand SrcA of the ALU are either RdM (the register in the **memory** stage), RdW (the register in the **writeback** stage), or RD1E (the register read from the **execute** stage itself). Similarly, for operand SrcB, the inputs are RdM, RdW, or RD2E.
+
+To control these multiplexers, two signals are defined:
+ - ForwardAE: This signal selects the source for SrcA between RdM, RdW, and RD1E.
+ - ForwardBE: This signal selects the source for SrcB between RdM, RdW, and RD2E.
+
+The control logic for ForwardAE and ForwardBE will check the values of the destination register in the **memory** and **writeback** stages against the source registers in the **execution** stage. If there is a match, and the RegWrite signal is high, forwarding occurs. 
+
+The specifics of these signals and how they are implemented can be found in the [Technical_Documentation](Documentation/Technical_Documentation.md).
+
+### **Stalling (September 29th \-)**
+Stalling is used to handle load instructions by delaying the instruction that follows a load in the **decode** stage. This allows the load to complete both its **execute** and **memory** stages before the next instruction enters the **execute** stage. Once the load reaches the **writeback** stage, the following instruction can access the data read from memory. Therefore, stall detection must occur between the instruction in the **decode** stage and the instruction in the **execute** stage.
+
+A stall should occur if a load instruction is in the **execute** stage, and the following instruction requires the loads destination register as a source. When this stall occurs, both the **fetch** and **decode** stages pipeline registers must be frozen, and the **execution** stages pipeline register must be flushed. The freezes perform the actual stall, and the flush ensures that garbage data isn't propogated through the pipeline. Note that when an all 0 instruction propagates through the pipeline nothing of consequence occurs, as no write enable signals are enabled.
+
+To simplify the stall logic, the ResultSrc signal was adjusted from the single-cycle implementation:
+ - auipc: 100 -> 001
+ - Load instructions 001 -> 100
+ - B-type instructions xxx -> 0xx
+ - S-type instructions xxx -> 0xx
+
+This change allows a single bit from the ResultSrc signal to identify a load, rather than two. B-type and S-type instructions were updated to ensure no accidental stalls occur. Although the risk of accidental stalls is low, given the organization of S- and B-type instructions, this change eliminates any possibility of accidental stall occuring.
+
+The signals used to control flushing and stalling in the case of load instructions are as follows:
+ - LoadStall: determines if a stall due to a load should occur
+ - StallF: Determines if a freeze should occur on the **fetch** stages pipeline register
+ - StallD: Determines if a freeze should occur on the **decode** stages pipeline register
+ - FlushE: Determines if a flush should occur on the **execute** stages pipeline register
+
+Details on these signals can be found in the [Technical_Documentation](Documentation/Technical_Documentation.md).
+
+### **Control Hazard Handelling (September 29th \-)**
+Control hazards arise due to the processor not knowing if a branch will occur or not. As discussed in previous sections, initially this processor will use static branch prediction, meaning it assumes that no branches will be taken. Because of this, implementing control hazard stalling will be relatively simple. The hazard unit needs to check if a branch is taken by checking PCSrcE. If a branch is taken, the decode and execute stage pipeline registers must be flushed. This is because these hold the values corrosponding to the next two instruction directly after the branch, and should not be executed if a branch is taken.
+
+The signals used to control flushing in the case of a control hazard are as follows:
+ - FlushE: Determines if a flush should occur on the **execute** stages pipeline register
+   - Also used in load hazards
+ - FlushD: Determines if a flush should occur on the **decode** stages pipeline register
+
+The specifics of these signals and how they are implemented can be found in the [Technical_Documentation](Documentation/Technical_Documentation.md).
 
 # **Challenges**
 

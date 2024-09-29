@@ -61,7 +61,7 @@ module datapath(input clk, reset,
     ALU ALU(ALUControl, SrcA, SrcB, ALUResult, N, Z, C, V);
     
     reduce Reduce(ReadData, WidthSrc, ReducedData);
-    mux5 Resultmux(ALUResult, ReducedData, PCPlus4, ImmExt, PCTarget, ResultSrc, Result);
+    mux5 Resultmux(ALUResult, PCTarget, PCPlus4, ImmExt, ReducedData, ResultSrc, Result);
                
                 
                 

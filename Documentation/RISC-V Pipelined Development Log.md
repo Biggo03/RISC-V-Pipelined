@@ -49,10 +49,10 @@ The other key improvement is the fact that multiple instructions are able to exe
 - Writeback  
   - Data fetched from the datamemory is written back to the register file
 
-## **Hazard Overview: (September 26th)**  
+## **Hazard Overview (September 26th):**  
 This section explains the hazards that the processor will have to deal with due to the addition of pipelining. The actual handling of hazards will be discussed in the section covering the creation of the Hazard Unit.
 
-### **RAW Hazards:**  
+### **RAW Hazards (September 26th):**  
 In pipelined processor designs, multiple instructions are executed concurrently, which can lead to hazards that affect data integrity. One such hazard is the Read After Write (**RAW**) hazard, which occurs when an instruction depends on the result of another instruction that has not yet completed its **writeback** phase. For instance, if an instruction in the **execute** stage requires the value of a register currently being written to in the **writeback** stage, a **RAW** hazard arises.
 
 To resolve this issue, **forwarding** can be employed. **Forwarding** allows the result from the **memory** or **writeback** stage to be sent back to the execute stage, ensuring that the instruction receives the most recent value.
@@ -63,49 +63,49 @@ Forwarding is sufficient to deal with cases where the result is calculated in th
 
 Effectively managing RAW hazards through techniques like forwarding and stalling is crucial for maintaining pipeline efficiency and ensuring correct program execution.
 
-### **Control Hazards:**  
+### **Control Hazards (September 26th):**  
 The only control hazard that needs to be dealt with initially is that caused by branching instructions. Because branches are conditional and depend on the result calculated in the **execute** stage, a prediction must be made on which instructions are to begin execution in the preceding **fetch** and **decode** stages. If the prediction is incorrect, then the pipeline registers in these sections must be flushed, and the correct PC address must be fetched. This leads to a delay of two clock cycles, as incorrect instructions are flushed. However, this is better than delay caused by simply stalling and waiting for the correct branch to be calculated as the prediction can be correct, allowing for the steady flow of instructions through the pipeline. This processor will begin with always assuming that no branch is taken. This approach has the simplest level of complexity but also results in the highest number of mispredictions. More sophisticated branch prediction will be added later in development, which will decrease misprediction rate, and improve pipeline efficiency.
 
-## **Initial Design (September 26th \- 28th)**  
+## **Initial Design (September 26th \- 28th):**  
 The pipelined architecture is built on the single-cycle architecture that has already been constructed. The main task in this phase is to insert pipeline registers and ensure all signals reach their correct destination. Each pipeline stage's schematic design will be discussed in this section.
 
 In some cases, signals need to be routed back to earlier stages. These will be addressed in the stage where they are generated, rather than the stage they are routed back to. This approach mirrors the design process and provides a clearer picture of signal flow.
 
 Also note that in this section, signal names will not have a suffix implying the stage they're in, as it is implyed, however in later section a suffix will denote the stage that signal originated from.
 
-### **Fetch Stage (September 27th)**
+### **Fetch Stage (September 27th):**
 This stage contains the PC register, the instruction memory, an addition unit for calculating PCPlus4, and a multiplexer to determine if a branch address is to be jumped to or not. This largely remained the same as the single cycle, but with the following signals being routed to the **decode** stages pipeline register: Instr, PC, and PCPlus4. The PCTarget address is calculated in the **execution** section, and as such will be covered there.
 
-### **Decode Stage (September 27th)**
+### **Decode Stage (September 27th):**
 This stage contains the register file, control unit, and extension unit. In this stage, the register file handles all read operations, while writes occur in the **writeback** stage.
 
 One challenge was deciding how to handle branching logic, which is detailed in [Challenges Section #1](#1-reworking-branching-logic-september-27th). To determine proper branching, the funct3 field of the instruction and BranchOp signal are routed to the **execute** stage. The extension unit receives the appropriate portions of the instruction word along with ImmSrc.
 
 The following signals are routed to the **execute** stage's pipeline register: RD1, RD2 (also called WriteData), PC, Rd (destination register for writes), ImmExt, PCPlus4, funct3, BranchOp, and all control signals except ImmSrc.
 
-### **Execute Stage (September 27th)**
+### **Execute Stage (September 27th):**
 This stage contains the ALU, the branch decoder, and the addition unit for calculating the PCTarget address. In this stage, the ALU performs arithmetic operations, and generates flags, the branch decoder determines if a branch is to occur or not, and the PC target address is calculated.
 
 The same multiplexers used in the single-cycle design are used here. One determines if an immediate or a register is to be the second input to the ALU. The other determines the base that is to be added onto PC to calculate the PC target address (this will either be PC or RD1).
 
 The following signals are routed to the **memory** stage's pipeline register: ALUResult, WriteData, Rd (destination register for writes), PCTarget, PCPlus4, WidthSrc, ResultSrc MemWrite, RegWrite, and ImmExt.
 
-### **Memory Stage (September 28th)**
+### **Memory Stage (September 28th):**
 This stage contains the data memory and the reduce unit, which adjusts the width of fetched data as necessary. In this stage, data is either stored in or retrieved from memory, with the control signals MemWrite and WidthSrc governing these actions.
 
 The following signals are routed to the **writeback** stage's pipeline register: ResultSrc, RegWrite, ALUResult, ReducedData (the result after any necessary width adjustment), Rd (destination register for writes), PCTarget, PCPlus4, and ImmExt.
 
-### Writeback Stage (September 28th)**
+### Writeback Stage (September 28th):**
 This stage contains the result multiplexer and interacts with the register file. In this stage, the result multiplexer selects the appropriate value ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget to be written back to the register file, provided that RegWrite is enabled. The possible values are: ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget
 
 As this is the final stage in the pipeline, no signals from this stage are routed to any further sections.
 
-## **Hazard Unit Design (September 29th)**
+## **Hazard Unit Design (September 29th):**
 The design of the hazard unit is largely based on the design of the hazard unit within Digital Design and Computer Architecture by David and Sarah L. Harris. It will deal with the hazards discussed in the [Hazard Overview Section](Hazard-Overview-September-26th). The specific type of handelling for each type of hazard will be discussed here.
 
 Signals are referred to with a suffix indicating the stage they originated from (for example, RdE for a signal from the execute stage) for clarity in tracking data as it progresses through the pipeline stages.
 
-### **Forwarding (September 29th)**
+### **Forwarding (September 29th):**
 Forwarding is employed to resolve RAW (Read After Write) hazards wherever possible, except for hazards caused by load instructions. When forwarding is possible, the value of a destination register currently in the **memory** or **writeback** stage is forwarded to the **execution** stage, provided the RegWrite signal is active. If RegWrite is inactive, the destination register is not modified, and no forwarding is needed.
 
 Since the execution stage can receive forwarded data from either the **memory** or **writeback** stages, a three-input multiplexer is required to select the correct data for each operand of the ALU. The sources for operand SrcA of the ALU are either RdM (the register in the **memory** stage), RdW (the register in the **writeback** stage), or RD1E (the register read from the **execute** stage itself). Similarly, for operand SrcB, the inputs are RdM, RdW, or RD2E.
@@ -118,7 +118,7 @@ The control logic for ForwardAE and ForwardBE will check the values of the desti
 
 The specifics of these signals and how they are implemented can be found in the [Technical_Documentation](Documentation/Technical_Documentation.md).
 
-### **Stalling (September 29th)**
+### **Stalling (September 29th):**
 Stalling is used to handle load instructions by delaying the instruction that follows a load in the **decode** stage. This allows the load to complete both its **execute** and **memory** stages before the next instruction enters the **execute** stage. Once the load reaches the **writeback** stage, the following instruction can access the data read from memory. Therefore, stall detection must occur between the instruction in the **decode** stage and the instruction in the **execute** stage.
 
 A stall should occur if a load instruction is in the **execute** stage, and the following instruction requires the loads destination register as a source. When this stall occurs, both the **fetch** and **decode** stages pipeline registers must be frozen, and the **execution** stages pipeline register must be flushed. The freezes perform the actual stall, and the flush ensures that garbage data isn't propogated through the pipeline. Note that when an all 0 instruction propagates through the pipeline nothing of consequence occurs, as no write enable signals are enabled.
@@ -139,7 +139,7 @@ The signals used to control flushing and stalling in the case of load instructio
 
 Details on these signals can be found in the [Technical_Documentation](Documentation/Technical_Documentation.md).
 
-### **Control Hazard Handelling (September 29th)**
+### **Control Hazard Handelling (September 29th):**
 Control hazards arise due to the processor not knowing if a branch will occur or not. As discussed in previous sections, initially this processor will use static branch prediction, meaning it assumes that no branches will be taken. Because of this, implementing control hazard stalling will be relatively simple. The hazard unit needs to check if a branch is taken by checking PCSrcE. If a branch is taken, the decode and execute stage pipeline registers must be flushed. This is because these hold the values corrosponding to the next two instruction directly after the branch, and should not be executed if a branch is taken.
 
 The signals used to control flushing in the case of a control hazard are as follows:
@@ -148,6 +148,16 @@ The signals used to control flushing in the case of a control hazard are as foll
  - FlushD: Determines if a flush should occur on the **decode** stages pipeline register
 
 The specifics of these signals and how they are implemented can be found in the [Technical_Documentation](Documentation/Technical_Documentation.md).
+
+## **Verilog Coding (September 29th \- ):**
+
+### **Overview (September 29th \-):**
+The general plan in implementing this designs datapath is to create each pipeline stage in their own modules, then connect them all using pipeline registers within a larger datapath module. This approach allows for the datapath module to remain readable despite the incresed level of complexity. I believe that having the pipeline registers within the larger datapath module will allow for simpler application of stall and flush hazard signals, as well as provide more clarity in how instructions flow through the datapath. This approach also allows for easier testing and debugging of each module, as well as the design as a whole.
+
+### **Fetch Stage (September 29th):**
+This is the only stage with it's pipeline register being within it's own module. This was done as this pipeline register is actually just the PC register, and as such it's only input is PCNext, which is calculated within the fetch stage. So it made sense to put the pipeline register within this stage as it has a role midway through the stage.
+
+Other than that, this module was relatively simple to implement, and was essentially instantiating already created verilog modules to achieve the desired funtionality.
 
 # **Challenges**
 

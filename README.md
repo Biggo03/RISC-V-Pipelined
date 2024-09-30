@@ -19,4 +19,4 @@ The working schematic of the microarchitecture, as well as a project development
 - Testbenches for hardware validation
 
 ## Technical Details
-For a detailed explanation of the architecture, supported instructions, control signals, testing procedures, and hazard handeling information, please refer to [TECHNICAL_DETAILS.md]().
+For a detailed explanation of the architecture, supported instructions, control signals, testing procedures, and hazard handeling information, please refer to [Technical_Documentation.md](Documentation/Technical_Documentation.md).

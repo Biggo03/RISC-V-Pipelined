@@ -209,8 +209,8 @@ The following table outlines what each signal value represents, and it's governi
 |ForwardBE    |((Rs2E == RdW) & RegWriteW) & (Rs2E != 0)       | 01     |Forward result from **writeback** stage to **execute** stage|
 |ForwardBE    |All other inputs                                | 00     |No forwarding occurs|
 |LoadStall    |ResultSrcE[2] & ((Rs1D == RdE) \| (Rs2D == RdE))| 1      |A stall due to a load should occur|
-|StallF       |~LoadStall                                      | 0      |**Fetch** stages pipeline register will be stalled|
-|StallD       |~LoadStall                                      | 0      |**Decode** stages pipeline register will be stalled|
+|StallF       |LoadStall                                       | 1      |**Fetch** stages pipeline register will be stalled|
+|StallD       |LoadStall                                       | 1      |**Decode** stages pipeline register will be stalled|
 |FlushE       |LoadStall \| PCSrcE                             | 1      |**Execute** stages pipeline register will be flushed|
 |FlushD       |PCSrcE                                          | 1      |**Decode** stages pipeline register will be flushed|
 

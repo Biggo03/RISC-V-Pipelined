@@ -19,7 +19,7 @@ module fetchstage(input clk, reset,
                   input [31:0] PCTargetE,
                   input PCSrcE, StallF,
                   output [31:0] InstrF,
-                  output [31:0] PCF, PCPlus4D);
+                  output [31:0] PCF, PCPlus4F);
 
     //Intermedoate PC value
     wire [31:0] PCNextF;
@@ -33,7 +33,7 @@ module fetchstage(input clk, reset,
     
     flop PCreg(
                .clk (clk),
-               .en (1'b1), 
+               .en (~StallF), 
                .reset (reset),
                .D (PCNextF),
                .Q (PCF));

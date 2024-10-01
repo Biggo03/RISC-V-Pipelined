@@ -29,7 +29,7 @@ module instrmem(input [31:0] A,
     //Initialize instruction memory with given file
     initial begin
     
-       $readmemh("C:/Users/vmpwo/Digital Design/Single-Cycle_RISCV/riscvsingle/riscvsingle.srcs/sources_1/imports/riscvprograms/riscvprogram_6.txt", RAM);
+       $readmemh("riscvprogram_6.txt", RAM);
  
     end
     

@@ -24,12 +24,11 @@
 module controlunit(input [6:0] op,
                    input [2:0] funct3,
                    input funct7b5,
-                   input N, Z, C, V,
                    output [3:0] ALUControl,
                    output [2:0] ImmSrc, WidthSrc, ResultSrc,
                    output ALUSrc,
                    output RegWrite, MemWrite,
-                   output PCSrc, PCBaseSrc);
+                   output PCBaseSrc);
         
     
     //Internal control signals
@@ -41,9 +40,6 @@ module controlunit(input [6:0] op,
     
     //ALU Decoder
     ALUdecoder ALUDec(funct3, ALUOp, op[5], funct7b5, ALUControl);
-    
-    //Branch Decoder
-    branchdecoder BranchDec(funct3, BranchOp, N, Z, C, V, PCSrc);
     
     //Width Decoder
     widthdecoder WidthDec(funct3, WidthOp, WidthSrc);        

@@ -154,14 +154,49 @@ The specifics of these signals and how they are implemented can be found in the 
 ### **Overview (September 29th \-):**
 The general plan in implementing this designs datapath is to create each pipeline stage in their own modules, then connect them all using pipeline registers within a larger datapath module. This approach allows for the datapath module to remain readable despite the incresed level of complexity. I believe that having the pipeline registers within the larger datapath module will allow for simpler application of stall and flush hazard signals, as well as provide more clarity in how instructions flow through the datapath. This approach also allows for easier testing and debugging of each module, as well as the design as a whole.
 
-### **Fetch Stage (September 29th):**
+### **Fetch Stage (September 29th \- October 1st):**
 This is the only stage with it's pipeline register being within it's own module. This was done as this pipeline register is actually just the PC register, and as such it's only input is PCNext, which is calculated within the fetch stage. So it made sense to put the pipeline register within this stage as it has a role midway through the stage.
 
 Other than that, this module was relatively simple to implement, and was essentially instantiating already created verilog modules to achieve the desired funtionality.
 
+**Testing:**
+
+This module was tested in three different cases using SystemVerilog assertions. These casese included:
+ - Standard operation (No branching, simply read from instruction memory as normal)
+ - Stalling (Assert the stall signal and ensure nothing changes)
+ - Branching (Branch to an instruction and ensure everything changes appropriately)
+
+By ensuring the module can handle the above scenarios, I can be relatively confident in its functionality during actual operation, as these tests effectively cover the actions that occur in a clock cycle within the fetch stage.
+
+### **Decode Stage (October 1st):**
+This pipeline stage includes both the register file and the control unit, raising the question of whether either module should be included within this module. I decided it was best to include both the register file and the control unit to simplify the overall code structure, which is a primary goal of creating separate modules for each pipeline stage.
+
+Although the register file is accessed by both the **decode** and **writeback** stages, it is primarily utilized within the **decode** stage. Its inclusion in this stage does not functionally isolate it from the writeback stage.
+
+The previous decision to include the branch decoder as a separate module from the control unit means that the control unit only takes inputs from the decode stage. Therefore, it makes sense for it to be integrated within this stage’s module.
+
+This stage also includes the extension unit, which was instantiated alongside both the control unit and the register file. The implementation was simply connecting signals to the proper ports of any module that they interacted with.
+
+**Testing:**
+
+Given that this module contains larger submodules than previous stages and has a broad range of acceptable inputs and outputs, I plan to leave the verification of this module to the top-level tests of the design. This strategy allows for functional testing of the **decode** Stage while minimizing the time spent on ensuring that the structural components instantiated within it interact correctly at just the stage abstraction level. Since the components themselves have already been validated, any issues that arise are more likely due to interactions with other modules, making top-level testing a more effective approach.
+
 # **Challenges**
 
-## **#1 Reworking Branching Logic (September 27th)**
+## **#1 Reworking Branching Logic (September 27th):**
 This was quite a challenge, as my initial design of the branching decoder relied on having both funct3, BranchOp, and the flags available at the same time. However, as the pipelined design calculates the flags in the Execution stage, if the branch decoder remained the same, it would use the flags from the execution stage, but the instruction from the decode stage. 
 
 Ultimately I decided to route the funct3 and BranchOp signals to the **execute** stages pipeline register, and determine PCSrc there. Then I needed to decide how to represent this on the schematic. I could either route the signals in the **exectution** stage back to the control unit, or display the branch decoder as it's own module within the **execute** stage. I decided on the later, as this reduces the sprawl of the schematic. Even though it leads to a subsection of the control unit not being within the control unit, I believe the clarity it provides is worth the tradeoff.
+
+# **Changelog**
+
+## **#1 Using Parameters to Define Control Signals (October 1st):**
+I learned that Verilog header files can be utilized to define parameters that are accessible in other modules. This approach is ideal for simplifying instruction decoding, as it allows me to define different opcodes as parameters and store their values in a single header file. By consolidating all opcodes in one location, I can streamline any changes made throughout development.
+
+I chose to create parameters for each opcode, as well as for each ALU control signal, WidthSrc signal, and ResultSrc signal. These signals were selected because they are relatively long and have multiple associated values. Additionally, several of these signals are used in multiple locations within the design. By maintaining a single source for these values, I can significantly reduce the likelihood of errors during updates or modifications.
+
+The changes were made to the following modules:
+ - maindecoder.v
+ - ALUdecoder.v
+ - Widthdecoder.v
+ - reduce.v

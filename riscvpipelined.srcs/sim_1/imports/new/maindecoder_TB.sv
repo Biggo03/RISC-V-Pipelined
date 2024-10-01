@@ -80,19 +80,19 @@ module maindecoder_tb();
         
         //I-Type Load Instructions
         op = 7'b0000011; 
-        SetExpected(1'b1, 3'b000, 1'b1, 1'b0, 3'b001, 2'b00, 2'b00, 1'b1, 1'bx);
+        SetExpected(1'b1, 3'b000, 1'b1, 1'b0, 3'b100, 2'b00, 2'b00, 1'b1, 1'bx);
         #10;
         CheckOutput();
         
         //S-Type Instructions
         op = 7'b0100011; 
-        SetExpected(1'b0, 3'b001, 1'b1, 1'b1, 3'bx, 2'b00, 2'b00, 1'b1, 1'bx);
+        SetExpected(1'b0, 3'b001, 1'b1, 1'b1, 3'b0xx, 2'b00, 2'b00, 1'b1, 1'bx);
         #10;
         CheckOutput();
         
         //B-type Instructions
         op = 7'b1100011;
-        SetExpected(1'b0, 3'b010, 1'b0, 1'b0, 3'bx, 2'b10, 2'b01, 1'bx, 1'b0);
+        SetExpected(1'b0, 3'b010, 1'b0, 1'b0, 3'b0xx, 2'b10, 2'b01, 1'bx, 1'b0);
         #10;
         CheckOutput();
         
@@ -116,7 +116,7 @@ module maindecoder_tb();
         
         //auipc
         op = 7'b0010111;
-        SetExpected(1'b1, 3'b100, 1'bx, 1'b0, 3'b100, 2'b00, 2'bx, 1'b0, 1'b0);
+        SetExpected(1'b1, 3'b100, 1'bx, 1'b0, 3'b001, 2'b00, 2'bx, 1'b0, 1'b0);
         #10;
         CheckOutput();
         

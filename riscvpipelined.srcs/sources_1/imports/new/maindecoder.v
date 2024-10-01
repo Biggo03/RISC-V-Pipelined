@@ -27,7 +27,9 @@ module maindecoder(input [6:0] op,
                    output WidthOp,
                    output ALUSrc, PCBaseSrc,
                    output RegWrite, MemWrite);
-
+    
+    `include "OpParams.vh"
+    `include "ControlParams.vh"
 
     reg [14:0] controls;
     
@@ -38,17 +40,17 @@ module maindecoder(input [6:0] op,
     
         case(op)
         //RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_BranchOp_ALUOp_WidthOp_PCBaseSrc
-            
-            7'b0110011: controls = 15'b1_xxx_0_0_000_00_10_0_x; //R-Type Instructions
-            7'b0010011: controls = 15'b1_000_1_0_000_00_10_0_x; //I-Type ALU Instructions
-            7'b0000011: controls = 15'b1_000_1_0_100_00_00_1_x; //I-Type Load Instructions
-            7'b0100011: controls = 15'b0_001_1_1_0xx_00_00_1_x; //S-Type Instructions
-            7'b1100011: controls = 15'b0_010_0_0_0xx_10_01_x_0; //B-Type Instructions
-            7'b1101111: controls = 15'b1_011_x_0_010_01_xx_0_0; //jal
-            7'b1100111: controls = 15'b1_000_x_0_010_01_xx_0_1; //jalr
-            7'b0110111: controls = 15'b1_100_x_0_011_00_xx_0_x; //lui
-            7'b0010111: controls = 15'b1_100_x_0_001_00_xx_0_0; //auipc
-            default: controls = 15'bx; //Unknown opcode
+                                 
+            OP_R_TYPE:       controls = {1'b1, 3'bxxx, 1'b0, 1'b0, RESULT_MUX_ALU,      2'b00, 2'b10, 1'b0, 1'bx}; //R-Type Instructions
+            OP_I_TYPE_ALU:   controls = {1'b1, 3'b000, 1'b1, 1'b0, RESULT_MUX_ALU,      2'b00, 2'b10, 1'b0, 1'bx}; //I-Type ALU Instructions
+            OP_I_TYPE_LOADS: controls = {1'b1, 3'b000, 1'b1, 1'b0, RESULT_MUX_DATAMEM,  2'b00, 2'b00, 1'b1, 1'bx}; //I-Type Load Instructions
+            OP_S_TYPE:       controls = {1'b0, 3'b001, 1'b1, 1'b1, RESULT_MUX_DONTCARE, 2'b00, 2'b00, 1'b1, 1'bx}; //S-Type Instructions
+            OP_B_TYPE:       controls = {1'b0, 3'b010, 1'b0, 1'b0, RESULT_MUX_DONTCARE, 2'b10, 2'b01,1'bx, 1'b0};//B-Type Instructions
+            OP_JAL:          controls = {1'b1, 3'b011, 1'bx, 1'b0, RESULT_MUX_PCPLUS4,  2'b01, 2'bxx, 1'b0, 1'b0}; //jal
+            OP_JALR:         controls = {1'b1, 3'b000, 1'bx, 1'b0, RESULT_MUX_PCPLUS4,  2'b01, 2'bxx, 1'b0, 1'b1}; //jalr
+            OP_LUI:          controls = {1'b1, 3'b100, 1'bx, 1'b0, RESULT_MUX_IMMEXT,   2'b00, 2'bxx, 1'b0, 1'bx}; //lui
+            OP_AUIPC:        controls = {1'b1, 3'b100, 1'bx, 1'b0, RESULT_MUX_PCTARGET, 2'b00, 2'bxx, 1'b0, 1'b0}; //auipc
+            default:         controls = 15'bx; //Unknown opcode
             
         endcase
     

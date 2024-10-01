@@ -463,7 +463,7 @@ def ALU_vector_gen(vector_per_op, file, test_case="Random"):
 def main():
     
     filename = "ALU_test_vectors.txt"
-    vector_per_op = 100
+    vector_per_op = 200
 
     with open(filename, "w") as file:
         if (filename == "ALU_test_vectors.txt"):

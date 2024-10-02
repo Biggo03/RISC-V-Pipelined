@@ -15,7 +15,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module executestage(input [31:0] RD1E, RD2E,
+module Estage(input [31:0] RD1E, RD2E,
                     input [31:0] ResultW, ALUResultM,
                     input [31:0] PCE,
                     input [31:0] ImmExtE,

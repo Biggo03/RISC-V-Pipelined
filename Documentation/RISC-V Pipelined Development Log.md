@@ -170,18 +170,18 @@ This module was tested in three different cases using SystemVerilog assertions. 
 
 By ensuring the module can handle the above scenarios, I can be relatively confident in its functionality during actual operation, as these tests effectively cover the actions that occur in a clock cycle within the fetch stage.
 
-### **Decode Stage (October 1st):**
-This pipeline stage includes both the register file and the control unit, raising the question of whether either module should be included within this module. I decided it was best to include both the register file and the control unit to simplify the overall code structure, which is a primary goal of creating separate modules for each pipeline stage.
+### **Decode / Writeback Stage (October 1st):**
+This pipeline stage incorporates both the register file and the control unit, leading to the decision to include both modules within this module. By doing so, I aim to simplify the overall code structure, which is one of the primary objectives behind creating separate modules for each pipeline stage.
 
-Although the register file is accessed by both the **decode** and **writeback** stages, it is primarily utilized within the **decode** stage. Its inclusion in this stage does not functionally isolate it from the writeback stage.
+Since the register file is accessed by both the **decode** and **writeback** stages, it makes logical sense to combine these stages. The **writeback** stage primarily consists of the register file and a single multiplexer. Even if I had not merged the two stages, including the register file within the **decode** stage would force the **writeback** stage to operate within it, making the design more confusing than it needs to be.
 
-The previous decision to include the branch decoder as a separate module from the control unit means that the control unit only takes inputs from the decode stage. Therefore, it makes sense for it to be integrated within this stage’s module.
+The previous decision to include the branch decoder as a separate module from the control unit means that the control unit only takes inputs from the **decode** stage. Therefore, it makes sense for it to be integrated within this stage’s module.
 
-This stage also includes the extension unit, which was instantiated alongside both the control unit and the register file. The implementation was simply connecting signals to the proper ports of any module that they interacted with.
+Additionally, the extension unit is included, instantiated alongside both the control unit and the register file. Since this module also encompasses the writeback stage, it contains the final result multiplexer. The implementation primarily involved connecting signals to the appropriate ports of each interacting module.
 
 **Testing:**
 
-Given that this module contains larger submodules than previous stages and has a broad range of acceptable inputs and outputs, I plan to leave the verification of this module to the top-level tests of the design. This strategy allows for functional testing of the **decode** Stage while minimizing the time spent on ensuring that the structural components instantiated within it interact correctly at just the stage abstraction level. Since the components themselves have already been validated, any issues that arise are more likely due to interactions with other modules, making top-level testing a more effective approach.
+Given that this module contains larger submodules than previous stages and has a broad range of acceptable inputs and outputs, I plan to leave the verification of this module to the top-level tests of the design. This strategy allows for functional testing of the **decode/writeback** Stage while minimizing the time spent on ensuring that the structural components instantiated within it interact correctly at just the stage abstraction level. Since the components themselves have already been validated, any issues that arise are more likely due to interactions with other modules, making top-level testing a more effective approach.
 
 ### **Execute Stage (October 1st):**
 In this pipeline stage, I have integrated the branch decoder within the module for the same reasons I included the control unit in the **decode** stage. This design choice helps maintain a coherent flow and minimizes the complexity of managing multiple modules across different stages.
@@ -198,6 +198,7 @@ This pipeline stage contains only the data memory and the reduction unit for mod
 **Testing:**
 
 While it is certainly possible to create a testbench for this stage due to its relative simplicity, I believe that it is not necessary. The internal components have both been verified, and the only activity within the module occurs between these two components. Therefore, I will leave the verification of this component to be confirmed through the successful verification of the top-level module.
+
 
 # **Challenges**
 

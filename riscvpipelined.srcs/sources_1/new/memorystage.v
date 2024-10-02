@@ -15,7 +15,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module memorystage(input clk,
+module Mstage(input clk,
                    input [31:0] ALUResultM, WriteDataM,
                    input [2:0] WidthSrcM,
                    input MemWriteM,

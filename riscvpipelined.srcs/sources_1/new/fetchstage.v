@@ -15,7 +15,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module fetchstage(input clk, reset,
+module Fstage(input clk, reset,
                   input [31:0] PCTargetE,
                   input PCSrcE, StallF,
                   output [31:0] InstrF,

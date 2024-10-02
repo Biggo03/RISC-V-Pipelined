@@ -20,13 +20,12 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
+
 module ALU #(parameter WIDTH = 32)
             (input [3:0] ALUControl,
              input [WIDTH-1:0] A, B,
              output [WIDTH-1:0] ALUResult,
              output N, Z, C, V);
-    
-    `include "ControlParams.vh"
 
     //Intermediate signals for use in always statement
     reg [WIDTH-1:0] TempResult;
@@ -43,17 +42,17 @@ module ALU #(parameter WIDTH = 32)
         
         //Operation Logic
         case(ALUControl)
-            CTRL_ALU_ADD: {Cout, TempResult} = A + B; //Addition
-            CTRL_ALU_SUB: {Cout, TempResult} = A - B; //Subtraction
-            CTRL_ALU_AND: TempResult = A & B; //AND
-            CTRL_ALU_OR: TempResult = A | B; //OR
-            CTRL_ALU_XOR: TempResult = A ^ B; //XOR
-            CTRL_ALU_SLL: TempResult = A << B; //Shift Left Logical
-            CTRL_ALU_SRL: TempResult = A >> B; //Shift Right Logical
-            CTRL_ALU_SRA: TempResult = $signed(A) >>> B; //Shift Right Arithmetic
+            4'b1000: {Cout, TempResult} = A + B; //Addition
+            4'b1001: {Cout, TempResult} = A - B; //Subtraction
+            4'b0010: TempResult = A & B; //AND
+            4'b0011: TempResult = A | B; //OR
+            4'b0100: TempResult = A ^ B; //XOR
+            4'b0111: TempResult = A << B; //Shift Left Logical
+            4'b0000: TempResult = A >> B; //Shift Right Logical
+            4'b0001: TempResult = $signed(A) >>> B; //Shift Right Arithmetic
                 
             //SLT
-            CTRL_ALU_SLT: begin
+            4'b0101: begin
                     TempResult = A - B;
                     VControl = ~(ALUControl[0] ^ A[WIDTH-1] ^ B[WIDTH-1]) & (A[WIDTH-1] ^ TempResult[WIDTH-1]);
                     
@@ -65,7 +64,7 @@ module ALU #(parameter WIDTH = 32)
             end
             
             //SLTU
-            CTRL_ALU_SLTU: begin
+            4'b0110: begin
                 
                 //Assumed unsigned representation
                 if (A < B) TempResult = 1;

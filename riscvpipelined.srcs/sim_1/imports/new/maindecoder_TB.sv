@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module maindecoder_tb();
+module maindecoder_TB();
 
     logic [6:0] op;
     logic [2:0] ImmSrc, ResultSrc, ImmSrcExp, ResultSrcExp;

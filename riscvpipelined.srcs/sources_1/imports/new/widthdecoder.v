@@ -24,9 +24,7 @@
 module widthdecoder(input [2:0] funct3,
                     input WidthOp,
                     output [2:0] WidthSrc);
-    
-    `include "ControlParams.vh"
-    
+                    
     reg [2:0] TempWidthSrc;
     
     always @(*) begin
@@ -36,11 +34,11 @@ module widthdecoder(input [2:0] funct3,
             
             //Width dependant on funct3
             case(funct3)
-                3'b010: TempWidthSrc = WIDTH_WORD;  //lw, sw
-                3'b001: TempWidthSrc = WIDTH_HW_S;  //lh, sh
-                3'b000: TempWidthSrc = WIDTH_BYTE_S;  //lb, sb
-                3'b101: TempWidthSrc = WIDTH_HW_U;  //lhu
-                3'b100: TempWidthSrc = WIDTH_BYTE_U;  //lbu
+                3'b010: TempWidthSrc = 3'b000;  //lw, sw
+                3'b001: TempWidthSrc = 3'b010;  //lh, sh
+                3'b000: TempWidthSrc = 3'b001;  //lb, sb
+                3'b101: TempWidthSrc = 3'b110;  //lhu
+                3'b100: TempWidthSrc = 3'b101;  //lbu
                 default: TempWidthSrc = 3'bxxx; //Unknown
             endcase
             

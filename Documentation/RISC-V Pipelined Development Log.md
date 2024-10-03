@@ -69,34 +69,38 @@ The only control hazard that needs to be dealt with initially is that caused by 
 ## **Initial Design (September 26th \- 28th):**  
 The pipelined architecture is built on the single-cycle architecture that has already been constructed. The main task in this phase is to insert pipeline registers and ensure all signals reach their correct destination. Each pipeline stage's schematic design will be discussed in this section.
 
-In some cases, signals need to be routed back to earlier stages. These will be addressed in the stage where they are generated, rather than the stage they are routed back to. This approach mirrors the design process and provides a clearer picture of signal flow.
-
 Also note that in this section, signal names will not have a suffix implying the stage they're in, as it is implyed, however in later section a suffix will denote the stage that signal originated from.
 
 ### **Fetch Stage (September 27th):**
-This stage contains the PC register, the instruction memory, an addition unit for calculating PCPlus4, and a multiplexer to determine if a branch address is to be jumped to or not. This largely remained the same as the single cycle, but with the following signals being routed to the **decode** stages pipeline register: Instr, PC, and PCPlus4. The PCTarget address is calculated in the **execution** section, and as such will be covered there.
+**Changes made on October 2nd:** See [Changelog Sections #1](#Changelog)
+This stage contains the PC register, an addition unit for calculating PCPlus4, a multiplexer to determine if a branch address is to be jumped to or not, and interfaces with the instruction memory. This largely remained the same as the single cycle, but with the following signals being routed to the **decode** stages pipeline register: PC, and PCPlus4. Instruction signal is routed from the instruction memory to the **decode** stages pipeline register. The PCTarget address is calculated in the **execution** section, and as such will be covered there.
 
 ### **Decode Stage (September 27th):**
-This stage contains the register file, control unit, and extension unit. In this stage, the register file handles all read operations, while writes occur in the **writeback** stage.
+**Changes made on October 2nd:** See [Changelog Sections #1](#Changelog)
+This stage contains the extension unit, and interfaces with the register file and control unit. In this stage, data is sent to the register file, which handles all read operations.
 
-One challenge was deciding how to handle branching logic, which is detailed in [Challenges Section #1](#1-reworking-branching-logic-september-27th). To determine proper branching, the funct3 field of the instruction and BranchOp signal are routed to the **execute** stage. The extension unit receives the appropriate portions of the instruction word along with ImmSrc.
+I initially had a challenge deciding how to handle branching logic, which is detailed in [Challenges Section #1](#1-reworking-branching-logic-september-27th). This became a non-issue after the changes made in the mentioned changelog entry, and more can be read about it in said entry. 
 
-The following signals are routed to the **execute** stage's pipeline register: RD1, RD2 (also called WriteData), PC, Rd (destination register for writes), ImmExt, PCPlus4, funct3, BranchOp, and all control signals except ImmSrc.
+To determine proper branching, the funct3 field of the instruction and BranchOp signal are routed to the control unit. The extension unit receives the appropriate portions of the instruction word along with ImmSrc.
+
+The following signals are routed to the **execute** stage's pipeline register: PC, Rd (destination register for writes), Rs1, Rs2, ImmExt, PCPlus4, funct3, BranchOp, and all other control signals except ImmSrc.
 
 ### **Execute Stage (September 27th):**
-This stage contains the ALU, the branch decoder, and the addition unit for calculating the PCTarget address. In this stage, the ALU performs arithmetic operations, and generates flags, the branch decoder determines if a branch is to occur or not, and the PC target address is calculated.
+**Changes made on October 2nd:** See [Changelog Sections #1](#Changelog)
+This stage contains the ALU, an addition unit for calculating the PCTarget address, and interfaces with the control unit (branch decoder). In this stage, the ALU performs arithmetic operations, and generates flags, and the PC target address is calculated.
 
-The same multiplexers used in the single-cycle design are used here. One determines if an immediate or a register is to be the second input to the ALU. The other determines the base that is to be added onto PC to calculate the PC target address (this will either be PC or RD1).
+The same multiplexers used in the single-cycle design are used here. One determines if an immediate or a register is to be the second input to the ALU. The other determines the base that is to be added onto PC to calculate the PC target address (this will either be PC or RD1). This section will not go into hazard handelling multiplexers.
 
 The following signals are routed to the **memory** stage's pipeline register: ALUResult, WriteData, Rd (destination register for writes), PCTarget, PCPlus4, WidthSrc, ResultSrc MemWrite, RegWrite, and ImmExt.
 
 ### **Memory Stage (September 28th):**
-This stage contains the data memory and the reduce unit, which adjusts the width of fetched data as necessary. In this stage, data is either stored in or retrieved from memory, with the control signals MemWrite and WidthSrc governing these actions.
+**Changes made on October 2nd:** See [Changelog Sections #1](#Changelog)
+This stage contains the reduce unit, which adjusts the width of fetched data as necessary, and interacts with the data memory. In this stage, an address and data is sent to data memory where it is stored, or data from the given address is loaded. The control signals MemWrite and WidthSrc governing these actions.
 
 The following signals are routed to the **writeback** stage's pipeline register: ResultSrc, RegWrite, ALUResult, ReducedData (the result after any necessary width adjustment), Rd (destination register for writes), PCTarget, PCPlus4, and ImmExt.
 
 ### Writeback Stage (September 28th):**
-This stage contains the result multiplexer and interacts with the register file. In this stage, the result multiplexer selects the appropriate value ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget to be written back to the register file, provided that RegWrite is enabled. The possible values are: ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget
+This stage contains the result multiplexer and interacts with the register file. In this stage, the result multiplexer selects the appropriate value ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget to be written back to the register file, provided that RegWrite is enabled. The possible values are: ALUResult, data fetched from memory, PCPlus4, ImmExt, or PCTarget.
 
 As this is the final stage in the pipeline, no signals from this stage are routed to any further sections.
 
@@ -151,15 +155,28 @@ The specifics of these signals and how they are implemented can be found in the 
 
 ## **Verilog Coding (September 29th \- ):**
 
-### **Overview (September 29th):**
-The general plan in implementing this designs datapath is to create each pipeline stage in their own modules, then connect them all using pipeline registers within a larger datapath module. This approach allows for the datapath module to remain readable despite the incresed level of complexity. I believe that having the pipeline registers within the larger datapath module will allow for simpler application of stall and flush hazard signals, as well as provide more clarity in how instructions flow through the datapath. This approach also allows for easier testing and debugging of each module, as well as the design as a whole.
+### **Overview (September 29th, Oct 2nd):**
+**Changes made on October 2nd:** See [Changelog Sections #1 and #2](#Changelog)
 
-Note that signals that pass through a pipeline stage, but are not used within that pipeline stage will not be included within that pipeline stages module. They will simply pass from the appropriate pipeline register to their destination, whether that be the hazard unit, or the next pipeline register.
+This design will be implemented by creating an individual module for each pipeline stage. This module is to include all the combinational logic within the module, as well as it's pipeline register. For example the Execute stages pipeline register would be the pipeline register with decode stage inputs, and will output signals used in the execute stage. 
+
+In addition, general modules will not be included within the pipeline stage modules, but rather either a datapath module, or a top-level module. The hierarchy of the design, as well as the modules within each abstraction level are as follows:
+ - Top-Level
+   - Data Memory
+   - Instruction Memory
+   - Processor
+     - Control Unit
+     - Datapath
+       - Pipeline Stages
+       - Register File 
+
+This organization will allow for each level of abstarction to have a defined role, and will ensure modules higher within the hierarchy aren't burdened with low-level signal management.
 
 ### **Fetch Stage (September 29th \- October 1st):**
-This is the only stage with it's pipeline register being within it's own module. This was done as this pipeline register is actually just the PC register, and as such it's only input is PCNext, which is calculated within the fetch stage. So it made sense to put the pipeline register within this stage as it has a role midway through the stage.
+**Changes made on October 2nd:** See [Changelog Section #1](#Changelog)
+This stage contains the PC register, which is effectively the fetch stages pipeline register. This stage also contains a multiplexer to determine the PC registers next input, an adder for calculating PCPlus4, and will interface with the instruction memory. The PCTarget address for branches and jumps is recieved from the **execute** stage. The PC register recieves the StallF signal, which disables its contents from being updated, effectively freezing the processor for a cycle.
 
-Other than that, this module was relatively simple to implement, and was essentially instantiating already created verilog modules to achieve the desired funtionality.
+The actual code within this module is just instantiation of the lower level modules mentioned above.
 
 **Testing:**
 
@@ -170,23 +187,31 @@ This module was tested in three different cases using SystemVerilog assertions. 
 
 By ensuring the module can handle the above scenarios, I can be relatively confident in its functionality during actual operation, as these tests effectively cover the actions that occur in a clock cycle within the fetch stage.
 
-### **Decode / Writeback Stage (October 1st):**
-This pipeline stage incorporates both the register file and the control unit, leading to the decision to include both modules within this module. By doing so, I aim to simplify the overall code structure, which is one of the primary objectives behind creating separate modules for each pipeline stage.
+### **Decode Stage (October 1st):**
+**Changes made on October 2nd:** See [Changelog Sections #1 and #2](#Changelog)
 
-Since the register file is accessed by both the **decode** and **writeback** stages, it makes logical sense to combine these stages. The **writeback** stage primarily consists of the register file and a single multiplexer. Even if I had not merged the two stages, including the register file within the **decode** stage would force the **writeback** stage to operate within it, making the design more confusing than it needs to be.
+This pipeline stage interfaces with the register file, but since the register file has been moved to a higher abstraction level, the only module within this stage is the extension unit, responsible for extending immediates. The primary functionality of the **decode** stage is to generate signals used by other modules, particularly the control unit and the **execution** stage.
 
-The previous decision to include the branch decoder as a separate module from the control unit means that the control unit only takes inputs from the **decode** stage. Therefore, it makes sense for it to be integrated within this stage’s module.
+Most control signals are derived from the instruction within this pipeline stage. Portions of the instruction related to control signal decoding are sent to the control unit, while the source and destination register numbers are sent to the **execution** stage.
 
-Additionally, the extension unit is included, instantiated alongside both the control unit and the register file. Since this module also encompasses the writeback stage, it contains the final result multiplexer. The implementation primarily involved connecting signals to the appropriate ports of each interacting module.
+Additionally, this stage uses the signal DReset, which is the OR of the reset and FlushD signals. This ensures that the pipeline register is flushed whenever either reset or FlushD is asserted, maintaining proper control flow.
+
+The design of this module primarily involves signal assignments for generating these control and forwarding signals, as well as the instantiation of the extension unit, and pipeline register.
 
 **Testing:**
 
 Given that this module contains larger submodules than previous stages and has a broad range of acceptable inputs and outputs, I plan to leave the verification of this module to the top-level tests of the design. This strategy allows for functional testing of the **decode/writeback** Stage while minimizing the time spent on ensuring that the structural components instantiated within it interact correctly at just the stage abstraction level. Since the components themselves have already been validated, any issues that arise are more likely due to interactions with other modules, making top-level testing a more effective approach.
 
 ### **Execute Stage (October 1st):**
-In this pipeline stage, I have integrated the branch decoder within the module for the same reasons I included the control unit in the **decode** stage. This design choice helps maintain a coherent flow and minimizes the complexity of managing multiple modules across different stages.
+**Changes made on October 2nd:** See [Changelog Sections #1 and #2](#Changelog)
 
-The module primarily serves as an instantiation point for the relevant components, ensuring that the proper signals are connected correctly to facilitate the execution of instructions.
+The **execute** stage is by far the most complex in the pipeline, primarily due to the large number of inputs and outputs it handles. This complexity is reflected in the sheer volume of input and output ports, as well as the number of signals included within the pipeline registers assignemnt statements.
+
+Within this stage, several multiplexers handle the selection of inputs to arithmetic modules and manage forwarding paths. The arithmetic units include the ALU and an adder used to calculate the PCTarget address for branching. There are a number of intermediate signals within the module, being the intermediate signals between the multiplexers, and their associtted arithmetic unit. 
+
+The outputs of this stage are sent to various other modules, including the hazard control unit, the memory stage’s pipeline register, and the branch decoder, which resides within the control unit.
+
+The key challenge in the execute stage lies in managing the numerous signals and ensuring they are correctly routed and processed by the respective components.
 
 **Testing:**
 
@@ -212,10 +237,15 @@ I started the design by creating tasks to deal with asserting the correct values
 As mentioned above, stall and flush signal inputs were varied in order to ensure many combinations were calcualted correctly. This was done by again making the inner for loop go up to 64. Different ranges of this inner loops variable lead to different inputs being given differnt values, resulting in many possible combinations being covered.
 
 
-
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**
+**Changes made on October 2nd:** See [Changelog Sections #1](#Changelog)
+
+This was initially a challenge as I intended to have the control unit within the **decode** stage module, however after the change listed in the mentioned changelog entry, it became a non-issue. I will leave the initial entry here in order to provide context for the inital challenge.
+
+**Initial Entry:**
+
 This was quite a challenge, as my initial design of the branching decoder relied on having both funct3, BranchOp, and the flags available at the same time. However, as the pipelined design calculates the flags in the Execution stage, if the branch decoder remained the same, it would use the flags from the execution stage, but the instruction from the decode stage. 
 
 Ultimately I decided to route the funct3 and BranchOp signals to the **execute** stages pipeline register, and determine PCSrc there. Then I needed to decide how to represent this on the schematic. I could either route the signals in the **exectution** stage back to the control unit, or display the branch decoder as it's own module within the **execute** stage. I decided on the later, as this reduces the sprawl of the schematic. Even though it leads to a subsection of the control unit not being within the control unit, I believe the clarity it provides is worth the tradeoff.

@@ -218,7 +218,10 @@ The key challenge in the execute stage lies in managing the numerous signals and
 Similar to the **decode** stage, I have opted to defer the testing of this module to the top-level tests of the design. Since this module is essentially a structural combination of already verified components, it makes more sense to focus on the overall functionality of the system rather than on unit tests for this particular module. This approach minimizes the time spent on verification while still ensuring that the entire system operates as intended, allowing for a more efficient development process.
 
 ### **Memory Stage (October 1st):**
-This pipeline stage contains only the data memory and the reduction unit for modulating data width. This module consists solely of the instantiation of these two components, ensuring that the proper signals are connected correctly to facilitate the execution of instructions.
+**Changes made on October 2nd:** See [Changelog Sections #1 and #2](#Changelog)
+This stage contains the reduction unit for adjusting data width and interfaces with the data memory module. The primary role of this stage is to handle the exchange of data between the processor and data memory, with control signals managing these interactions.
+
+Data read from memory is passed to the **writeback** stage's pipeline register, along with other outputs from this stage. Additionally, some of this data is sent to the hazard unit or used in forwarding register values to the **execution** stage.
 
 **Testing:**
 

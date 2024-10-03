@@ -9,7 +9,7 @@
 // 
 // Dependencies: flop (flop.v), extend (extend.v)
 // Additional Comments: 
-//            Input sources: Fetch stage pipeline register, Instruction memory, Hazard control unit
+//            Input sources: Fetch stage, Instruction memory, Hazard control unit
 //            Output destinations: Memory stage pipeline register, Hazard control unit, Control unit             
 //                      
 //

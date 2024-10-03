@@ -7,27 +7,46 @@
 // Project Name: riscvpipelined
 // Description: All logic contained within the memory pipeline stage.
 // 
-// Dependencies: datamem (datamem.v), reduce (reduce.v)
-// Additional Comments: This is intended to interface with inputs coming from the Memory stages pipeline register
-//                      and outputs being linked to the Writeback stages pipeline register
+// Dependencies: flop (flop.v), reduce (reduce.v)
+// Additional Comments: 
+//            Input sources: Execute stage, Hazard control unit
+//            Output destinations: Writeback stage pipeline register, Hazard control unit
 //                      
 //
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Mstage(input clk,
-                   input [31:0] ALUResultM, WriteDataM,
-                   input [2:0] WidthSrcM,
-                   input MemWriteM,
-                   output [31:0] ReducedDataM);
-
-    wire [31:0] ReadDataM;
-
-    datamem DataMemory(.clk (clk),
-                       .WE (MemWriteM),
-                       .WidthSrc (WidthSrcM[1:0]),
-                       .A (ALUResultM),
-                       .RD (ReadDataM));
+module Mstage(input clk, reset,
+              //Input Data Signals
+              input [31:0] ALUResultE, WriteDataE,
+              input [31:0] PCTargetE, PCPlus4E,
+              input [31:0] ImmExtE,
+              input [31:0] ReadDataM,
+              input [4:0] RdE,
+              //Input Control Signals
+              input [2:0] WidthSrcE, ResultSrcE,
+              input MemWriteE, RegWriteE,
+              //Output Data Signals
+              output [31:0] ReducedDataM, ALUResultM, WriteDataM,
+              output [31:0] PCTargetM, PCPlus4M,
+              output [31:0] ImmExtM,
+              output [4:0] RdM,
+              //Output Control Signals
+              output [2:0] ResultSrcM, WidthSrcM,
+              output MemWriteM, RegWriteM);
+    
+    //Signals for holding inputs and outputs of Memory pipeline register
+    wire [172:0] MInputs, MOutputs;
+    
+    assign MInputs = {ALUResultE, WriteDataE, PCTargetE, PCPlus4E, ImmExtE, RdE, WidthSrcE, ResultSrcE, MemWriteE, RegWriteE};
+    
+    flop #(.WIDTH (173)) MemoryReg(.clk (clk),
+                                   .en (1'b1),
+                                   .reset (reset),
+                                   .D (MInputs),
+                                   .Q (MOutputs));
+    
+    assign {ALUResultM, WriteDataM, PCTargetM, PCPlus4M, ImmExtM, RdM, WidthSrcM, ResultSrcM, MemWriteM, RegWriteM} = MOutputs;
     
     reduce WidthChange(.BaseResult (ReadDataM),
                        .WidthSrc (WidthSrcM),

@@ -9,7 +9,7 @@
 // 
 // Dependencies: mux3 (mux3.v), mux2 (mux2.v), ALU (ALU.v), adder (adder.v)
 // Additional Comments: 
-//            Input sources: Decode stage pipeline register, Hazard control unit
+//            Input sources: Decode stage, Hazard control unit
 //            Output destinations: Memory stage pipeline register, Hazard control unit, Control unit
 //                      
 //

@@ -227,6 +227,8 @@ Data read from memory is passed to the **writeback** stage's pipeline register, 
 
 While it is certainly possible to create a testbench for this stage due to its relative simplicity, I believe that it is not necessary. The internal components have both been verified, and the only activity within the module occurs between these two components. Therefore, I will leave the verification of this component to be confirmed through the successful verification of the top-level module.
 
+### **Writeback Stage (October 1st):**
+
 ### **Hazard Control Unit (October 2nd):**
 This unit was designed at the behavioral level rather than the structural level, as this performs logic functions in order to determine the value of hazard control signals. I designed this module by first creating an always statement to calculate the forwading signals, as they have three values, an if-else statement was the most natural way to implement it. This used temporary reg type signals that were then assigned to the actual outputs. Note I also used local parameters to add clarity in what each forward signal value represents.
 

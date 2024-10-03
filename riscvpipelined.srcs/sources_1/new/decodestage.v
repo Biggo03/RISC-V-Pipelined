@@ -10,17 +10,20 @@
 // Dependencies: flop (flop.v), extend (extend.v)
 // Additional Comments: 
 //            Input sources: Fetch stage, Instruction memory, Hazard control unit
-//            Output destinations: Memory stage pipeline register, Hazard control unit, Control unit             
+//            Output destinations: Memory stage pipeline register, Hazard control unit, Control unit, Register File             
 //                      
 //
 //////////////////////////////////////////////////////////////////////////////////
 
 
 module Dstage(input clk, reset,
+              //Input Data Signals
               input [31:0] InstrF,
               input [31:0] PCF, PCPlus4F,
+              //Input Control Signals
               input [2:0] ImmSrcD,
               input StallD, FlushD,
+              //Output Data Signals
               output [31:0] ImmExtD,
               output [31:0] PCD, PCPlus4D,
               output [4:0] RdD, Rs1D, Rs2D,
@@ -28,8 +31,10 @@ module Dstage(input clk, reset,
               output [2:0] funt3D,
               output funct7b5D);
     
+    localparam REG_WIDTH = 96;
+    
     //Signals for holding inputs and outputs of Decode pipeline register
-    wire [95:0] DInputs, DOutputs;
+    wire [REG_WIDTH-1:0] DInputs, DOutputs;
     
     assign DInputs = {InstrF, PCF, PCPlus4F};
     
@@ -37,7 +42,7 @@ module Dstage(input clk, reset,
     wire DReset;
     assign DReset = (reset | FlushD);
     
-    flop #(.WIDTH (96)) DecodeReg(.clk (clk),
+    flop #(.WIDTH (REG_WIDTH)) DecodeReg(.clk (clk),
                                  .en (~StallD),
                                  .reset (DReset),
                                  .D (DInputs),
@@ -46,7 +51,6 @@ module Dstage(input clk, reset,
      //InstrD not actually output, but used in determining outputs.
      wire [31:0] InstrD;
     
-    //Assign all outputs of module accordingly
     assign {InstrD, PCD, PCPlus4D} = DOutputs;
     
     assign RdD = InstrD[11:7];
@@ -57,7 +61,8 @@ module Dstage(input clk, reset,
     assign funct3D = InstrD[14:12];
     assign funt7b5D = InstrD[30];
     
-    //Extension unit
+    
+    
     extend ExtensionUnit(.Instr (InstrD[31:7]),
                          .ImmSrc (ImmSrcD),
                          .ImmExt (ImmExtD));

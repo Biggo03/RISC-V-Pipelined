@@ -35,18 +35,22 @@ module Mstage(input clk, reset,
               output [2:0] ResultSrcM, WidthSrcM,
               output MemWriteM, RegWriteM);
     
+    localparam REG_WIDTH = 173;
+    
     //Signals for holding inputs and outputs of Memory pipeline register
-    wire [172:0] MInputs, MOutputs;
+    wire [REG_WIDTH-1:0] MInputs, MOutputs;
     
-    assign MInputs = {ALUResultE, WriteDataE, PCTargetE, PCPlus4E, ImmExtE, RdE, WidthSrcE, ResultSrcE, MemWriteE, RegWriteE};
+    assign MInputs = {ALUResultE, WriteDataE, PCTargetE, PCPlus4E, ImmExtE, RdE, 
+                      WidthSrcE, ResultSrcE, MemWriteE, RegWriteE};
     
-    flop #(.WIDTH (173)) MemoryReg(.clk (clk),
-                                   .en (1'b1),
-                                   .reset (reset),
-                                   .D (MInputs),
-                                   .Q (MOutputs));
+    flop #(.WIDTH (REG_WIDTH)) MemoryReg(.clk (clk),
+                                         .en (1'b1),
+                                         .reset (reset),
+                                         .D (MInputs),
+                                         .Q (MOutputs));
     
-    assign {ALUResultM, WriteDataM, PCTargetM, PCPlus4M, ImmExtM, RdM, WidthSrcM, ResultSrcM, MemWriteM, RegWriteM} = MOutputs;
+    assign {ALUResultM, WriteDataM, PCTargetM, PCPlus4M, ImmExtM, RdM, 
+            WidthSrcM, ResultSrcM, MemWriteM, RegWriteM} = MOutputs;
     
     reduce WidthChange(.BaseResult (ReadDataM),
                        .WidthSrc (WidthSrcM),

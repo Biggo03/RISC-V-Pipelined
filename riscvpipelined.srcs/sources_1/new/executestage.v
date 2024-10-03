@@ -32,7 +32,7 @@ module Estage(//Input Data Signals
               input PCBaseSrcD, ALUSrcD,
               input [1:0] ForwardAE, ForwardBE,
               input FlushE,
-              //Output Data Outputs
+              //Output Data Signals
               output [31:0] ALUResultE, WriteDataE,
               output [31:0] PCTargetE, PCPlus4E,
               output [31:0] ImmExtE,
@@ -44,9 +44,11 @@ module Estage(//Input Data Signals
               output [1:0] BranchOpE,
               output MemWriteE, RegWriteE
               );
+     
+     localparam REG_WIDTH = 194;
                     
     //Signals for holding inputs and outputs of Execute pipeline register
-    wire [193:0] EInputs, EOutputs;
+    wire [REG_WIDTH-1:0] EInputs, EOutputs;
     
     assign EInputs = {BranchOpD, WidthSrcD, ResultSrcD, MemWriteD, ALUControlD, PCBaseSrcD, ALUSrcD, RegWriteD,
                       funct3D, RD1D, RD2D, PCD, RdD, ImmExtD, Rs1D, Rs2D, PCPlus4D};
@@ -55,7 +57,7 @@ module Estage(//Input Data Signals
     wire EReset;
     assign EReset = (reset | FlushE);
     
-    flop #(.WIDTH (194)) ExecuteReg(.clk (clk),
+    flop #(.WIDTH (REG_WIDTH)) ExecuteReg(.clk (clk),
                                     .en (1'b1),
                                     .reset (EReset),
                                     .D (EInputs),

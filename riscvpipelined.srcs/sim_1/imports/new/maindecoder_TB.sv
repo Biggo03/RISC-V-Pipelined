@@ -33,9 +33,8 @@ module maindecoder_TB();
     
 
     //Repetitive assertions warrant a task
-    task CheckOutput();//input logic RegWriteExp, WidthOpExp, ALUSrcExp, PCBaseSrcExp, MemWriteExp,
-                     //input logic [1:0] ALUOpExp, BranchOpExp,
-                     //input logic [2:0] ImmSrcExp, ResultSrcExp);
+    task CheckOutput();
+    
     
         assert(RegWrite === RegWriteExp & WidthOp === WidthOpExp & ALUSrc === ALUSrcExp &
                PCBaseSrc === PCBaseSrcExp & MemWrite === MemWriteExp &

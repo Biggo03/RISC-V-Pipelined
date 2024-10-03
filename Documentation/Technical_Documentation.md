@@ -138,6 +138,7 @@ The following table describes the behaviour of width setting modules
 |110       |16-bits unsigned|
 |001       |8-bits signed|
 |101       |8-bits unsigned|
+
 ## ALU
 The ALU implements add, subtract, and, or, xor, slt, sltu, sll, srl, and sra. All extensions are handeled by an extension unit.
 

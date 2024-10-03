@@ -151,7 +151,7 @@ The specifics of these signals and how they are implemented can be found in the 
 
 ## **Verilog Coding (September 29th \- ):**
 
-### **Overview (September 29th \-):**
+### **Overview (September 29th):**
 The general plan in implementing this designs datapath is to create each pipeline stage in their own modules, then connect them all using pipeline registers within a larger datapath module. This approach allows for the datapath module to remain readable despite the incresed level of complexity. I believe that having the pipeline registers within the larger datapath module will allow for simpler application of stall and flush hazard signals, as well as provide more clarity in how instructions flow through the datapath. This approach also allows for easier testing and debugging of each module, as well as the design as a whole.
 
 Note that signals that pass through a pipeline stage, but are not used within that pipeline stage will not be included within that pipeline stages module. They will simply pass from the appropriate pipeline register to their destination, whether that be the hazard unit, or the next pipeline register.
@@ -198,6 +198,19 @@ This pipeline stage contains only the data memory and the reduction unit for mod
 **Testing:**
 
 While it is certainly possible to create a testbench for this stage due to its relative simplicity, I believe that it is not necessary. The internal components have both been verified, and the only activity within the module occurs between these two components. Therefore, I will leave the verification of this component to be confirmed through the successful verification of the top-level module.
+
+### **Hazard Control Unit (October 2nd):**
+This unit was designed at the behavioral level rather than the structural level, as this performs logic functions in order to determine the value of hazard control signals. I designed this module by first creating an always statement to calculate the forwading signals, as they have three values, an if-else statement was the most natural way to implement it. This used temporary reg type signals that were then assigned to the actual outputs. Note I also used local parameters to add clarity in what each forward signal value represents.
+
+All load and stall logic was only one-bit, meaning it was simplest to implement them using assign statements. I created a temporary wire signal to hold the LoadStall signal, which was then used in the assignment statements of corresponding signals. This was just the of the appropriate logic equations to their appropriate signals. The actual logic equations that were implemented can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md).
+
+**Testing**
+As this module isn't structural in any way it makes sense to ensure the outputs are as expected. I created a testbench using only SystemVerilog. It likely wasn't necessary, but I designed the testbench to test every combination of registers for both ForwardAE and ForwardBE. For stall and flush testing, I setup the inputs to cover a large number of combinations to ensure that the correct flush and stall signals were always produced.
+
+I started the design by creating tasks to deal with asserting the correct values, and printing informitive error messages. For both forwading and stall/flush testing I used nested for loops. In forward testing these for loops looped through each possible register combination and ensured that the correct hazard signal was produced. This was done for both ForwardAE and ForwardBE. The inner loop went up to 64, with the first 32 iterations changing the register value associated with ForwardAE, and the last 32 iterations changing the register value associated with ForwardBE.
+
+As mentioned above, stall and flush signal inputs were varied in order to ensure many combinations were calcualted correctly. This was done by again making the inner for loop go up to 64. Different ranges of this inner loops variable lead to different inputs being given differnt values, resulting in many possible combinations being covered.
+
 
 
 # **Challenges**

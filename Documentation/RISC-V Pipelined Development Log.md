@@ -227,7 +227,15 @@ Data read from memory is passed to the **writeback** stage's pipeline register, 
 
 While it is certainly possible to create a testbench for this stage due to its relative simplicity, I believe that it is not necessary. The internal components have both been verified, and the only activity within the module occurs between these two components. Therefore, I will leave the verification of this component to be confirmed through the successful verification of the top-level module.
 
-### **Writeback Stage (October 1st):**
+### **Writeback Stage (October 3rd):**
+This stage contains a multiplexer responsible for selecting the result to be written back to the register file. Its primary function is to manage the write-back of data into the register file, and thus it does not interface with another pipeline stage register but focuses on completing the pipeline process by updating the register file.
+
+Additionally, the result signal generated here is sent back to the execute stage for potential forwarding. To facilitate forwarding, the destination register number and the RegWrite control signal are passed to the hazard control unit, ensuring proper handling of dependencies.
+
+**Testing**
+
+As with the other pipeline stages, functionality verification will be integrated into the testing of the overall top-level system. Since this stage's internal operations rely primarily on already verified components, top-level testing ensures proper interaction with the rest of the design.
+
 
 ### **Hazard Control Unit (October 2nd):**
 This unit was designed at the behavioral level rather than the structural level, as this performs logic functions in order to determine the value of hazard control signals. I designed this module by first creating an always statement to calculate the forwading signals, as they have three values, an if-else statement was the most natural way to implement it. This used temporary reg type signals that were then assigned to the actual outputs. Note I also used local parameters to add clarity in what each forward signal value represents.

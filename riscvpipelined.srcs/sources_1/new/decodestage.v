@@ -5,70 +5,61 @@
 // Create Date: 10/01/2024 02:55:00 PM
 // Module Name: decodestage
 // Project Name: riscvpipelined
-// Description: All logic contained within the decode and writeback pipeline stages.
+// Description: All logic contained within the decode stage, along with its pipeline register
 // 
-// Dependencies: flop (flop.v), rf (rf.v), controlunit (controlunit.v), extend (extend.v), mux5 (mux5.v)
-// Additional Comments: This is intended to interface with inputs coming from both the decode and writeback 
-//                      stage pipeline registers, and outputs going to the execute stages pipeline register.
+// Dependencies: flop (flop.v), extend (extend.v)
+// Additional Comments: 
+//            Input sources: Fetch stage pipeline register, Instruction memory, Hazard control unit
+//            Output destinations: Memory stage pipeline register, Hazard control unit, Control unit             
+//                      
 //
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module DWstage(input clk, reset,
-               //Decode stage inputs
-               input [31:0] InstrD,
-               input [31:0] PCD, PCPlus4D,
-               //Writeback stage inputs
-               input [31:0] RDw,
-               input [31:0] ALUResultW, PCTargetW, PCPlus4W, ImmExtW, ReducedDataW,
-               input RegWriteW,
-               input [2:0] ResultSrc,
-               //Decode stage outputs
-               output [31:0] RD1D, RD2D,
-               output [31:0] ImmExtD,
-               //Decode stage control outputs
-               output [3:0] ALUControlD,
-               output [2:0] WidthSrcD, ResultSrcD,
-               output [1:0] BranchOpD,
-               output ALUSrcD, PCBaseSrcD, RegWriteD, MemWriteD);
+module Dstage(input clk, reset,
+              input [31:0] InstrF,
+              input [31:0] PCF, PCPlus4F,
+              input [2:0] ImmSrcD,
+              input StallD, FlushD,
+              output [31:0] ImmExtD,
+              output [31:0] PCD, PCPlus4D,
+              output [4:0] RdD, Rs1D, Rs2D,
+              output [6:0] OpD,
+              output [2:0] funt3D,
+              output funct7b5D);
     
-    //Control signal ImmSrcD used within module
-    wire [2:0] ImmSrcD;
+    //Signals for holding inputs and outputs of Decode pipeline register
+    wire [95:0] DInputs, DOutputs;
     
-    //Wires from writeback stage:
-    wire [31:0] ResultW;
+    assign DInputs = {InstrF, PCF, PCPlus4F};
     
-    controlunit CU(.op (InstrD[6:0]),
-                   .funct3 (InstrD[14:12]),
-                   .funct7b5 (InstrD[30]),
-                   .ALUControl (ALUControlD),
-                   .ImmSrc (ImmSrcD),
-                   .WidthSrc (WidthSrcD),
-                   .ResultSrc (ResultSrcD),
-                   .ALUSrc (ALUSrcD),
-                   .RegWrite (RegWriteD),
-                   .MemWrite (MemWriteD),
-                   .PCBaseSrc (PCBaseSrcD));
+    //Register should be cleared if either of flush or reset asserted
+    wire DReset;
+    assign DReset = (reset | FlushD);
     
-    rf RegisterFile(.clk (clk),
-                    .reset (reset),
-                    .A1 (InstrD[19:15]),
-                    .A2 (InstrD[24:20]),
-                    .A3 (RdW),
-                    .WD3 (ResultW),
-                    .RD1 (RD1D),
-                    .RD2 (RD2D));
-
+    flop #(.WIDTH (96)) DecodeReg(.clk (clk),
+                                 .en (~StallD),
+                                 .reset (DReset),
+                                 .D (DInputs),
+                                 .Q (DOutputs));
+     
+     //InstrD not actually output, but used in determining outputs.
+     wire [31:0] InstrD;
+    
+    //Assign all outputs of module accordingly
+    assign {InstrD, PCD, PCPlus4D} = DOutputs;
+    
+    assign RdD = InstrD[11:7];
+    assign Rs1D = InstrD[19:15];
+    assign Rs2D = InstrD[24:20];
+    
+    assign OpD = InstrD[6:0];
+    assign funct3D = InstrD[14:12];
+    assign funt7b5D = InstrD[30];
+    
+    //Extension unit
     extend ExtensionUnit(.Instr (InstrD[31:7]),
                          .ImmSrc (ImmSrcD),
                          .ImmExt (ImmExtD));
-    
-    mux5 ResultMux(.d0 (ALUResultW),
-                   .d1 (PCTargetW),
-                   .d2 (PCPlus4W),
-                   .d3 (ImmExtW),
-                   .d4 (ReducedDataW),
-                   .s (ResultSrcW),
-                   .y (ResultW));
     
 endmodule

@@ -221,3 +221,17 @@ This was quite a challenge, as my initial design of the branching decoder relied
 Ultimately I decided to route the funct3 and BranchOp signals to the **execute** stages pipeline register, and determine PCSrc there. Then I needed to decide how to represent this on the schematic. I could either route the signals in the **exectution** stage back to the control unit, or display the branch decoder as it's own module within the **execute** stage. I decided on the later, as this reduces the sprawl of the schematic. Even though it leads to a subsection of the control unit not being within the control unit, I believe the clarity it provides is worth the tradeoff.
 
 # **Changelog**
+
+## **#1 Change Location of Register File, Control Unit, Branch Decoder, Instruction Memory, and Datam Memory(October 2nd):**
+Initially I included all of the modules listed above within pipeline stage modules. As I began working on the top level module, I realized how unintuitive it was to have modules used by the whole system within one stages module, especially in the case of the register file. As the register file was within the decode stage, I decided to also include the writeback stage within the decode stage module. This further complicated and confused the design.
+
+The control unit and branch decoder being with the decode and Execute stage respectively doesn't overly complicate their module, as their inputs and outputs are self contained with the module they are within. However, after beginning work on the top level module, I believe that including them as their own modules within the top-level module is the best route of action, as it makes it clear that they are modules that affect the whole pipeline, and not just combinational logic thats used in determining outputs of a given pipeline stage. Not only that, but it allows for the branch decoder to again be included within the control unit, consolidating the main control unit.
+
+As for the instruction and data memory, including them directly within pipeline stage modules is not a very accurate representation of their location within the hierarchy. As such, I believe that moving the instruction memory out of the fetch stage, and the data memory out of the memory stage will simplify the overall design.
+
+This also allows me to add another level of abstraction to again simplify the design, having the standard datapath and control unit within a processor module, and the data memory and instruction memory within the top-level modue (alongside the processor module).
+
+## **#2 Including Pipeline Registers within Stage Modules(October 2nd):**
+Initially I was planning to include the pipeline registers within the top-level module. However as I was making the changes noted in the previous section, I realized that I could again greatly simplify the top-level design by including each stages input registers within the pipeline stage module itself. As some pipeline stages only contain one or two modules, this also ensures that the use of modules for each pipeline stage actually does simplify the design. 
+
+I also realized that doing this would allow me to combine signals as inputs to the pipeline register, and decouple the output of the pipeline register within the pipeline stage module. Doing this within a pipeline module greatly reduces the signal sprawl that would have been present within the top-level module had no change been made.

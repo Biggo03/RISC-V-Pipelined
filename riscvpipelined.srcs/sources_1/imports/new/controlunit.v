@@ -1,49 +1,73 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
+// Author: Viggo Wozniak
+//
 // Create Date: 09/01/2024 04:13:20 PM
-// Design Name: 
 // Module Name: controlunit
-// Project Name: riscvsingle
-// Target Devices: 
-// Tool Versions: 
-// Description: Combines the various decoders used for generating control signals into one unit.
-//              Outputs all control signals used in the data path.
+// Project Name: riscvpipelined
+// Description: Control unit for pipelined riscv processor
 // 
-// Dependencies: maindecoder.v, ALUdecoder.v, branchdecoder.v, and widthdecoder.v
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
+// Dependencies: maindecoder (maindecoder.v), ALUdecoder (ALUdecoder.v), 
+//               widthdecoder (widthdecoder.v), branchdecoder (branchdecoder.v)
+//
+// Additional Comments: 
+//            Input sources: Decode stage, Execute stage
+//            Output destinations: Decode stage pipeline register, fetch stage PC multiplexer
+//                      
+//
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module controlunit(input [6:0] op,
-                   input [2:0] funct3,
-                   input funct7b5,
-                   output [3:0] ALUControl,
-                   output [2:0] ImmSrc, WidthSrc, ResultSrc,
-                   output ALUSrc,
-                   output RegWrite, MemWrite,
-                   output PCBaseSrc);
+module controlunit(input [6:0] opD,
+                   input [2:0] funct3D, funct3E,
+                   input funct7b5D,
+                   input [1:0] BranchOpE,
+                   input N, Z, C, V,
+                   output [3:0] ALUControlD,
+                   output [2:0] ImmSrcD, WidthSrcD, ResultSrcD,
+                   output BranchOpD,
+                   output PCSrcE,
+                   output ALUSrcD,
+                   output RegWriteD, MemWriteD,
+                   output PCBaseSrcD);
         
     
     //Internal control signals
-    wire [1:0] ALUOp, BranchOp;
+    wire [1:0] ALUOp;
     wire WidthOp;
     
     //Main Decoder
-    maindecoder MainDec(op, ImmSrc, ResultSrc, ALUOp, BranchOp, WidthOp, ALUSrc, PCBaseSrc, RegWrite, MemWrite);
+    maindecoder MainDec(.op (opD),
+                        .ImmSrc (ImmSrcD),
+                        .ResultSrc (ResultSrcD),
+                        .ALUOp (ALUOp),
+                        .BranchOp (BranchOpD),
+                        .WidthOp (WidthOp),
+                        .ALUSrc (ALUSrcD),
+                        .PCBaseSrc (PCBaseSrcD),
+                        .RegWrite (RegWriteD),
+                        .MemWrite (MemWriteD));
     
     //ALU Decoder
-    ALUdecoder ALUDec(funct3, ALUOp, op[5], funct7b5, ALUControl);
+    ALUdecoder ALUDec(.funct3 (funct3D),
+                      .ALUOp (ALUOp),
+                      .op5 (opD[5]),
+                      .funct7b5 (funct7b5D),
+                      .ALUControl (ALUControlD));
     
     //Width Decoder
-    widthdecoder WidthDec(funct3, WidthOp, WidthSrc);        
-        
+    widthdecoder WidthDec(.funct3 (funct3D),
+                          .WidthOp (WidthOp),
+                          .WidthSrc (WidthSrcD));     
+    
+    //Branch Decoder   
+    branchdecoder BranchDec(.funct3 (funct3E),
+                            .BranchOp (BranchOpE),
+                            .N (N),
+                            .Z (Z),
+                            .C (C),
+                            .V (V),
+                            .PCSrc (PCSrcE));
         
         
 endmodule   

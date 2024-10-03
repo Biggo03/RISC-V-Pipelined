@@ -242,13 +242,13 @@ This unit was designed at the behavioral level rather than the structural level,
 
 All load and stall logic was only one-bit, meaning it was simplest to implement them using assign statements. I created a temporary wire signal to hold the LoadStall signal, which was then used in the assignment statements of corresponding signals. This was just the of the appropriate logic equations to their appropriate signals. The actual logic equations that were implemented can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md).
 
-**Testing**
+**Testing:**
+
 As this module isn't structural in any way it makes sense to ensure the outputs are as expected. I created a testbench using only SystemVerilog. It likely wasn't necessary, but I designed the testbench to test every combination of registers for both ForwardAE and ForwardBE. For stall and flush testing, I setup the inputs to cover a large number of combinations to ensure that the correct flush and stall signals were always produced.
 
 I started the design by creating tasks to deal with asserting the correct values, and printing informitive error messages. For both forwading and stall/flush testing I used nested for loops. In forward testing these for loops looped through each possible register combination and ensured that the correct hazard signal was produced. This was done for both ForwardAE and ForwardBE. The inner loop went up to 64, with the first 32 iterations changing the register value associated with ForwardAE, and the last 32 iterations changing the register value associated with ForwardBE.
 
 As mentioned above, stall and flush signal inputs were varied in order to ensure many combinations were calcualted correctly. This was done by again making the inner for loop go up to 64. Different ranges of this inner loops variable lead to different inputs being given differnt values, resulting in many possible combinations being covered.
-
 
 # **Challenges**
 

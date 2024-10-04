@@ -110,7 +110,7 @@ The design of the hazard unit is largely based on the design of the hazard unit 
 Signals are referred to with a suffix indicating the stage they originated from (for example, RdE for a signal from the execute stage) for clarity in tracking data as it progresses through the pipeline stages.
 
 ### **Forwarding (September 29th):**
-Forwarding is employed to resolve RAW (Read After Write) hazards wherever possible, except for hazards caused by load instructions. When forwarding is possible, the value of a destination register currently in the **memory** or **writeback** stage is forwarded to the **execution** stage, provided the RegWrite signal is active. If RegWrite is inactive, the destination register is not modified, and no forwarding is needed.
+Forwarding is employed to resolve RAW (Read After Write) hazards wherever possible, except for hazards caused by load instructions. When forwarding is possible, the value that the destination register is to be set to in the **memory** or **writeback** stage is forwarded to the **execution** stage, provided the RegWrite signal is active. If RegWrite is inactive, the destination register is not modified, and no forwarding is needed.
 
 Since the execution stage can receive forwarded data from either the **memory** or **writeback** stages, a three-input multiplexer is required to select the correct data for each operand of the ALU. The sources for operand SrcA of the ALU are either RdM (the register in the **memory** stage), RdW (the register in the **writeback** stage), or RD1E (the register read from the **execute** stage itself). Similarly, for operand SrcB, the inputs are RdM, RdW, or RD2E.
 
@@ -218,10 +218,12 @@ The key challenge in the execute stage lies in managing the numerous signals and
 Similar to the **decode** stage, I have opted to defer the testing of this module to the top-level tests of the design. Since this module is essentially a structural combination of already verified components, it makes more sense to focus on the overall functionality of the system rather than on unit tests for this particular module. This approach minimizes the time spent on verification while still ensuring that the entire system operates as intended, allowing for a more efficient development process.
 
 ### **Memory Stage (October 1st):**
-**Changes made on October 2nd:** See [Changelog Sections #1 and #2](#Changelog)
+**Changes made on: October 2nd and October 4th:** See [Changelog Sections #1, #2, and #4](#Changelog)
 This stage contains the reduction unit for adjusting data width and interfaces with the data memory module. The primary role of this stage is to handle the exchange of data between the processor and data memory, with control signals managing these interactions.
 
 Data read from memory is passed to the **writeback** stage's pipeline register, along with other outputs from this stage. Additionally, some of this data is sent to the hazard unit or used in forwarding register values to the **execution** stage.
+
+Note that this stage also contains a multiplexer that determines which data is to be sent to the execution stage for forwarding, as different instructions have different values written to a register.
 
 **Testing:**
 
@@ -284,6 +286,17 @@ This was quite a challenge, as my initial design of the branching decoder relied
 
 Ultimately I decided to route the funct3 and BranchOp signals to the **execute** stages pipeline register, and determine PCSrc there. Then I needed to decide how to represent this on the schematic. I could either route the signals in the **exectution** stage back to the control unit, or display the branch decoder as it's own module within the **execute** stage. I decided on the later, as this reduces the sprawl of the schematic. Even though it leads to a subsection of the control unit not being within the control unit, I believe the clarity it provides is worth the tradeoff.
 
+## **#2 Unexpected Hazards (October 4th):**
+During testing of the top-level module, I encountered an issue where some signals were not being forwarded correctly. This stemmed from not accounting for the additional instructions I had implemented beyond those supported by the textbook. As a result, I needed to introduce further hazard handling to ensure proper functionality.
+
+The problematic instructions were primarily the U-type instructions (lui and auipc), and potentially the jal and jalr instructions. The issue arose because the hazard unit was designed to assume that the value to be written back to a register would always come from ALUResultM in the memory stage. While this assumption holds true for R-type and I-type instructions, it does not apply to the U-type and jump instructions.
+
+lui writes ImmExt to the destination register, and auiPC writes PCTarget to the destination register. as for jal and jalr, they weren't included in the origional designs hazard handelling, likely because it used static branch handelling, meaning whenever a jump was taken, the stages that would have been forwarded to get flushed anyways. However at some point I plan to add more involved branch prediction, meaning that my processor must handle this as well.
+
+To solve this problem I decided to add a multiplexer to the memory stage that selects the value that will be written back to a register. This is the signal that will be sent to the hazard unit rather than just ALUResultM. Solving the issue this way minimizes the changes needed to solve the problem, and only requires the addition of a single multiplexer. Beyond that, this solution allows for the ResultSrcM signal to be used as the select signal for said multiplexer. Note that the result read from memory will not be sent to this multiplexer, as loaded instruction result in a stall, with the result then being forwarded from the **writeback** stage.
+
+All changes that I actually make to the hazard control unit will be found in the following sections: [Memory Stage](#memory-stage-october-1st). Since this section provides a comprehensive explanation of the issue, I will only provide a brief summary of the modifications in the changelog, with a reference to this section for full details.
+
 # **Changelog**
 
 ## **#1 Change Location of Register File, Control Unit, Branch Decoder, Instruction Memory, and Datam Memory (October 2nd):**
@@ -304,3 +317,6 @@ I also realized that doing this would allow me to combine signals as inputs to t
 While assembling the datapath module, I realized that the flush signals were initially designed as asynchronous resets, but they should actually function as synchronous resets. This prompted a change in the flop module, where I shifted from asynchronous to synchronous resets.
 
 The decision to move to synchronous resets was driven by simplicity and the nature of the system. There is no critical need for asynchronous resets in this design, as the clock signal is always active. As a result, the system should reliably reset when required, and synchronous resets won't introduce any timing issues or complications. Given that the clock is consistently oscillating, a synchronous reset will effectively reset the system without causing disruptions to the overall functionality.
+
+## **#4 Updated Hazard Handelling (October 4th):**
+The initial hazard handelling implemented in the processor at the point of writing was not suffecient to deal with all RAW hazards that arise in the **memory** stage. This is due to an assumption about the value that was to be written back to a register not holding true for a subset of the implemented instructions. This lead to incorrect values being forwarded from the **memory** stage back to the **execution** stage. A more comprehensive review of this issue can be foun in [Challenges section #2](#2-unexpected-hazards-october-4th).

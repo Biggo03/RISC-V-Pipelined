@@ -42,8 +42,8 @@ module riscvpipelined(input clk, reset,
     wire [4:0] Rs1D, Rs2D;
     wire [4:0] Rs1E, Rs2E, RdE;
     wire ResultSrcEb2;
-    wire RdM, RegWriteM;
-    wire RdW, RegWriteW;
+    wire [4:0] RdM, RdW;
+    wire RegWriteM, RegWriteW;
     
     //Hazard control unit outputs
     wire [1:0] ForwardAE, ForwardBE;

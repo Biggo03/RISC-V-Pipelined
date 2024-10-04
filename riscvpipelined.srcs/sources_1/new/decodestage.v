@@ -40,6 +40,7 @@ module decodestage(input clk, reset,
     
     //Register should be cleared if either of flush or reset asserted
     wire DReset;
+
     assign DReset = (reset | FlushD);
     
     flop #(.WIDTH (REG_WIDTH)) DecodeReg(.clk (clk),

@@ -250,6 +250,15 @@ I started the design by creating tasks to deal with asserting the correct values
 
 As mentioned above, stall and flush signal inputs were varied in order to ensure many combinations were calcualted correctly. This was done by again making the inner for loop go up to 64. Different ranges of this inner loops variable lead to different inputs being given differnt values, resulting in many possible combinations being covered.
 
+### **Datapath (October 3rd):**
+This module is essentially used as a place to instantiate all the modules within it, which includes all the pipeline stage modules, as well as the register file. Signals are sent and recieved to and from all other top level modules, being the control unit, hazard control unit, data memory, and instruction memory. All signals not needed externally are declared within the module. These are grouped by the pipeline stage they are outputted from (and a small section for register file outputs).
+
+There is only a single assignment statement within this module, used to manage a specific signal that requires only the most significant bit (MSB) for external access, while the complete signal is used internally. This simple assignment ensures that external components receive only the necessary data without redundant information.
+
+**Testing:**
+
+Given that the Datapath module is part of the top-level design, its functionality will be confirmed during the testing of the overall system. The top-level tests will validate the correct interaction between all components.
+
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**
@@ -265,7 +274,7 @@ Ultimately I decided to route the funct3 and BranchOp signals to the **execute**
 
 # **Changelog**
 
-## **#1 Change Location of Register File, Control Unit, Branch Decoder, Instruction Memory, and Datam Memory(October 2nd):**
+## **#1 Change Location of Register File, Control Unit, Branch Decoder, Instruction Memory, and Datam Memory (October 2nd):**
 Initially I included all of the modules listed above within pipeline stage modules. As I began working on the top level module, I realized how unintuitive it was to have modules used by the whole system within one stages module, especially in the case of the register file. As the register file was within the decode stage, I decided to also include the writeback stage within the decode stage module. This further complicated and confused the design.
 
 The control unit and branch decoder being with the decode and Execute stage respectively doesn't overly complicate their module, as their inputs and outputs are self contained with the module they are within. However, after beginning work on the top level module, I believe that including them as their own modules within the top-level module is the best route of action, as it makes it clear that they are modules that affect the whole pipeline, and not just combinational logic thats used in determining outputs of a given pipeline stage. Not only that, but it allows for the branch decoder to again be included within the control unit, consolidating the main control unit.
@@ -274,7 +283,12 @@ As for the instruction and data memory, including them directly within pipeline 
 
 This also allows me to add another level of abstraction to again simplify the design, having the standard datapath and control unit within a processor module, and the data memory and instruction memory within the top-level modue (alongside the processor module).
 
-## **#2 Including Pipeline Registers within Stage Modules(October 2nd):**
+## **#2 Including Pipeline Registers within Stage Modules (October 2nd):**
 Initially I was planning to include the pipeline registers within the top-level module. However as I was making the changes noted in the previous section, I realized that I could again greatly simplify the top-level design by including each stages input registers within the pipeline stage module itself. As some pipeline stages only contain one or two modules, this also ensures that the use of modules for each pipeline stage actually does simplify the design. 
 
 I also realized that doing this would allow me to combine signals as inputs to the pipeline register, and decouple the output of the pipeline register within the pipeline stage module. Doing this within a pipeline module greatly reduces the signal sprawl that would have been present within the top-level module had no change been made.
+
+## **#3 Synchronous Reset for Registers (October 3rd):**
+While assembling the datapath module, I realized that the flush signals were initially designed as asynchronous resets, but they should actually function as synchronous resets. This prompted a change in the flop module, where I shifted from asynchronous to synchronous resets.
+
+The decision to move to synchronous resets was driven by simplicity and the nature of the system. There is no critical need for asynchronous resets in this design, as the clock signal is always active. As a result, the system should reliably reset when required, and synchronous resets won't introduce any timing issues or complications. Given that the clock is consistently oscillating, a synchronous reset will effectively reset the system without causing disruptions to the overall functionality.

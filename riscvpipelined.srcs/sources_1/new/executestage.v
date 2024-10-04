@@ -52,8 +52,8 @@ module executestage(//Input Data Signals
     assign EInputs = {BranchOpD, WidthSrcD, ResultSrcD, MemWriteD, ALUControlD, PCBaseSrcD, ALUSrcD, RegWriteD,
                       funct3D, RD1D, RD2D, PCD, RdD, ImmExtD, Rs1D, Rs2D, PCPlus4D};
                       
-    //Register should be cleared if either of flush or reset asserted
     wire EReset;
+    
     assign EReset = (reset | FlushE);
     
     flop #(.WIDTH (REG_WIDTH)) ExecuteReg(.clk (clk),

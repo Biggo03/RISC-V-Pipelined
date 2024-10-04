@@ -25,7 +25,7 @@ module flop #(parameter WIDTH = 32)
               input [WIDTH-1:0] D,
               output reg [WIDTH-1:0] Q);
     
-    always @(posedge clk, posedge reset) begin
+    always @(posedge clk) begin
         if (reset) Q <= 0;
         else if (en) Q <= D;
     end

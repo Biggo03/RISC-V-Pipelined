@@ -48,7 +48,7 @@ module maindecoder(input [6:0] op,
             7'b1100111: controls = 15'b1_000_x_0_010_01_xx_0_1; //jalr
             7'b0110111: controls = 15'b1_100_x_0_011_00_xx_0_x; //lui
             7'b0010111: controls = 15'b1_100_x_0_001_00_xx_0_0; //auipc
-            default: controls = 15'bx; //Unknown opcode
+            default: controls = 15'b0; //Unknown opcode
             
         endcase
     

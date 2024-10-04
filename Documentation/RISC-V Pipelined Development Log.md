@@ -266,6 +266,11 @@ This is the module containing all subcomponents of the RISC-V processor, those b
 
 Given that the processor module is part of the top-level design, its functionality will be confirmed during the testing of the overall system. The top-level tests will validate the correct interaction between all components.
 
+### **Top-Level Module (October 3rd):**
+This is the top-level module of the system, and contains the pipelined RISC-V module, as well as the instruction and data memory modules. It is effectively the same as the top-level module for the single-cycle processor I created previously, but with some different signal names.
+
+**Testing:**
+
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**

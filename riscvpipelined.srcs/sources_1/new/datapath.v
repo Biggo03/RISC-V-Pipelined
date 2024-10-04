@@ -31,7 +31,7 @@ module datapath(input clk, reset,
                 input PCSrcE,
                 //Input Hazard Control Signals
                 input [1:0] ForwardAE, ForwardBE,
-                input FlushD, FLushE,
+                input FlushD, FlushE,
                 input StallD, StallF,
                 //Output Signals (Memory)
                 output [31:0] ALUResultM, WriteDataM,
@@ -185,7 +185,7 @@ module datapath(input clk, reset,
                              .ResultSrcM (ResultSrcM),
                              .RegWriteM (RegWriteM),
                              .ResultW (ResultW),
-                             .Rdw (RdW),
+                             .RdW (RdW),
                              .RegWriteW (RegWriteW));
 
     //Register File

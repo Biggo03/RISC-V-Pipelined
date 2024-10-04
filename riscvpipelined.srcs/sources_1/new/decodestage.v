@@ -60,7 +60,7 @@ module decodestage(input clk, reset,
     
     assign OpD = InstrD[6:0];
     assign funct3D = InstrD[14:12];
-    assign funt7b5D = InstrD[30];
+    assign funct7b5D = InstrD[30];
     
     
     

@@ -18,14 +18,14 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module controlunit(input [6:0] opD,
+module controlunit(input [6:0] OpD,
                    input [2:0] funct3D, funct3E,
                    input funct7b5D,
                    input [1:0] BranchOpE,
                    input N, Z, C, V,
                    output [3:0] ALUControlD,
                    output [2:0] ImmSrcD, WidthSrcD, ResultSrcD,
-                   output BranchOpD,
+                   output [1:0] BranchOpD,
                    output PCSrcE,
                    output ALUSrcD,
                    output RegWriteD, MemWriteD,
@@ -37,7 +37,7 @@ module controlunit(input [6:0] opD,
     wire WidthOp;
     
     //Main Decoder
-    maindecoder MainDec(.op (opD),
+    maindecoder MainDec(.op (OpD),
                         .ImmSrc (ImmSrcD),
                         .ResultSrc (ResultSrcD),
                         .ALUOp (ALUOp),
@@ -51,7 +51,7 @@ module controlunit(input [6:0] opD,
     //ALU Decoder
     ALUdecoder ALUDec(.funct3 (funct3D),
                       .ALUOp (ALUOp),
-                      .op5 (opD[5]),
+                      .op5 (OpD[5]),
                       .funct7b5 (funct7b5D),
                       .ALUControl (ALUControlD));
     

@@ -57,13 +57,15 @@ module executestage(//Input Data Signals
     assign EReset = (reset | FlushE);
     
     flop #(.WIDTH (REG_WIDTH)) ExecuteReg(.clk (clk),
-                                    .en (1'b1),
-                                    .reset (EReset),
-                                    .D (EInputs),
-                                    .Q (EOutputs));
+                                          .en (1'b1),
+                                          .reset (EReset),
+                                          .D (EInputs),
+                                          .Q (EOutputs));
     
     //Intermediate signals from pipeline register
     wire [31:0] RD1E, RD2E, PCE;
+    wire [3:0] ALUControlE;
+    wire PCBaseSrcE, ALUSrcE;
     
     assign {BranchOpE, WidthSrcE, ResultSrcE, MemWriteE, ALUControlE, PCBaseSrcE, ALUSrcE, RegWriteE,
                                         funct3E, RD1E, RD2E, PCE, RdE, ImmExtE, Rs1E, Rs2E, PCPlus4E} = EOutputs;
@@ -77,7 +79,7 @@ module executestage(//Input Data Signals
                      .d1 (ResultW),
                      .d2 (ALUResultM),
                      .s (ForwardAE),
-                     .y (SrcA));
+                     .y (SrcAE));
     
     mux3 ForwardMuxB(.d0 (RD2E),
                      .d1 (ResultW),

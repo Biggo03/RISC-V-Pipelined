@@ -1,22 +1,21 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
+// Author: Viggo Wozniak
+//
 // Create Date: 10/03/2024 04:31:46 PM
-// Design Name: 
 // Module Name: datapath
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
+// Project Name: riscvpipelined
+// Description: All logic contained within the datapath
 // 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
+// Dependencies: fetchstage (fetchstage.v), decodestage (decodestage.v), executestage (executestage.v),
+//               memorystage (memorystage.v), writebackstage (writebackstage.v) rf (rf.v),
+//               all dependancies associated with these modules are also neccesary.
+//
+// Additional Comments: 
+//            Input sources: Control unit, hazard control unit, instruction memory, data memory
+//            Output destinations: Control unit, hazard control unit, instruction memory, data memory             
+//                      
+//
 //////////////////////////////////////////////////////////////////////////////////
 
 
@@ -37,7 +36,7 @@ module datapath(input clk, reset,
                 //Output Signals (Memory)
                 output [31:0] ALUResultM, WriteDataM,
                 output [31:0] PCF,
-                output [2:0] WidthSrcM,
+                output [1:0] WidthSrcMOUT,
                 output MemWriteM,
                 //Output Signals (Control Unit)
                 output [6:0] OpD,
@@ -48,7 +47,7 @@ module datapath(input clk, reset,
                 //Output Data Signals (Hazard Control Unit)
                 output [4:0] Rs1D, Rs2D,
                 output [4:0] Rs1E, Rs2E, RdE,
-                output ResultSrcb2E,
+                output ResultSrcEb2,
                 output [4:0] RdM, RdW,
                 output RegWriteM, RegWriteW);
 
@@ -148,7 +147,7 @@ module datapath(input clk, reset,
                          .RegWriteE (RegWriteE));
     
     //Need whole ResultSrcE signal internally, only need MSB externally
-    assign ResultSrcb2E = ResultSrcE[2];
+    assign ResultSrcEb2 = ResultSrcE[2];
     
     memorystage Memory(.clk (clk),
                        .reset (reset),
@@ -171,7 +170,7 @@ module datapath(input clk, reset,
                        .ImmExtM (ImmExtM),
                        .RdM (RdM),
                        .ResultSrcM (ResultSrcM),
-                       .WidthSrcM (WidthSrcM),
+                       .WidthSrcMOUT (WidthSrcMOUT),
                        .MemWriteM (MemWriteM),
                        .RegWriteM (RegWriteM));
 

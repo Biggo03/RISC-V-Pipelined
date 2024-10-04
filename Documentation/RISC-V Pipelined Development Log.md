@@ -259,6 +259,13 @@ There is only a single assignment statement within this module, used to manage a
 
 Given that the Datapath module is part of the top-level design, its functionality will be confirmed during the testing of the overall system. The top-level tests will validate the correct interaction between all components.
 
+### **RISC-V Pipelined (October 3rd):**
+This is the module containing all subcomponents of the RISC-V processor, those being the datapath, control unit, and the hazard control unit. It consists of the instantation of all of these components, with wire signals instantied to connect the modules accordingly. It is meant to interface with a data memory and an instruction memory.
+
+**Testing:**
+
+Given that the processor module is part of the top-level design, its functionality will be confirmed during the testing of the overall system. The top-level tests will validate the correct interaction between all components.
+
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**

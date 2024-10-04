@@ -32,13 +32,17 @@ module memorystage(input clk, reset,
                    output [31:0] ImmExtM,
                    output [4:0] RdM,
                    //Output Control Signals
-                   output [2:0] ResultSrcM, WidthSrcM,
+                   output [2:0] ResultSrcM, 
+                   output [1:0] WidthSrcMOUT,
                    output MemWriteM, RegWriteM);
     
     localparam REG_WIDTH = 173;
     
     //Signals for holding inputs and outputs of Memory pipeline register
     wire [REG_WIDTH-1:0] MInputs, MOutputs;
+    
+    //Only need two bits for output, so use internal signal for whole signal
+    wire [2:0] WidthSrcM;
     
     assign MInputs = {ALUResultE, WriteDataE, PCTargetE, PCPlus4E, ImmExtE, RdE, 
                       WidthSrcE, ResultSrcE, MemWriteE, RegWriteE};
@@ -51,6 +55,8 @@ module memorystage(input clk, reset,
     
     assign {ALUResultM, WriteDataM, PCTargetM, PCPlus4M, ImmExtM, RdM, 
             WidthSrcM, ResultSrcM, MemWriteM, RegWriteM} = MOutputs;
+    
+    assign WidthSrcMOUT = WidthSrcM[1:0];
     
     reduce WidthChange(.BaseResult (ReadDataM),
                        .WidthSrc (WidthSrcM),

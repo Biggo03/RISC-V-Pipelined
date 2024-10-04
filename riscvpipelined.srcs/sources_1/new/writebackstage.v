@@ -16,20 +16,20 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Wstage(input clk, reset,
-              //Input Data Signals
-              input [31:0] ALUResultM, ReducedDataM,
-              input [31:0] PCTargetM, PCPlus4M,
-              input [31:0] ImmExtM,
-              input [4:0] RdM,
-              //Input Control Signals
-              input [2:0] ResultSrcM,
-              input RegWriteM,
-              //Output Data Signals
-              output [31:0] ResultW,
-              output [4:0] RdW,
-              //Output Control Signals
-              output RegWriteW);
+module writebackstage(input clk, reset,
+                      //Input Data Signals
+                      input [31:0] ALUResultM, ReducedDataM,
+                      input [31:0] PCTargetM, PCPlus4M,
+                      input [31:0] ImmExtM,
+                      input [4:0] RdM,
+                      //Input Control Signals
+                      input [2:0] ResultSrcM,
+                      input RegWriteM,
+                      //Output Data Signals
+                      output [31:0] ResultW,
+                      output [4:0] RdW,
+                      //Output Control Signals
+                      output RegWriteW);
 
     localparam REG_WIDTH = 169;
     

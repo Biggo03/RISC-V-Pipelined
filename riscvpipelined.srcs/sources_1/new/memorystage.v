@@ -16,24 +16,24 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Mstage(input clk, reset,
-              //Input Data Signals
-              input [31:0] ALUResultE, WriteDataE,
-              input [31:0] PCTargetE, PCPlus4E,
-              input [31:0] ImmExtE,
-              input [31:0] ReadDataM,
-              input [4:0] RdE,
-              //Input Control Signals
-              input [2:0] WidthSrcE, ResultSrcE,
-              input MemWriteE, RegWriteE,
-              //Output Data Signals
-              output [31:0] ReducedDataM, ALUResultM, WriteDataM,
-              output [31:0] PCTargetM, PCPlus4M,
-              output [31:0] ImmExtM,
-              output [4:0] RdM,
-              //Output Control Signals
-              output [2:0] ResultSrcM, WidthSrcM,
-              output MemWriteM, RegWriteM);
+module memorystage(input clk, reset,
+                   //Input Data Signals
+                   input [31:0] ALUResultE, WriteDataE,
+                   input [31:0] PCTargetE, PCPlus4E,
+                   input [31:0] ImmExtE,
+                   input [31:0] ReadDataM,
+                   input [4:0] RdE,
+                   //Input Control Signals
+                   input [2:0] WidthSrcE, ResultSrcE,
+                   input MemWriteE, RegWriteE,
+                   //Output Data Signals
+                   output [31:0] ReducedDataM, ALUResultM, WriteDataM,
+                   output [31:0] PCTargetM, PCPlus4M,
+                   output [31:0] ImmExtM,
+                   output [4:0] RdM,
+                   //Output Control Signals
+                   output [2:0] ResultSrcM, WidthSrcM,
+                   output MemWriteM, RegWriteM);
     
     localparam REG_WIDTH = 173;
     

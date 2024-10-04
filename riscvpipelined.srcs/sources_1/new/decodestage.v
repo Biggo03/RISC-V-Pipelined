@@ -16,20 +16,20 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Dstage(input clk, reset,
-              //Input Data Signals
-              input [31:0] InstrF,
-              input [31:0] PCF, PCPlus4F,
-              //Input Control Signals
-              input [2:0] ImmSrcD,
-              input StallD, FlushD,
-              //Output Data Signals
-              output [31:0] ImmExtD,
-              output [31:0] PCD, PCPlus4D,
-              output [4:0] RdD, Rs1D, Rs2D,
-              output [6:0] OpD,
-              output [2:0] funt3D,
-              output funct7b5D);
+module decodestage(input clk, reset,
+                   //Input Data Signals
+                   input [31:0] InstrF,
+                   input [31:0] PCF, PCPlus4F,
+                   //Input Control Signals
+                   input [2:0] ImmSrcD,
+                   input StallD, FlushD,
+                   //Output Data Signals
+                   output [31:0] ImmExtD,
+                   output [31:0] PCD, PCPlus4D,
+                   output [4:0] RdD, Rs1D, Rs2D,
+                   output [6:0] OpD,
+                   output [2:0] funct3D,
+                   output funct7b5D);
     
     localparam REG_WIDTH = 96;
     

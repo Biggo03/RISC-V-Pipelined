@@ -16,34 +16,33 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Estage(//Input Data Signals
-              input clk, reset,
-              input [31:0] RD1D, RD2D,
-              input [31:0] ResultW, ALUResultM,
-              input [31:0] PCD, PCPlus4D,
-              input [31:0] ImmExtD,
-              input [2:0] funct3D,
-              input [4:0] RdD, Rs1D, Rs2D,
-              //Input Control Signals
-              input [3:0] ALUControlD,
-              input [2:0] WidthSrcD, ResultSrcD,
-              input [1:0] BranchOpD,
-              input  RegWriteD, MemWriteD,
-              input PCBaseSrcD, ALUSrcD,
-              input [1:0] ForwardAE, ForwardBE,
-              input FlushE,
-              //Output Data Signals
-              output [31:0] ALUResultE, WriteDataE,
-              output [31:0] PCTargetE, PCPlus4E,
-              output [31:0] ImmExtE,
-              output [31:0] Rs1E, Rs2E, RdE,
-              output [2:0] funct3E,
-              output N, Z, C, V,
-              //Output Control Signals
-              output [2:0] WidthSrcE, ResultSrcE,
-              output [1:0] BranchOpE,
-              output MemWriteE, RegWriteE
-              );
+module executestage(//Input Data Signals
+                    input clk, reset,
+                    input [31:0] RD1D, RD2D,
+                    input [31:0] ResultW, ALUResultM,
+                    input [31:0] PCD, PCPlus4D,
+                    input [31:0] ImmExtD,
+                    input [2:0] funct3D,
+                    input [4:0] RdD, Rs1D, Rs2D,
+                    //Input Control Signals
+                    input [3:0] ALUControlD,
+                    input [2:0] WidthSrcD, ResultSrcD,
+                    input [1:0] BranchOpD,
+                    input  RegWriteD, MemWriteD,
+                    input PCBaseSrcD, ALUSrcD,
+                    input [1:0] ForwardAE, ForwardBE,
+                    input FlushE,
+                    //Output Data Signals
+                    output [31:0] ALUResultE, WriteDataE,
+                    output [31:0] PCTargetE, PCPlus4E,
+                    output [31:0] ImmExtE,
+                    output [4:0] Rs1E, Rs2E, RdE,
+                    output [2:0] funct3E,
+                    output N, Z, C, V,
+                    //Output Control Signals
+                    output [2:0] WidthSrcE, ResultSrcE,
+                    output [1:0] BranchOpE,
+                    output MemWriteE, RegWriteE);
      
      localparam REG_WIDTH = 194;
                     

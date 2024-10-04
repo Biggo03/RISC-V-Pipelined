@@ -16,10 +16,10 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Fstage(input clk, reset,
-              input [31:0] PCTargetE,
-              input PCSrcE, StallF,
-              output [31:0] PCF, PCPlus4F);
+module fetchstage(input clk, reset,
+                  input [31:0] PCTargetE,
+                  input PCSrcE, StallF,
+                  output [31:0] PCF, PCPlus4F);
 
     //Intermedoate PC value
     wire [31:0] PCNextF;

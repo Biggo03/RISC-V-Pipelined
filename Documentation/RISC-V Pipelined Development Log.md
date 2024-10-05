@@ -293,6 +293,47 @@ This testing revealed a number of bugs, which I will now cover:
 **Problem 3:** Register file read data couldn't access written data on the clock cycle it was written in.
 **Solution:** Made the register file write-first, meaning if the either read address (A1 or A2) was equal to the write address (A3), and the register file had writing enabled, then the write data would be forwarded to the read port before it was actually written to a register. More on this can be found in [Changelog section #3](#3-register-file-read-before-write-hazard-october-4th).
 
+## **Post-Pipelining Performance Summary:**
+The performance can be split into three measurable areas: utilization (area), power, and timing (performance). These are measured post-synthesis with the instruction memory being initialized with the RISC-V program that runs every implemented instruction.
+
+### **Utilization:**
+The processor utilized the following when synthesized on the Zybo Z7-10 development board:
+
+| Module      | LUT’s (17600) | Registers (35200) | F7 Muxes (8800) | F8 Muxes (4400) | Bonded IOB (100) |
+| :----       | :----         | :----             | :----           | :----           | :----            |
+| Top         | 1829 (10.39%) | 1660 (4.72%)      | 387 (4.40%)     | 160 (3.64%)     | 67 (67%)         |
+| rvpipelined | 1597 (9.07%)  | 1660 (4.72%)      | 297 (3.38%)     | 128 (2.91%)     | 0 (0%)           |
+| dmem        | 168 (0.95%)   | 0 (0%)            | 64 (0.73%)      | 32 (0.72%)      | 0 (0%)           |
+
+Comparing utilization to single-cycle processor:
+
+| Component | Change in Utilization |
+|-----------|-----------------------|
+| Lut's     | 3.38% decrease        |
+| Registers | 62.1% increase        |
+| F7 Muxes  | 5.44% increase        |
+| F8 Muxes  | 150% increase         |
+| IOB's     | no change             |
+
+### **Timing:**
+Optimizing synthesis for performance, the design was able to achieve an **fmax** of **73.486Mhz**, corrosponding to a minimum clock period of **13.608ns**. This reflects an 11.3% improvement over the single-cycle design's fmax of **66.05 MHz**.
+
+Another noteworthy improvement is in total logic delay. The single-cycle design had a maximum logic delay of **4.486ns**, while the pipelined design achieved a minimum logic delay of **2.527ns**, resulting in a **43.7%** enhancement in this area.
+
+### **Power:**
+The total on-chip power was measured at **0.176W**, with **48%** attributed to dynamic power and **52%** to static power. This represents a **2.22%** decrease compared to the single-cycle design.
+
+The dynamic power further broke down as follows:
+
+| Process | Power Consumption | %change from siingle-cycle |
+| :----   | :----             | :----                      |
+| Clocks  | 0.010W (12%)      | 66.7% increase             |
+| Signals | 0.018W (21%)      | 72.3% decrease             |
+| Logic   | 0.014W (16%)      | 30.0% decrease             |
+| I/O     | 0.042W (51%)      | 16.7% increase             |
+
+**Note:** The percentages given are percentages of dynamic power, not total power.
+
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**

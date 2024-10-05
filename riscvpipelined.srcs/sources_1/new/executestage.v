@@ -19,7 +19,7 @@
 module executestage(//Input Data Signals
                     input clk, reset,
                     input [31:0] RD1D, RD2D,
-                    input [31:0] ResultW, ALUResultM,
+                    input [31:0] ResultW, ForwardDataM,
                     input [31:0] PCD, PCPlus4D,
                     input [31:0] ImmExtD,
                     input [2:0] funct3D,
@@ -77,13 +77,13 @@ module executestage(//Input Data Signals
     //Stage multiplexers:
     mux3 ForwardMuxA(.d0 (RD1E),
                      .d1 (ResultW),
-                     .d2 (ALUResultM),
+                     .d2 (ForwardDataM),
                      .s (ForwardAE),
                      .y (SrcAE));
     
     mux3 ForwardMuxB(.d0 (RD2E),
                      .d1 (ResultW),
-                     .d2 (ALUResultM),
+                     .d2 (ForwardDataM),
                      .s (ForwardBE),
                      .y (WriteDataE));
     

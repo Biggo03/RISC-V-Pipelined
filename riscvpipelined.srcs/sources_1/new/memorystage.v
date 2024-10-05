@@ -30,6 +30,7 @@ module memorystage(input clk, reset,
                    output [31:0] ReducedDataM, ALUResultM, WriteDataM,
                    output [31:0] PCTargetM, PCPlus4M,
                    output [31:0] ImmExtM,
+                   output [31:0] ForwardDataM,
                    output [4:0] RdM,
                    //Output Control Signals
                    output [2:0] ResultSrcM, 
@@ -57,6 +58,13 @@ module memorystage(input clk, reset,
             WidthSrcM, ResultSrcM, MemWriteM, RegWriteM} = MOutputs;
     
     assign WidthSrcMOUT = WidthSrcM[1:0];
+    
+    mux4 ForwardMux(.d0 (ALUResultM),
+                    .d1 (PCTargetM),
+                    .d2 (PCPlus4M),
+                    .d3 (ImmExtM),
+                    .s (ResultSrcM[1:0]),
+                    .y (ForwardDataM));
     
     reduce WidthChange(.BaseResult (ReadDataM),
                        .WidthSrc (WidthSrcM),

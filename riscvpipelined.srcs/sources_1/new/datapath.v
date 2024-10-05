@@ -66,7 +66,7 @@ module datapath(input clk, reset,
     wire MemWriteE, RegWriteE;
     
     //Memory Stage Outputs:
-    wire [31:0] ReducedDataM, PCTargetM, PCPlus4M, ImmExtM;
+    wire [31:0] ReducedDataM, PCTargetM, PCPlus4M, ImmExtM, ForwardDataM;
     wire [2:0] ResultSrcM;
     
     //Writeback Stage Outputs:
@@ -108,7 +108,7 @@ module datapath(input clk, reset,
                          .RD1D (RD1D),
                          .RD2D (RD2D),
                          .ResultW (ResultW),
-                         .ALUResultM (ALUResultM),
+                         .ForwardDataM (ForwardDataM),
                          .PCD (PCD),
                          .PCPlus4D (PCPlus4D),
                          .ImmExtD (ImmExtD),
@@ -168,6 +168,7 @@ module datapath(input clk, reset,
                        .PCTargetM (PCTargetM),
                        .PCPlus4M (PCPlus4M),
                        .ImmExtM (ImmExtM),
+                       .ForwardDataM (ForwardDataM),
                        .RdM (RdM),
                        .ResultSrcM (ResultSrcM),
                        .WidthSrcMOUT (WidthSrcMOUT),

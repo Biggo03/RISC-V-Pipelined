@@ -261,6 +261,13 @@ There is only a single assignment statement within this module, used to manage a
 
 Given that the Datapath module is part of the top-level design, its functionality will be confirmed during the testing of the overall system. The top-level tests will validate the correct interaction between all components.
 
+### **Updated Register File (October 4th):**
+For the pipelined design, the register file must be write first as to allow values written to the register file to be accessed within the same clock cycle. As such, the previously designed register file needed to be slightly redesigned. The details of the change, and more about why this module was changed see [Challenges section #3](#3-register-file-read-before-write-hazard-october-4th).
+
+**Testing:**
+
+As of now, the modules correctness has been verified through the succeful simulation of the top-level module, however I soon plan on updating the register files testbench to reflect the changes made to it.
+
 ### **RISC-V Pipelined (October 3rd):**
 This is the module containing all subcomponents of the RISC-V processor, those being the datapath, control unit, and the hazard control unit. It consists of the instantation of all of these components, with wire signals instantied to connect the modules accordingly. It is meant to interface with a data memory and an instruction memory.
 
@@ -296,6 +303,13 @@ lui writes ImmExt to the destination register, and auiPC writes PCTarget to the 
 To solve this problem I decided to add a multiplexer to the memory stage that selects the value that will be written back to a register. This is the signal that will be sent to the hazard unit rather than just ALUResultM. Solving the issue this way minimizes the changes needed to solve the problem, and only requires the addition of a single multiplexer. Beyond that, this solution allows for the ResultSrcM signal to be used as the select signal for said multiplexer. Note that the result read from memory will not be sent to this multiplexer, as loaded instruction result in a stall, with the result then being forwarded from the **writeback** stage.
 
 All changes that I actually make to the hazard control unit will be found in the following sections: [Memory Stage](#memory-stage-october-1st). Since this section provides a comprehensive explanation of the issue, I will only provide a brief summary of the modifications in the changelog, with a reference to this section for full details.
+
+## **#3 Register File Read Before Write Hazard (October 4th):**
+My register file design introduced a hazard where the result from the writeback stage wasn't available until the following cycle. This caused an issue if the write register matched either of the read registers, as the updated value wouldn't be passed to the execute stage in time. The problem arose because the register file is a synchronous module, where writes occur only on the rising edge of the clock. As a result, after the writeback stage produces a value, one clock cycle must pass before it's written to the register file.
+
+To solve this, I implemented a write-first register file. If either read register matches the write register, the write data is forwarded directly to the read output, ensuring the correct value is available during execution.
+
+This solution was implemented using an always block that checks both read registers. If either matches the write register and writing is enabled, the write data is forwarded; otherwise, the normal read process occurs.
 
 # **Changelog**
 

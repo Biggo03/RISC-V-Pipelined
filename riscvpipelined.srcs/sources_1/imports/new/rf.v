@@ -60,8 +60,20 @@ module rf #(parameter WIDTH = 32)
     endgenerate
     
     //Reading logic   
-    assign RD1 = RegisterArray[A1];
-    assign RD2 = RegisterArray[A2];
+    reg [31:0] Temp_RD1, Temp_RD2;
+    
+    //If A1 or A2 == A3, forward write result to output
+    always @(*) begin
+        if (A1 == A3 & WE3) Temp_RD1 = WD3;
+        else Temp_RD1 = RegisterArray[A1];
+        
+        if (A2 == A3 & WE3) Temp_RD2 = WD3;
+        else Temp_RD2 = RegisterArray[A2];
+        
+    end
+    
+    assign RD1 = Temp_RD1;
+    assign RD2 = Temp_RD2;
     
     //Writing Logic (only need to set enable bit)
     writedecoder enabledecoder(A3, WE3, en);     

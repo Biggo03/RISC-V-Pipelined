@@ -275,10 +275,23 @@ This is the module containing all subcomponents of the RISC-V processor, those b
 
 Given that the processor module is part of the top-level design, its functionality will be confirmed during the testing of the overall system. The top-level tests will validate the correct interaction between all components.
 
-### **Top-Level Module (October 3rd):**
+### **Top-Level Module (October 3rd \- 5th):**
 This is the top-level module of the system, and contains the pipelined RISC-V module, as well as the instruction and data memory modules. It is effectively the same as the top-level module for the single-cycle processor I created previously, but with some different signal names.
 
 **Testing:**
+
+This module was tested behaviorally using the same testbench file and RISC-V assembly programs as the single-cycle processor. This means that the program was run on the processor, and a final value was written to memory, and checked to ensure it was the correct value. The RISC-V assembly code was written s.t the final result is only written to memory correctly if all instructions were run correctly.
+
+This testing revealed a number of bugs, which I will now cover:
+
+**Problem 1:** Numerous typo's, and incorrect widths within numerous modules. 
+**Solution:** The typo's and incorrect widths were found through running behavioral simulation and either following an error message, or determining where the issue first occurred, and tracking down the signal that caused the error. In the second case the error was almost always an incorrect width.
+
+**Problem 2:** Unexpected data hazards caused by additonal instructions. This was because the memory stage only forwarded one signal, when multiple possible signals could be written to a register.More on this problem can be found in [Challenges section #2](#2-unexpected-hazards-october-4th).
+**Solution:** Added a multiplexer to the **memory** stage that determined the signal that was to be forwarded back to the **execute** stage. The control signal was ResultSrc, as this is already used to determine what is to be written back to the register file.
+
+**Problem 3:** Register file read data couldn't access written data on the clock cycle it was written in.
+**Solution:** Made the register file write-first, meaning if the either read address (A1 or A2) was equal to the write address (A3), and the register file had writing enabled, then the write data would be forwarded to the read port before it was actually written to a register. More on this can be found in [Changelog section #3](#3-register-file-read-before-write-hazard-october-4th).
 
 # **Challenges**
 

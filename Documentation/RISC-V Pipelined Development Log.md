@@ -315,13 +315,17 @@ Comparing utilization to single-cycle processor:
 | F8 Muxes  | 150% increase         |
 | IOB's     | no change             |
 
+The increase in registers is likely due to the introduction of pipeline registers (need mroe to store the intermediate data), and the decrease in LUT's with an increase in multiplexers is likely due to optimizations made possible by the introduction of the pipeline stages. As multiplexers are simpler components than LUT's, it's possible the synthesizer prioritizes using multiplexers where possible.
+
 ### **Timing:**
-Optimizing synthesis for performance, the design was able to achieve an **fmax** of **73.486Mhz**, corrosponding to a minimum clock period of **13.608ns**. This reflects an 11.3% improvement over the single-cycle design's fmax of **66.05 MHz**.
+Optimizing synthesis for performance, the design was able to achieve an **fmax** of **73.486Mhz**, corrosponding to a minimum clock period of **13.608ns**. This reflects an **11.3%** improvement over the single-cycle design's fmax of **66.05 MHz**.
 
 Another noteworthy improvement is in total logic delay. The single-cycle design had a maximum logic delay of **4.486ns**, while the pipelined design achieved a minimum logic delay of **2.527ns**, resulting in a **43.7%** enhancement in this area.
 
+The fmax improvemnt is far lower than the expected near **500%** increase expeceted from a 5-stage pipeline. After inspecting the critical path schematic, it seems that the execution stage introduces a significant bottleneck. This could possibly be improved through playing with synthesis settings, or changing post-synthesis mapping. This may be something that is looked into more at a later time.
+
 ### **Power:**
-The total on-chip power was measured at **0.176W**, with **48%** attributed to dynamic power and **52%** to static power. This represents a **2.22%** decrease compared to the single-cycle design.
+The total on-chip power was measured at **0.176W**, with **48%** attributed to dynamic power and **52%** to static power. This represents a **2.22%** decrease compared to the single-cycle design. 
 
 The dynamic power further broke down as follows:
 
@@ -333,6 +337,8 @@ The dynamic power further broke down as follows:
 | I/O     | 0.042W (51%)      | 16.7% increase             |
 
 **Note:** The percentages given are percentages of dynamic power, not total power.
+
+The overall decrease in power was not expected, however it's likely due to the change in resource utilizaiton, and possibly more effecient pathing between components. As seen the logic power consumption decreased by 30%. The main thing this could correlate to is a decrease in LUT's utilized, and an increase in multiplexers used. In this case, about 70 less LUT's were used, and a little over 100 more multiplexers were used. As LUT's are more complex than multiplexers, and were likely in more active paths within the single-cycle design, it makes sense that a decrease in LUT utilization leads to lower logic power consumption.
 
 # **Challenges**
 

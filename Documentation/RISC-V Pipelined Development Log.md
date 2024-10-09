@@ -338,7 +338,11 @@ The dynamic power further broke down as follows:
 
 **Note:** The percentages given are percentages of dynamic power, not total power.
 
-The overall decrease in power was not expected, however it's likely due to the change in resource utilizaiton, and possibly more effecient pathing between components. As seen the logic power consumption decreased by 30%. The main thing this could correlate to is a decrease in LUT's utilized, and an increase in multiplexers used. In this case, about 70 less LUT's were used, and a little over 100 more multiplexers were used. As LUT's are more complex than multiplexers, and were likely in more active paths within the single-cycle design, it makes sense that a decrease in LUT utilization leads to lower logic power consumption.
+The overall decrease in power was not expected, however it's likely due to the change in resource utilizaiton, and possibly more effecient pathing between components. 
+
+The logic power consumption decreased by 30%, this could correlate to is a decrease in LUT's utilized, and an increase in multiplexers used. In this case, about 70 less LUT's were used, and a little over 100 more multiplexers were used. As LUT's are more complex than multiplexers, and were likely in more active paths within the single-cycle design, it makes sense that a decrease in LUT utilization leads to lower logic power consumption.
+
+The signal power used decreased by the most significant amount. This is almost certainly due to a decrease in the length the signals need to travel, decreasing the overall capacitance of the system.
 
 # **Challenges**
 

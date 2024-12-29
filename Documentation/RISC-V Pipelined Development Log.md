@@ -24,7 +24,7 @@ Pipelining, along with branch prediction and caching, aims to enhance the overal
 
 I will benchmark the power, performance, and area of the processor after each feature addition in order to provide an idea of the tradeoffs between each addition. These measurements will be taken from the post-synthesis result.
 
-# **Pipelining (September 26th \- ):**
+# **Pipelining (September 26th \- October 5th):**
 
 ## **Overview (September 26th):**  
 The implementation of the pipeline is based on the 5-stage pipeline design in *Digital Design and Computer Architecture: RISC-V Edition* by Sarah L. Harris and David Harris. This means that a lot of the functionality will be very similar to the processor provided within the textbook. 
@@ -153,7 +153,7 @@ The signals used to control flushing in the case of a control hazard are as foll
 
 The specifics of these signals and how they are implemented can be found in the [Technical_Documentation](Documentation/Technical_Documentation.md).
 
-## **Verilog Coding (September 29th \- ):**
+## **Verilog Coding (September 29th \- October 5th):**
 
 ### **Overview (September 29th, Oct 2nd):**
 **Changes made on October 2nd:** See [Changelog Sections #1 and #2](#Changelog)
@@ -343,6 +343,44 @@ The overall decrease in power was not expected, however it's likely due to the c
 The logic power consumption decreased by 30%, this could correlate to is a decrease in LUT's utilized, and an increase in multiplexers used. In this case, about 70 less LUT's were used, and a little over 100 more multiplexers were used. As LUT's are more complex than multiplexers, and were likely in more active paths within the single-cycle design, it makes sense that a decrease in LUT utilization leads to lower logic power consumption.
 
 The signal power used decreased by the most significant amount. This is almost certainly due to a decrease in the length the signals need to travel, decreasing the overall capacitance of the system.
+
+# **Next Steps (December 29th):**
+
+At this point, the processor has effectively been pipelined, and is functional however there are still some improvements that can be made. Some of these improvements will be based around pure processor performance, and others will be based on processor usibility. In addtion, I will want to make changes that allow the processor to be properly implemented on the target FPGA, being the Zybo Z7-10 development board.
+
+As of now, I'm planning on implementing more sophisticated dynamic branch prediction, which would increase the CPI of the processor. This is a metric that hasn't been measured before, and is likely very dependant on the compiler used to generate the assembly code. As such, will have to rely on the theoretical benifits of this addition, rather than any concreete metric.
+
+The other changes I want to make as of now are related to memory managment, as well as program loading. As of now, there are two memories in the system, an instruction and data memory. I would like to change these so that they act as caches for a larger main memory. This main memory would ideally come from the 1GB memory on the Zybo board.
+
+Finally, to make the processor more usable, I would like to make it possible to serially load programs into the main memory using a UART interface.
+
+The first addition will be branch prediction, and the second will likely be the implementation of the full memory system, and finally, serial program loading.
+
+# **Branch Prediction (December 29th \- Present):**
+
+## **Overview (December 29th):**
+
+The next additon that I have planned for my processor is branch prediction. I feel that this is a natural next step after pipelining, as it directly relates to the funcitonality of the pipeline itself. Branch misprediction effectively has a two clock cycle performance penalty, as two pipeline stages are filled with bubbles. Therefore reducing the rate of branch mispredictions can drastically improve the overall functional performance of a processor, even though clock speed may not be directly affected.
+
+The initial branch prediction strategy that was implemented was static branch prediction, which always assumes that branches are not taken. Although this is the most simple form of branch prediction to implement, it is extremely ineffecient. For example, in any kind of loop, it will always perfrom poorly as a for loop may iterate hundreds or even thousands of times, and each time it iterates a branch is taken. This would effectively mean that the loop contains two NOP instructions at the end of the loop iteration, as a misprediction will occur each iteration.
+
+My plan is to implement a (2,2) branch predictor in order to improve branch prediciton accuracy. A (2,2) branch predictor is a correlating branch predictor, meaning it takes into account both the previous behaviour of the a local branch (a specific branch within a program), as well as the previous behaviour of all recent branches in the program. It does this by effectively having a two layer state machine. The "outer" or "global" layer keeps track of the all recent branches in the program. As this is a (2,2) correlating branch predictor, this means there are four possible states of this outer state machine:
+- taken, taken
+- untaken, untaken
+- taken, untaken
+- untaken. taken
+For each of these states, a local branch has its own local branch predictor, which in this case, will be a 2-bit branch predictor. These 2-bit branch predictors also have 4 states:
+- strongly taken
+- weakly taken
+- weakly not taken
+- strongly not taken
+When a given branch is taken, the state machine moves towards strongly taken (for example, would go from weakly not taken to weakly taken). When a branch is not taken, the state machine moves towards strongly not taken (for example, would go from weakly taken, to weakly not taken). When the branch predictor is in a "taken" state, it will predict that the branch is taken. When the branch predictor is in a "not taken" state, it will predict that the branch is not taken.
+
+So to give a summary, there is a global state machine that selects one of 4 local branch predictors that are to be used for a given branch. Note that only used local predictors are updated based on a given branch.
+
+## **Two-Level Branch Predictor Design ():**
+
+## Verilog Coding ():**
 
 # **Challenges**
 

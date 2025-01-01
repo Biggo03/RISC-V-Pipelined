@@ -287,7 +287,7 @@ This testing revealed a number of bugs, which I will now cover:
 **Problem 1:** Numerous typo's, and incorrect widths within numerous modules. 
 **Solution:** The typo's and incorrect widths were found through running behavioral simulation and either following an error message, or determining where the issue first occurred, and tracking down the signal that caused the error. In the second case the error was almost always an incorrect width.
 
-**Problem 2:** Unexpected data hazards caused by additonal instructions. This was because the memory stage only forwarded one signal, when multiple possible signals could be written to a register.More on this problem can be found in [Challenges section #2](#2-unexpected-hazards-october-4th).
+**Problem 2:** Unexpected data hazards caused by additional instructions. This was because the memory stage only forwarded one signal, when multiple possible signals could be written to a register.More on this problem can be found in [Challenges section #2](#2-unexpected-hazards-october-4th).
 **Solution:** Added a multiplexer to the **memory** stage that determined the signal that was to be forwarded back to the **execute** stage. The control signal was ResultSrc, as this is already used to determine what is to be written back to the register file.
 
 **Problem 3:** Register file read data couldn't access written data on the clock cycle it was written in.
@@ -358,25 +358,47 @@ The first addition will be branch prediction, and the second will likely be the 
 
 # **Branch Prediction (December 29th \- Present):**
 
-## **Overview (December 29th):**
+## **Overview (December 29th - 31st):**
 
-The next additon that I have planned for my processor is branch prediction. I feel that this is a natural next step after pipelining, as it directly relates to the funcitonality of the pipeline itself. Branch misprediction effectively has a two clock cycle performance penalty, as two pipeline stages are filled with bubbles. Therefore reducing the rate of branch mispredictions can drastically improve the overall functional performance of a processor, even though clock speed may not be directly affected.
+The next addition that I have planned for my processor is branch prediction. I feel that this is a natural next step after pipelining, as it directly relates to the functionality of the pipeline itself. Branch misprediction effectively has a two clock cycle performance penalty, as two pipeline stages are filled with bubbles. Therefore reducing the rate of branch mispredictions can drastically improve the overall functional performance of a processor, even though clock speed may not be directly affected.
 
-The initial branch prediction strategy that was implemented was static branch prediction, which always assumes that branches are not taken. Although this is the most simple form of branch prediction to implement, it is extremely ineffecient. For example, in any kind of loop, it will always perfrom poorly as a for loop may iterate hundreds or even thousands of times, and each time it iterates a branch is taken. This would effectively mean that the loop contains two NOP instructions at the end of the loop iteration, as a misprediction will occur each iteration.
+The initial branch prediction strategy that was implemented was static branch prediction, which always assumes that branches are not taken. Although this is the most simple form of branch prediction to implement, it is extremely inefficient. For example, in any kind of loop, it will always perform poorly as a for loop may iterate hundreds or even thousands of times, and each time it iterates a branch is taken. This would effectively mean that the loop contains two NOP instructions at the end of the loop iteration, as a misprediction will occur each iteration.
 
-My plan is to implement a (2,2) branch predictor in order to improve branch prediciton accuracy. A (2,2) branch predictor is a correlating branch predictor, meaning it takes into account both the previous behaviour of the a local branch (a specific branch within a program), as well as the previous behaviour of all recent branches in the program. It does this by effectively having a two layer state machine. The "outer" or "global" layer keeps track of the all recent branches in the program. As this is a (2,2) correlating branch predictor, this means there are four possible states of this outer state machine:
+My plan is to implement a (2,2) branch predictor in order to improve branch prediction accuracy. A (2,2) branch predictor is a correlating branch predictor, meaning it takes into account both the previous behaviour of a local branch (a specific branch within a program), as well as the previous behaviour of all recent branches in the program. It does this by effectively having a two layer state machine. The "outer" or "global" layer keeps track of the all recent branches in the program. It does this in a register called the Global History Register, or **GHR**. As this is a (2,2) correlating branch predictor, this means there are four possible states of this outer state machine, and are based on the behaviour of the two most recent branches.
 - taken, taken
 - untaken, untaken
 - taken, untaken
-- untaken. taken
-For each of these states, a local branch has its own local branch predictor, which in this case, will be a 2-bit branch predictor. These 2-bit branch predictors also have 4 states:
+- untaken, taken
+
+For each of these states, a target branch has its own local branch predictor, which in this case, will be a 2-bit branch predictor. These 2-bit branch predictors also have 4 states:
 - strongly taken
 - weakly taken
 - weakly not taken
 - strongly not taken
-When a given branch is taken, the state machine moves towards strongly taken (for example, would go from weakly not taken to weakly taken). When a branch is not taken, the state machine moves towards strongly not taken (for example, would go from weakly taken, to weakly not taken). When the branch predictor is in a "taken" state, it will predict that the branch is taken. When the branch predictor is in a "not taken" state, it will predict that the branch is not taken.
 
-So to give a summary, there is a global state machine that selects one of 4 local branch predictors that are to be used for a given branch. Note that only used local predictors are updated based on a given branch.
+When a branch is taken, the predictor moves closer to 'strongly taken.' When not taken, it moves towards 'strongly not taken. When the branch predictor is in a "taken" state, it will predict that the branch is taken. When the branch predictor is in a "not taken" state, it will predict that the branch is not taken.
+
+In summary so far, the GHR encodes the outcomes of the two most recent branches to select one of four local branch predictors, each corresponding to a specific global state.
+
+Note that only used local predictors are updated based on a given branch. Branch predictor states are stored in a buffer, with each target branch having (in this case) 4 entries, one for each branch predictor. Based on slides in my computer architecture class, it seems that having 1024 entries per global state provides a significant decrease in mispredictions for most programs, so that is what will be implemented. This means that there are 1024 branches that can have their own local predictor, and the local predictors will be indexed using the 10 LSB's of their address. 
+
+Finally, when a branch is predicted as taken, there must be a way to tell where to branch to immediately. This is done by storing the target address of a given branch in a Branch Target Buffer, or **BTB**. This buffer will also be indexed with the 10 LSB's of the target branch. As both the branch predictors and the target addresses are indexed by the same bits, space can be saved by storing all information in a shared buffer.
+
+As there are 1024 entries per global state, and 4 global states, there will be 4096 total branch prediction entries, each being two bits. As each entry is indexed using 10 bits, and the target address also needs to be stored, this give a total amount of space taken up as: (1024 * (10 + 32)) + (1024*4*2) = 51200 bits, or 50KiB. This should be acceptable considering the 270KB of available BRAM for the target FPGA, as this leave about 264KB left over for the planned cache system, as well as anything else that may need it.
+
+
+
+## **Microarchitecture Changes (Dec 31st \- Present):**
+In order to accomodate more advanced branch prediction, the microarchitecture needs to be changed. As of now, the branch decoder only outputs PCSrcE, which updates the PC if a branch is taken. With dynamic branch prediction, will want to update the PC as soon as a B-type instruction is detected in the decode stage, based on the branch predictors current output. This is done using the BTB, which was discussed in the previous section.
+
+To simplify this section, I will list everything that I believe needs to be done in order to implement the branch prediction system described in the previous section. I will then try to explain my plan for how to implement each entry in the list.
+- Need to create a GHR that updates immediately after the result of a branch has been confirmed (in execution stage)
+- Need to create local branch predictors that only update if they are associated with the current GHR state, and only after the branch has been confirmed (in execution stage)
+- Need to allow BTB to be updated when branch target address is incorrect
+- Need to update hazard control unit to be able to flush the fetch, decode, and execute pipeline registers on a misprediction (or when BTB does not have proper target address)
+- Need to change PCNextF mux to allow for actual branch result, or predicted branch result, or PCPlus4
+
+Think about adding a valid bit to BTB, list incomplete.
 
 ## **Two-Level Branch Predictor Design ():**
 

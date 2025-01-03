@@ -392,13 +392,48 @@ As there are 1024 entries per global state, and 4 global states, there will be 4
 In order to accomodate more advanced branch prediction, the microarchitecture needs to be changed. As of now, the branch decoder only outputs PCSrcE, which updates the PC if a branch is taken. With dynamic branch prediction, will want to update the PC as soon as a B-type instruction is detected in the decode stage, based on the branch predictors current output. This is done using the BTB, which was discussed in the previous section.
 
 To simplify this section, I will list everything that I believe needs to be done in order to implement the branch prediction system described in the previous section. I will then try to explain my plan for how to implement each entry in the list.
-- Need to create a GHR that updates immediately after the result of a branch has been confirmed (in execution stage)
-- Need to create local branch predictors that only update if they are associated with the current GHR state, and only after the branch has been confirmed (in execution stage)
-- Need to allow BTB to be updated when branch target address is incorrect
-- Need to update hazard control unit to be able to flush the fetch, decode, and execute pipeline registers on a misprediction (or when BTB does not have proper target address)
-- Need to change PCNextF mux to allow for actual branch result, or predicted branch result, or PCPlus4
+1. Need to change PCNextF mux to allow for actual branch result, or predicted branch result, or PCPlus4F, or PCPlus4E
+2. Need to create a GHR that updates immediately after the result of a branch has been confirmed (in execution stage)
+3. Need to create local branch predictors that only update if they are associated with the current GHR state, and only after the branch has been confirmed (in execution stage)
+4. Need local branch predictors, whose "result" can be fetched based on branch index (in decode stage)
+5. BTB starts with no valid or tag bits, and a naive overwrite policy (may change in future)
+6. Need to allow BTB to be updated when branch target address is incorrect (in execution stage)
+7. Need to update hazard control unit to be able to flush the decode, and execute pipeline registers on a misprediction, or when BTB does not have proper target address (in execution stage)
+8. Need all branch predictors, and BTB to be able to be reset to a default value (will be weakly not take for local predictors, and untaken, untaken for GHR)
 
-Think about adding a valid bit to BTB, list incomplete.
+### **1 PCNextF extension**
+PCNextF is the signal that tells the PC the location of the next instruction to fetch, and the multiplexer that determines this signal is currently controlled by the signal PCSrcE. This needs to be changed in order to allow for all possible branch addresses to be used. The multiplexer must decide between the **Target address calculated in the execution stage**, **PCPlus4**, and the **Predicted target address**. This means that this control signal can no longer be seen as originating from one particular stage, but rather a universal control signal. 
+
+The new control signal will simply be called PCSrc, and will be two bits to accomodate a 4 to 1 multiplexer. It will be 4 to 1, as there are 4 possiblities that the PC may need to take on:
+- PCPlus4F
+- PCTarget (From Execution stage)
+- PCTarget (From BTB)
+- PCPlus4E
+
+Each of these possiblities will be discussed later in this section.
+
+This new PCSrc signal will need to take into account both the prediction made by the branch predictor, as well as the actual resolved branch value. Because of this, two internal signals will be created:
+
+- PCSrcRes: The result produced by the branch decoder, holding the resolved result of a given branch that is currently in the execution stage.
+- PCSrcPredD: The result produced by the branch predictor in the **Decode** stage.
+- PCSrcPredE: the previous value of PCSrcPredD computed in the **Decode** stage. This is the signal that will be compared against PCSrcRes in order to determine the validity of the prediction.
+
+The possible branching cases are listed below, along with the changes that must be made to PCSrc, and any flushes that may need to occur with each case.
+- Not a branching instruction: PCSrc -> PCPlus4F
+  - PCPred predicts not taken, PCRes will concur
+- Branch predicted as not taken: PCSrc -> PCPlus4F
+  - PCPred will predict not taken, once in execution stage, PCRes agrees
+- Branch predicted as taken: PCSrc -> PCTarget (From BTB), FlushD
+  - PCPred predicts taken, once in execution stage, PCRes agrees
+- Branch predicted not taken, but mispredicted: PCSrc -> PCTarget (Execution stage), FlushD, FlushE
+  - PCPred predicts not taken, once in execution stage, PCRes disagrees
+- Branch predicted taken, but mispredicted: PCSrc -> PCPlus4E, FlushD, FlushE
+  - PCPred preicts taken, once in execution stage, PCRes disagrees
+
+The last case brings up an important issue, the fact that if a branch is predicted as taken, but mispredicted the old PCPlus4 value must be fetched. This means that the value of PCPlus4 must be passed along the pipeline until the execution stage, so that branches mispredicted as taken can be rolled back effectively. This will be dealt with in a seperate section.
+
+Finally, the logic of the branch prediction unit can be described, along with the changes that must be made to the hazard unit to accomadate the need for more flushes. 
+
 
 ## **Two-Level Branch Predictor Design ():**
 

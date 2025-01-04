@@ -419,20 +419,47 @@ This new PCSrc signal will need to take into account both the prediction made by
 - PCSrcPredE: the previous value of PCSrcPredD computed in the **Decode** stage. This is the signal that will be compared against PCSrcRes in order to determine the validity of the prediction.
 
 The possible branching cases are listed below, along with the changes that must be made to PCSrc, and any flushes that may need to occur with each case.
-- Not a branching instruction: PCSrc -> PCPlus4F
+- Not a branching instruction: PCSrc -> PCPlus4F (Branch in Decode stage)
   - PCPred predicts not taken, PCRes will concur
+- Jump: PCSrc -> PCTargetB (from BTB), FlushD
 - Branch predicted as not taken: PCSrc -> PCPlus4F
   - PCPred will predict not taken, once in execution stage, PCRes agrees
-- Branch predicted as taken: PCSrc -> PCTarget (From BTB), FlushD
+- Branch predicted as taken: PCSrc -> PCTargetB (From BTB), FlushD
   - PCPred predicts taken, once in execution stage, PCRes agrees
-- Branch predicted not taken, but mispredicted: PCSrc -> PCTarget (Execution stage), FlushD, FlushE
+- Branch predicted not taken, but mispredicted: PCSrc -> PCTargetE, FlushD, FlushE
   - PCPred predicts not taken, once in execution stage, PCRes disagrees
 - Branch predicted taken, but mispredicted: PCSrc -> PCPlus4E, FlushD, FlushE
-  - PCPred preicts taken, once in execution stage, PCRes disagrees
+  - PCPred predicts taken, once in execution stage, PCRes disagrees
+
+* Note that all mispredicted cases PCSrc change and flushes will be applied once the branch reaches the execution stage. In the decode stage the behaviour will be the same as if the branch prediction was correct (as can't verify validity of branch prediction in decode stage)
 
 The last case brings up an important issue, the fact that if a branch is predicted as taken, but mispredicted the old PCPlus4 value must be fetched. This means that the value of PCPlus4 must be passed along the pipeline until the execution stage, so that branches mispredicted as taken can be rolled back effectively. This will be dealt with in a seperate section.
 
-Finally, the logic of the branch prediction unit can be described, along with the changes that must be made to the hazard unit to accomadate the need for more flushes. 
+Finally, the logic of the branch prediction unit can be described, along with the changes that must be made to the hazard unit to accomadate the need for more flushes.
+
+This first table describes the behaviour caused by the inital branch prediction:
+| BranchOp | PCSrcPredD | PCSrc   | FlushD |
+|----------|------------|---------|--------|
+|Non-branch|Not Taken   |PCPlus4F |False   |
+|Jump      |Taken       |PCTargetB|True    |
+|Any branch|Taken       |PCTargetB|True    |
+|Any branch|Not Taken   |PCPlus4F |False   |
+
+
+This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
+| PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |
+|------------|----------|---------|--------|--------|
+|Taken       |Taken     |PCPlus4F |False   |False   |
+|Taken       |Not Taken |PCPlus4E |True    |True    |
+|Not Taken   |Taken     |PCTargetE|True    |True    |
+|Not  Taken  |Not Taken |PCPlus4F |False   |False   |
+
+These tables with the proper binary values can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md).
+
+One edge case that must also be considered, is the resolution of PCSrc when there are two branches one after the other. In this case, the way everything has been setup, PCSrc will be driven by two values. As such, once Verilog implementation begins, it must be ensured that the second table result takes precedence over the first IF the PCSrcPredE and PCRes are NOT equal. If they are equal, then the result of the first table should take precedence, as this means that the program should continue as if the prediction was correct.
+
+### **2. GHR**
+
 
 
 ## **Two-Level Branch Predictor Design ():**

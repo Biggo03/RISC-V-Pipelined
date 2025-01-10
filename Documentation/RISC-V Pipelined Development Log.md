@@ -386,13 +386,11 @@ Finally, when a branch is predicted as taken, there must be a way to tell where 
 
 As there are 1024 entries per global state, and 4 global states, there will be 4096 total branch prediction entries, each being two bits. As each entry is indexed using 10 bits, and the target address also needs to be stored, this give a total amount of space taken up as: (1024 * (10 + 32)) + (1024*4*2) = 51200 bits, or 50KiB. This should be acceptable considering the 270KB of available BRAM for the target FPGA, as this leave about 264KB left over for the planned cache system, as well as anything else that may need it.
 
-
-
 ## **Microarchitecture Changes (Dec 31st \- Present):**
 In order to accomodate more advanced branch prediction, the microarchitecture needs to be changed. As of now, the branch decoder only outputs PCSrcE, which updates the PC if a branch is taken. With dynamic branch prediction, will want to update the PC as soon as a B-type instruction is detected in the decode stage, based on the branch predictors current output. This is done using the BTB, which was discussed in the previous section.
 
 To simplify this section, I will list everything that I believe needs to be done in order to implement the branch prediction system described in the previous section. I will then try to explain my plan for how to implement each entry in the list.
-1. Need to change PCNextF mux to allow for actual branch result, or predicted branch result, or PCPlus4F, or PCPlus4E
+1. Need to change PCNextF mux to allow for actual branch result, predicted branch result, PCPlus4F, or PCPlus4E
 2. Need to create a GHR that updates immediately after the result of a branch has been confirmed (in execution stage)
 3. Need to create local branch predictors that only update if they are associated with the current GHR state, and only after the branch has been confirmed (in execution stage)
 4. Need local branch predictors, whose "result" can be fetched based on branch index (in decode stage)
@@ -430,41 +428,43 @@ The possible branching cases are listed below, along with the changes that must 
   - PCPred predicts not taken, once in execution stage, PCRes disagrees
 - Branch predicted taken, but mispredicted: PCSrc -> PCPlus4E, FlushD, FlushE
   - PCPred predicts taken, once in execution stage, PCRes disagrees
+- Branch predicted taken correctly, but PCTargetE != PCTargetB: PCSrc -> PCTargetE, FlushD, FlushE
 
 * Note that all mispredicted cases PCSrc change and flushes will be applied once the branch reaches the execution stage. In the decode stage the behaviour will be the same as if the branch prediction was correct (as can't verify validity of branch prediction in decode stage)
 
 The last case brings up an important issue, the fact that if a branch is predicted as taken, but mispredicted the old PCPlus4 value must be fetched. This means that the value of PCPlus4 must be passed along the pipeline until the execution stage, so that branches mispredicted as taken can be rolled back effectively. This will be dealt with in a seperate section.
 
+There will be an Active signal, which will be set high if there is an active branch in the predictor. This is to allow the branch predictor to tell if there is a branch that must be verified in the execution stage. When ActiveE is high, the second table takes precedence, when ActiveE is low, the first table takes precedence.
+
+Another control signal that must be used in order to resolve the edgecase of a correctly predicted take, but the BTB and Execution stage PCTargets are not equal. This will be called TargetMatch, and will be true (1) when PCTargetB and PCTargetE are equal, and will be false (0) otherwise. This signal will be computed in the execution stage, once both PCTargetB and PCTargetE are valid. This control signal can be used later in order to change entries in the BTB when needed.
+
 Finally, the logic of the branch prediction unit can be described, along with the changes that must be made to the hazard unit to accomadate the need for more flushes.
 
 This first table describes the behaviour caused by the inital branch prediction:
-| BranchOp | PCSrcPredD | PCSrc   | FlushD |
-|----------|------------|---------|--------|
-|Non-branch|Not Taken   |PCPlus4F |False   |
-|Jump      |Taken       |PCTargetB|True    |
-|Any branch|Taken       |PCTargetB|True    |
-|Any branch|Not Taken   |PCPlus4F |False   |
+| BranchOpD | PCSrcPredD | PCSrc   | FlushD | ActiveD |
+|-----------|------------|---------|--------|---------|
+|Non-branch |Not Taken   |PCPlus4F |False   |0        |
+|Jump       |Taken       |PCTargetB|True    |1        |
+|Any branch |Taken       |PCTargetB|True    |1        |
+|Any branch |Not Taken   |PCPlus4F |False   |1        |
 
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
-| PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |
-|------------|----------|---------|--------|--------|
-|Taken       |Taken     |PCPlus4F |False   |False   |
-|Taken       |Not Taken |PCPlus4E |True    |True    |
-|Not Taken   |Taken     |PCTargetE|True    |True    |
-|Not  Taken  |Not Taken |PCPlus4F |False   |False   |
+| TargetMatch | ActiveE | PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |
+|-------------|---------|------------|----------|---------|--------|--------|
+|1            |1        |Taken       |Taken     |DecodeRes|False   |False   |
+|0            |1        |Taken       |Taken     |PCTargetE|True    |True    |
+|N/A          |1        |Taken       |Not Taken |PCPlus4E |True    |True    |
+|N/A          |1        |Not Taken   |Taken     |PCTargetE|True    |True    |
+|N/A          |1        |Not Taken   |Not Taken |DecodeRes|False   |False   |
+|N/A          |0        |N/A         |N/A       |DecodeRes|False   |False   |
 
-These tables with the proper binary values can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md).
+These tables with the proper binary values can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md). It will be listed under the Branch Control Unit section.
 
-One edge case that must also be considered, is the resolution of PCSrc when there are two branches one after the other. In this case, the way everything has been setup, PCSrc will be driven by two values. As such, once Verilog implementation begins, it must be ensured that the second table result takes precedence over the first IF the PCSrcPredE and PCRes are NOT equal. If they are equal, then the result of the first table should take precedence, as this means that the program should continue as if the prediction was correct.
+**Back-to-Back Branches Edgecase:**
+One edge case that must also be considered, is the resolution of PCSrc when there are two branches one after the other. In this case, the way everything has been setup, PCSrc will be driven by two values. As such, once Verilog implementation begins, it must be ensured that the second table result takes precedence over the first IF the PCSrcPredE and PCRes are NOT equal. If they are equal, then the result of the first table should take precedence, as this means that the program should continue as if the prediction was correct. This is reflected in the tables in the DecodeRes result.
 
 ### **2. GHR**
-
-
-
-## **Two-Level Branch Predictor Design ():**
-
-## Verilog Coding ():**
 
 # **Challenges**
 
@@ -520,3 +520,6 @@ The decision to move to synchronous resets was driven by simplicity and the natu
 
 ## **#4 Updated Hazard Handelling (October 4th):**
 The initial hazard handelling implemented in the processor at the point of writing was not suffecient to deal with all RAW hazards that arise in the **memory** stage. This is due to an assumption about the value that was to be written back to a register not holding true for a subset of the implemented instructions. This lead to incorrect values being forwarded from the **memory** stage back to the **execution** stage. A more comprehensive review of this issue can be foun in [Challenges section #2](#2-unexpected-hazards-october-4th).
+
+## **#5 Changing name convention of branch modules (January 7th):**
+Adding branch prediction lead to more complex logic with branching, meaning that more than the branch decoder was needed. Therefore, I decided to change the name of the branch decoder to the Branch Resolution Unit, as it is what resolves if a branch is correct or not. I initially called the module that took in the prediction, as well as the resolved branch result, and ultimately determined the value of PCSrc as the prediction decoder, however, I decided to rename it to the Branch Control Unit. I believe that this makes everything a lot more clear.

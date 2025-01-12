@@ -497,9 +497,18 @@ To solve this, I implemented a write-first register file. If either read registe
 
 This solution was implemented using an always block that checks both read registers. If either matches the write register and writing is enabled, the write data is forwarded; otherwise, the normal read process occurs.
 
+## **#4 PCNextF Extension Changes (BCU creation, PCSrc changes) (January 9th):**
+This entire extension was quite a challenge, as it required a lot of decisions, and the comparison of many trade offs to come to the final decision in how to implement the BCU, and how to handle PCSrc. The first challenge was determining each possible case in how control flow could change, and determining what signal would need to be fed to PCNext in each case. This also required me to figure out what hazard control signals would need to be asserted and when, depending on which value was to be fed to PCNext, and the circumstance in which that value was fed to PCNext. 
+
+Once that was determined, I needed to figure out how to actually implement this control logic. This required rethinking how the branch decoder was used, how to determine PCSrc on correct predictions, incorrect predictions, and mispredictions, as well as the special case in which the BTB and actual target addresses differ. I decided on effectively a 2-stage model, where the first stage deals with standard instructions, and predictions, and the second stage deals with mispredictions, and the previously mentioned special case. This was intuitive to me, as the predictions are assumed available in the decode stage, and the actual results are avialable in the execution stage, naturally giving two stages of logic.
+
+This leads to another one of the challenges, being determining the best course of action considering tradeoffs in complexity, and performance. I decided to determine the speculative branch in the decode stage, as this lead to no need for extra hardware in the fetch stage to determine if a branch or jump is occuring. If the speculative branch occured in the fetch stage, extra hardware would be needed in order to determine if a branch was occuring, and fetch the corrosponding target address from the BTB. That being said, doing this would result in a 0 cycle penalty for correctly predicted taken branches, whereas what was implemented results in a 1 cycle penalty for predicted taken branches.
+
+Initially I decided to go with the less time optimized decode stage speculative branch, but I thought that I'm leaving an entire stall cycle on the table. At the point of writing this, the instruction memory was not synthesized, but looking at the data memory, which will have a very similar structure, there was a lot of extra timinig slack that could be utilized. I also looked at the timing of the fetch stage, and again saw a lot of extra slack. Because of this, it's extremely unlikely that adding extra logic to handle speculative branching in the fetch stage would increase the clock cycle of the design. Note that this decision was made while writing this entry, as I thought more about why I made the decision I did. More specifics about this change can be found in [Changelog Section #7](#7-changed-location-of-speculative-branching-january-11th).
+
 # **Changelog**
 
-## **#1 Change Location of Register File, Control Unit, Branch Decoder, Instruction Memory, and Datam Memory (October 2nd):**
+## **#1 Change Location of Register File, Control Unit, Branch Decoder, Instruction Memory, and Data Memory (October 2nd):**
 Initially I included all of the modules listed above within pipeline stage modules. As I began working on the top level module, I realized how unintuitive it was to have modules used by the whole system within one stages module, especially in the case of the register file. As the register file was within the decode stage, I decided to also include the writeback stage within the decode stage module. This further complicated and confused the design.
 
 The control unit and branch decoder being with the decode and Execute stage respectively doesn't overly complicate their module, as their inputs and outputs are self contained with the module they are within. However, after beginning work on the top level module, I believe that including them as their own modules within the top-level module is the best route of action, as it makes it clear that they are modules that affect the whole pipeline, and not just combinational logic thats used in determining outputs of a given pipeline stage. Not only that, but it allows for the branch decoder to again be included within the control unit, consolidating the main control unit.
@@ -523,3 +532,44 @@ The initial hazard handelling implemented in the processor at the point of writi
 
 ## **#5 Changing name convention of branch modules (January 7th):**
 Adding branch prediction lead to more complex logic with branching, meaning that more than the branch decoder was needed. Therefore, I decided to change the name of the branch decoder to the Branch Resolution Unit, as it is what resolves if a branch is correct or not. I initially called the module that took in the prediction, as well as the resolved branch result, and ultimately determined the value of PCSrc as the prediction decoder, however, I decided to rename it to the Branch Control Unit. I believe that this makes everything a lot more clear.
+
+## **#6 Removal of Active Signal in Branch Prediction (January 11th):**
+When adding the block diagram for the Branch Control Unit and Branch Resolution Unit, I saw that BranchOp could be used rather than the previously used "Active" signal. To make this change slightly more effecient, I decided to change the BranchOp signal such that the jump and branch instructions share a bit. As of writing this, a Branchop value of 01 corrosponds to a branch, and 10 corrosponds to a jump. As non-branching instructions have a BranchOp value of 00, by making branches corrospond to a value of 11, I can use the MSB in order to determine if either a branch or a jump is in the execution stage. This achieves the same effect as the Active signal, without needing additional logic. **Still need to implement this change**
+
+## **#7 Changed location of speculative branching (January 11th):**
+While going over my design decisions for handelling branch prediction, I began to really think about why I decided to specualtively branch in the decode stage rather than the fetch stage. I decided the only real reason I did this was because it was simpler to implement, and would require less work. However, although I believe this can be a valid reason to make a given design decision, I decided it was not worth it to leave 1 clock cycle on the table for correctly predicted branches in this case. I decided this, because I want my processor to have a relatively high performance, without adding excessive complexity. Doing speculative branch prediction in the fetch stage is not excessivley complex, and it will give me even more experience in developing digital systems, which is the purpose of this project, so I decided it was best to do specualtive branching in the fetch stage.
+
+This lead to numerous changes, which will be reflected in the development log, as well as the technical documentation.
+**Still needs to be implemented**
+
+
+
+# **List of Control Signals, and their Location:**
+
+| Control Signal | Main Decoder| Width Decoder | ALU | Immediate Extension| Hazard Unit | BRU | BCU | Branch Predictor |
+|----------------|-------------|---------------|-----|--------------------|-------------|-----|-----|------------------|
+|RegWrite        |█████████████|               |     |                    |             |     |     |                  |
+|ImmSrc          |█████████████|               |     |████████████████████|             |     |     |                  |
+|ALUSrc          |█████████████|               |     |                    |             |     |     |                  |
+|MemWrite        |█████████████|               |     |                    |             |     |     |                  |
+|ResultSrc       |█████████████|               |     |                    |             |     |     |                  |
+|BranchOP        |█████████████|               |     |                    |             |█████|█████|                  |
+|PCSrcPred       |             |               |     |                    |             |     |█████|                  |
+|PCSrcRes        |             |               |     |                    |             |█████|█████|                  |
+|PCSrc           |             |               |     |                    |             |     |█████|                  |
+|ALUOp           |█████████████|               |█████|                    |             |     |     |                  |
+|ALUControl      |█████████████|               |█████|                    |             |     |     |                  |
+|WidthOp         |█████████████|███████████████|     |                    |             |     |     |                  |
+|WidthSrc        |             |███████████████|     |                    |             |     |     |                  |
+|PCBaseSrc       |█████████████|               |     |                    |             |     |     |                  |
+|ForwardAE       |             |               |     |                    |█████████████|     |     |                  |
+|ForwardAE       |             |               |     |                    |█████████████|     |     |                  |
+|ForwardAE       |             |               |     |                    |█████████████|     |     |                  |
+|ForwardBE       |             |               |     |                    |█████████████|     |     |                  |
+|ForwardBE       |             |               |     |                    |█████████████|     |     |                  |
+|ForwardBE       |             |               |     |                    |█████████████|     |     |                  |
+|LoadStall       |             |               |     |                    |█████████████|     |     |                  |
+|StallF          |             |               |     |                    |█████████████|     |     |                  |
+|StallD          |             |               |     |                    |█████████████|     |     |                  |
+|FlushE          |             |               |     |                    |█████████████|     |     |                  |
+|FlushD          |             |               |     |                    |█████████████|     |     |                  |

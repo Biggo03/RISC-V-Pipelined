@@ -397,7 +397,7 @@ I will list everything that I believe needs to be done in order to implement the
 5. BTB starts with no valid or tag bits, and a naive overwrite policy (may change in future)
 6. Need to allow BTB to be updated when branch target address is incorrect (in execution stage)
 7. Need to update hazard control unit to be able to flush the decode, and execute pipeline registers on a misprediction, or when BTB does not have proper target address (in execution stage)
-8. Need all branch predictors, and BTB to be able to be reset to a default value (will be weakly not take for local predictors, and untaken, untaken for GHR)
+8. Need all branch predictors, and GHR to be able to be reset to a default value (will be weakly not take for local predictors, and untaken, untaken for GHR)
 
 ### **1. PCNextF Extension (Branch Control Unit Design):**
 PCNextF is the signal that tells the PC the location of the next instruction to fetch, and the multiplexer that determines this signal is currently controlled by the signal PCSrcE. This needs to be changed in order to allow for all possible branch addresses to be used. The multiplexer must decide between the **Target address calculated in the execution stage**, **PCPlus4**, and the **Predicted target address**. This means that this control signal can no longer be seen as originating from one particular stage, but rather a universal control signal. 
@@ -469,6 +469,8 @@ One edge case that must also be considered, is the resolution of PCSrc when ther
 ### **2. Branch Predictor Design:**
 This block has several components, being the GHR, the local branch predictors, and the BTB. It will also need multiplexers and decoders in order to retrieve the proper data as well.
 
+Note that for both the GHR, and local state machines, I intend on allowing the synthesizer to determine an encoding scheme, as this allows the final design to be synthesized either focusing on performance, area, or power more effectively.
+
 **GHR:**
 
 This will be a simple four state state machine, with one state for each possible combination of the last two branches. The state machines output will be described in the table below:
@@ -486,13 +488,33 @@ It will change states using the **PCRes** signal, as this is always 1 when a bra
 
 **Local Branch Predictors:**
 
-These branch predictors will have 4 states:
-- Strongly Taken
-- Weakly Taken
-- Weakly Not Taken
-- Strongly Taken
+These branch predictors will have 4 states, with the following outputs:
+| State            | Output |
+|------------------|--------|
+|Strongly Taken    |1       |
+|Weakly Taken      |1       |
+|Weakly not Taken  |0       |
+|Strongly not Taken|0       | 
 
+As with the GHR, these should only be updated in the execution stage, after the result of a branch has been confirmed, as such, the state machine will be enabled by **BranchOpE[0]**, and will move one state towards strongly taken when PCRes = 1, and one state towards weakly taken when PCRes = 0.
 
+As there are to be 4096 local branch predictors, there will need to be a buffer storing the outputs of these state machines, indexed by the 10 LSB's of the current address. The indexed predictor will of course be the one that is updated.
+
+All local state machines will be setup to initially be in the weakly taken state.
+
+**Branch Target Buffer (BTB):**
+
+This is a buffer that will simply contains the branch target address associated with a given index, which again will be the 10 LSB's of the current address. This will start out with no valid, or tag bits, as I believe that they would not add much performance benifit, at least without making more major changes to the current microarchitecture.
+
+The TargetMatch signal can be used to replace outdated, or uninitialized entries in the buffer. As a reminder, this signal is 1 whenenver the BTB's branch target address, and actual branch target address are equal, and 0 otherwise. As such, whenever TargetMatch is 0, it will indicate that the newly calcualted address is to replace the old BTB entry.
+
+This naive overwrite policy will be used, as I beleive that more information about the location and density of branches would be needed in order to make a more sophisticated overwrite policy worth the area and effort.
+
+**Overall Design:**
+
+I will make the BTB contain both the local branch predictors current outputs, as well as the BTB's branch target addresses. This is because putting them in two seperate storage buffers would require twice as much decoding hardware, and as both the branch target address, and local predictors results are needed at the same time, and share the same index, it's unlikely doing it in this manner will impact performance.
+
+The signal names for each signal will be decided when doing the Verilog coding, and creating the entries in the Technical documentation. This is because these designs are relatively trivial in comparison to the previously designed branch control unit.
 
 
 # **Challenges**

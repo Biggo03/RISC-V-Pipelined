@@ -189,12 +189,11 @@ The value of PCNext based on PCSrc are given by the following table:
 
 
 This table will describe the result of PCSrc based on BranchOpD, and the branch predictors prediction.
-| Instruction Type | BranchOpD | PCSrcPredD |  PCSrc |
-|------------------|-----------|------------|--------|
-|Non-Branching     |00         |0           |00      |
-|Jumps             |01         |1           |01      |
-|Branch            |11         |1           |01      |
-|Branch            |11         |0           |00      |
+| Instruction Type | Op[6:5] | PCSrcPredF |  PCSrc |
+|------------------|---------|------------|--------|
+|Non-Branching     |00       |0           |00      |
+|Branch/Jump       |11       |1           |01      |
+|Branch            |11       |0           |00      |
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
 | TargetMatch | BranchOpE[1] | PCSrcPredE | PCSrcRes | PCSrc   |

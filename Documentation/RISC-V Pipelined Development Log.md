@@ -443,13 +443,13 @@ Another control signal that must be used in order to resolve the edgecase of a c
 Finally, the logic of the branch prediction unit can be described, along with the changes that must be made to the hazard unit to accomadate the need for more flushes.
 
 This first table describes the behaviour caused by the inital branch prediction:
-| BranchOpD | PCSrcPredF | PCSrc   |
+| Op[6:5]   | PCSrcPredF | PCSrc   |
 |-----------|------------|---------|
 |Non-branch |Not Taken   |PCPlus4F |
-|Jump       |Taken       |PCTargetB|
-|Any branch |Taken       |PCTargetB|
-|Any branch |Not Taken   |PCPlus4F |
+|branch/jump|Taken       |PCTargetB|
+|branch/jump|Not Taken   |PCPlus4F |
 
+Op[6:5] can be used, as based on the opcodes of the RISC-V instruction set I'm using, and all possilbe extensions, branching and jumping instructions are the only ones where the first two bits of the opcode are both 1.
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
 | TargetMatch | BranchOp[1] | PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |

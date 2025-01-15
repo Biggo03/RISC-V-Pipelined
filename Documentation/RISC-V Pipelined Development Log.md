@@ -413,16 +413,18 @@ Each of these possiblities will be discussed later in this section.
 This new PCSrc signal will need to take into account both the prediction made by the branch predictor, as well as the actual resolved branch value. Because of this, two internal signals will be created:
 
 - PCSrcRes: The result produced by the branch decoder, holding the resolved result of a given branch that is currently in the execution stage.
-- PCSrcPredD: The result produced by the branch predictor in the **Decode** stage.
-- PCSrcPredE: the previous value of PCSrcPredD computed in the **Decode** stage. This is the signal that will be compared against PCSrcRes in order to determine the validity of the prediction.
+- PCSrcPredF: The result produced by the branch predictor in the **Fetch** stage.
+- PCSrcPredE: the previous value of PCSrcPredF computed in the **Fetch** stage. This is the signal that will be compared against PCSrcRes in order to determine the validity of the prediction.
+
+Note that I plan on going with the predicted branch in the fetch stage, as to stop a stall that would be required if the predicted branch were to be taken in the decode stage. This means that on a successfully predicted taken branch, no cycles will be lost. However this will require extra hardware in the fetch stage, mainly being comparators to determine if the opcode from the fetched instruction is a branch/jump or not. The fetch of the BTB entry would need to occur regardless at some point, and can be fetched in parallel with the fetch of the instruction word itself from memory. A multiplexer can be used to determine if the predicted BTB address is to be used, using the branch predictor alongside the result of the comparator as its select signal. This should be clear once the changes are made in the microarchitecture diagram.
 
 The possible branching cases are listed below, along with the changes that must be made to PCSrc, and any flushes that may need to occur with each case.
-- Not a branching instruction: PCSrc -> PCPlus4F (Branch in Decode stage)
+- Not a branching instruction: PCSrc -> PCPlus4F
   - PCPred predicts not taken, PCRes will concur
-- Jump: PCSrc -> PCTargetB (from BTB), FlushD
+- Jump: PCSrc -> PCTargetB (from BTB)
 - Branch predicted as not taken: PCSrc -> PCPlus4F
   - PCPred will predict not taken, once in execution stage, PCRes agrees
-- Branch predicted as taken: PCSrc -> PCTargetB (From BTB), FlushD
+- Branch predicted as taken: PCSrc -> PCTargetB (From BTB)
   - PCPred predicts taken, once in execution stage, PCRes agrees
 - Branch predicted not taken, but mispredicted: PCSrc -> PCTargetE, FlushD, FlushE
   - PCPred predicts not taken, once in execution stage, PCRes disagrees
@@ -430,34 +432,34 @@ The possible branching cases are listed below, along with the changes that must 
   - PCPred predicts taken, once in execution stage, PCRes disagrees
 - Branch predicted taken correctly, but PCTargetE != PCTargetB: PCSrc -> PCTargetE, FlushD, FlushE
 
-* Note that all mispredicted cases PCSrc change and flushes will be applied once the branch reaches the execution stage. In the decode stage the behaviour will be the same as if the branch prediction was correct (as can't verify validity of branch prediction in decode stage)
+* Note that all mispredicted cases PCSrc change and flushes will be applied once the branch reaches the execution stage. In the fetch stage the behaviour will be the same as if the branch prediction was correct (as can't verify validity of branch prediction in fetch stage)
 
 The last case brings up an important issue, the fact that if a branch is predicted as taken, but mispredicted the old PCPlus4 value must be fetched. This means that the value of PCPlus4 must be passed along the pipeline until the execution stage, so that branches mispredicted as taken can be rolled back effectively. This will be dealt with in a seperate section.
 
-There will be an Active signal, which will be set high if there is an active branch in the predictor. This is to allow the branch predictor to tell if there is a branch that must be verified in the execution stage. When ActiveE is high, the second table takes precedence, when ActiveE is low, the first table takes precedence.
+The BranchOp signal will be used to determine whether a branch or jump instruction is in the execution stage. This must be known, as if there is a branch or jump prediction there must be checks done to ensure it is valid.
 
 Another control signal that must be used in order to resolve the edgecase of a correctly predicted take, but the BTB and Execution stage PCTargets are not equal. This will be called TargetMatch, and will be true (1) when PCTargetB and PCTargetE are equal, and will be false (0) otherwise. This signal will be computed in the execution stage, once both PCTargetB and PCTargetE are valid. This control signal can be used later in order to change entries in the BTB when needed.
 
 Finally, the logic of the branch prediction unit can be described, along with the changes that must be made to the hazard unit to accomadate the need for more flushes.
 
 This first table describes the behaviour caused by the inital branch prediction:
-| BranchOpD | PCSrcPredD | PCSrc   | FlushD | ActiveD |
-|-----------|------------|---------|--------|---------|
-|Non-branch |Not Taken   |PCPlus4F |False   |0        |
-|Jump       |Taken       |PCTargetB|True    |1        |
-|Any branch |Taken       |PCTargetB|True    |1        |
-|Any branch |Not Taken   |PCPlus4F |False   |1        |
+| BranchOpD | PCSrcPredF | PCSrc   |
+|-----------|------------|---------|
+|Non-branch |Not Taken   |PCPlus4F |
+|Jump       |Taken       |PCTargetB|
+|Any branch |Taken       |PCTargetB|
+|Any branch |Not Taken   |PCPlus4F |
 
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
-| TargetMatch | ActiveE | PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |
-|-------------|---------|------------|----------|---------|--------|--------|
-|1            |1        |Taken       |Taken     |DecodeRes|False   |False   |
-|0            |1        |Taken       |Taken     |PCTargetE|True    |True    |
-|N/A          |1        |Taken       |Not Taken |PCPlus4E |True    |True    |
-|N/A          |1        |Not Taken   |Taken     |PCTargetE|True    |True    |
-|N/A          |1        |Not Taken   |Not Taken |DecodeRes|False   |False   |
-|N/A          |0        |N/A         |N/A       |DecodeRes|False   |False   |
+| TargetMatch | BranchOp[1] | PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |
+|-------------|-------------|------------|----------|---------|--------|--------|
+|1            |1            |Taken       |Taken     |DecodeRes|False   |False   |
+|0            |1            |Taken       |Taken     |PCTargetE|True    |True    |
+|N/A          |1            |Taken       |Not Taken |PCPlus4E |True    |True    |
+|N/A          |1            |Not Taken   |Taken     |PCTargetE|True    |True    |
+|N/A          |1            |Not Taken   |Not Taken |DecodeRes|False   |False   |
+|N/A          |0            |N/A         |N/A       |DecodeRes|False   |False   |
 
 These tables with the proper binary values can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md). It will be listed under the Branch Control Unit section.
 
@@ -534,13 +536,12 @@ The initial hazard handelling implemented in the processor at the point of writi
 Adding branch prediction lead to more complex logic with branching, meaning that more than the branch decoder was needed. Therefore, I decided to change the name of the branch decoder to the Branch Resolution Unit, as it is what resolves if a branch is correct or not. I initially called the module that took in the prediction, as well as the resolved branch result, and ultimately determined the value of PCSrc as the prediction decoder, however, I decided to rename it to the Branch Control Unit. I believe that this makes everything a lot more clear.
 
 ## **#6 Removal of Active Signal in Branch Prediction (January 11th):**
-When adding the block diagram for the Branch Control Unit and Branch Resolution Unit, I saw that BranchOp could be used rather than the previously used "Active" signal. To make this change slightly more effecient, I decided to change the BranchOp signal such that the jump and branch instructions share a bit. As of writing this, a Branchop value of 01 corrosponds to a branch, and 10 corrosponds to a jump. As non-branching instructions have a BranchOp value of 00, by making branches corrospond to a value of 11, I can use the MSB in order to determine if either a branch or a jump is in the execution stage. This achieves the same effect as the Active signal, without needing additional logic. **Still need to implement this change**
+When adding the block diagram for the Branch Control Unit and Branch Resolution Unit, I saw that BranchOp could be used rather than the previously used "Active" signal. To make this change slightly more effecient, I decided to change the BranchOp signal such that the jump and branch instructions share a bit. As of writing this, a Branchop value of 01 corrosponds to a branch, and 10 corrosponds to a jump. As non-branching instructions have a BranchOp value of 00, by making branches corrospond to a value of 11, I can use the MSB in order to determine if either a branch or a jump is in the execution stage. This achieves the same effect as the Active signal, without needing additional logic.
 
 ## **#7 Changed location of speculative branching (January 11th):**
 While going over my design decisions for handelling branch prediction, I began to really think about why I decided to specualtively branch in the decode stage rather than the fetch stage. I decided the only real reason I did this was because it was simpler to implement, and would require less work. However, although I believe this can be a valid reason to make a given design decision, I decided it was not worth it to leave 1 clock cycle on the table for correctly predicted branches in this case. I decided this, because I want my processor to have a relatively high performance, without adding excessive complexity. Doing speculative branch prediction in the fetch stage is not excessivley complex, and it will give me even more experience in developing digital systems, which is the purpose of this project, so I decided it was best to do specualtive branching in the fetch stage.
 
-This lead to numerous changes, which will be reflected in the development log, as well as the technical documentation.
-**Still needs to be implemented**
+This lead to numerous changes, which have been reflected in the development log, as well as the technical documentation. It will also require more changes be made to the microarchitecture diagram.
 
 
 

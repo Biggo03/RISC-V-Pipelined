@@ -387,19 +387,19 @@ Finally, when a branch is predicted as taken, there must be a way to tell where 
 As there are 1024 entries per global state, and 4 global states, there will be 4096 total branch prediction entries, each being two bits. As each entry is indexed using 10 bits, and the target address also needs to be stored, this give a total amount of space taken up as: (1024 * (10 + 32)) + (1024*4*2) = 51200 bits, or 50KiB. This should be acceptable considering the 270KB of available BRAM for the target FPGA, as this leave about 264KB left over for the planned cache system, as well as anything else that may need it.
 
 ## **Microarchitecture Changes (Dec 31st \- Present):**
-In order to accomodate more advanced branch prediction, the microarchitecture needs to be changed. As of now, the branch decoder only outputs PCSrcE, which updates the PC if a branch is taken. With dynamic branch prediction, will want to update the PC as soon as a B-type instruction is detected in the decode stage, based on the branch predictors current output. This is done using the BTB, which was discussed in the previous section.
+In order to accomodate more advanced branch prediction, the microarchitecture needs to be changed. As of now, the branch decoder only outputs PCSrcE, which updates the PC if a branch is taken. With dynamic branch prediction, will want to update the PC as soon as a B-type instruction is detected in the fetch stage, based on the branch predictors current output. This is done using the BTB, which was discussed in the previous section.
 
-To simplify this section, I will list everything that I believe needs to be done in order to implement the branch prediction system described in the previous section. I will then try to explain my plan for how to implement each entry in the list.
+I will list everything that I believe needs to be done in order to implement the branch prediction system described in the previous section. I will then go over the design of the two major components needed to implement the system, being the branch control unit, and the branch predictor itself. This list is here for me to reference to makes sure all requirements are being met.
 1. Need to change PCNextF mux to allow for actual branch result, predicted branch result, PCPlus4F, or PCPlus4E
 2. Need to create a GHR that updates immediately after the result of a branch has been confirmed (in execution stage)
 3. Need to create local branch predictors that only update if they are associated with the current GHR state, and only after the branch has been confirmed (in execution stage)
-4. Need local branch predictors, whose "result" can be fetched based on branch index (in decode stage)
+4. Need local branch predictors, whose "result" can be fetched based on branch index (in fetch stage)
 5. BTB starts with no valid or tag bits, and a naive overwrite policy (may change in future)
 6. Need to allow BTB to be updated when branch target address is incorrect (in execution stage)
 7. Need to update hazard control unit to be able to flush the decode, and execute pipeline registers on a misprediction, or when BTB does not have proper target address (in execution stage)
 8. Need all branch predictors, and BTB to be able to be reset to a default value (will be weakly not take for local predictors, and untaken, untaken for GHR)
 
-### **1 PCNextF extension**
+### **1. PCNextF Extension (Branch Control Unit Design):**
 PCNextF is the signal that tells the PC the location of the next instruction to fetch, and the multiplexer that determines this signal is currently controlled by the signal PCSrcE. This needs to be changed in order to allow for all possible branch addresses to be used. The multiplexer must decide between the **Target address calculated in the execution stage**, **PCPlus4**, and the **Predicted target address**. This means that this control signal can no longer be seen as originating from one particular stage, but rather a universal control signal. 
 
 The new control signal will simply be called PCSrc, and will be two bits to accomodate a 4 to 1 multiplexer. It will be 4 to 1, as there are 4 possiblities that the PC may need to take on:
@@ -452,21 +452,48 @@ This first table describes the behaviour caused by the inital branch prediction:
 Op[6:5] can be used, as based on the opcodes of the RISC-V instruction set I'm using, and all possilbe extensions, branching and jumping instructions are the only ones where the first two bits of the opcode are both 1.
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
-| TargetMatch | BranchOp[1] | PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |
-|-------------|-------------|------------|----------|---------|--------|--------|
-|1            |1            |Taken       |Taken     |DecodeRes|False   |False   |
-|0            |1            |Taken       |Taken     |PCTargetE|True    |True    |
-|N/A          |1            |Taken       |Not Taken |PCPlus4E |True    |True    |
-|N/A          |1            |Not Taken   |Taken     |PCTargetE|True    |True    |
-|N/A          |1            |Not Taken   |Not Taken |DecodeRes|False   |False   |
-|N/A          |0            |N/A         |N/A       |DecodeRes|False   |False   |
+| TargetMatch | BranchOpE[0] | PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |
+|-------------|--------------|------------|----------|---------|--------|--------|
+|1            |1             |Taken       |Taken     |DecodeRes|False   |False   |
+|0            |1             |Taken       |Taken     |PCTargetE|True    |True    |
+|N/A          |1             |Taken       |Not Taken |PCPlus4E |True    |True    |
+|N/A          |1             |Not Taken   |Taken     |PCTargetE|True    |True    |
+|N/A          |1             |Not Taken   |Not Taken |DecodeRes|False   |False   |
+|N/A          |0             |N/A         |N/A       |DecodeRes|False   |False   |
 
 These tables with the proper binary values can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md). It will be listed under the Branch Control Unit section.
 
 **Back-to-Back Branches Edgecase:**
 One edge case that must also be considered, is the resolution of PCSrc when there are two branches one after the other. In this case, the way everything has been setup, PCSrc will be driven by two values. As such, once Verilog implementation begins, it must be ensured that the second table result takes precedence over the first IF the PCSrcPredE and PCRes are NOT equal. If they are equal, then the result of the first table should take precedence, as this means that the program should continue as if the prediction was correct. This is reflected in the tables in the DecodeRes result.
 
-### **2. GHR**
+### **2. Branch Predictor Design:**
+This block has several components, being the GHR, the local branch predictors, and the BTB. It will also need multiplexers and decoders in order to retrieve the proper data as well.
+
+**GHR:**
+
+This will be a simple four state state machine, with one state for each possible combination of the last two branches. The state machines output will be described in the table below:
+
+| Last Branches  | Output |
+|----------------|--------|
+|untaken, untaken|00      |
+|untaken, taken  |01      |
+|taken, untaken  |10      |
+|taken, taken    |11      | 
+
+The outputs will be used in order to determine which of the local branch predictors are to be used. Note that this is effectively a shift register.
+
+It will change states using the **PCRes** signal, as this is always 1 when a branch is taken, and 0 otherwise. It should also only change when a branch instruction is in the execution stage. As such, this state machine will be enabled by **BranchOpE[0]**
+
+**Local Branch Predictors:**
+
+These branch predictors will have 4 states:
+- Strongly Taken
+- Weakly Taken
+- Weakly Not Taken
+- Strongly Taken
+
+
+
 
 # **Challenges**
 
@@ -536,7 +563,7 @@ The initial hazard handelling implemented in the processor at the point of writi
 Adding branch prediction lead to more complex logic with branching, meaning that more than the branch decoder was needed. Therefore, I decided to change the name of the branch decoder to the Branch Resolution Unit, as it is what resolves if a branch is correct or not. I initially called the module that took in the prediction, as well as the resolved branch result, and ultimately determined the value of PCSrc as the prediction decoder, however, I decided to rename it to the Branch Control Unit. I believe that this makes everything a lot more clear.
 
 ## **#6 Removal of Active Signal in Branch Prediction (January 11th):**
-When adding the block diagram for the Branch Control Unit and Branch Resolution Unit, I saw that BranchOp could be used rather than the previously used "Active" signal. To make this change slightly more effecient, I decided to change the BranchOp signal such that the jump and branch instructions share a bit. As of writing this, a Branchop value of 01 corrosponds to a branch, and 10 corrosponds to a jump. As non-branching instructions have a BranchOp value of 00, by making branches corrospond to a value of 11, I can use the MSB in order to determine if either a branch or a jump is in the execution stage. This achieves the same effect as the Active signal, without needing additional logic.
+When adding the block diagram for the Branch Control Unit and Branch Resolution Unit, I saw that BranchOp could be used rather than the previously used "Active" signal. To make this change slightly more effecient, I decided to change the BranchOp signal such that the jump and branch instructions share a bit. As of writing this, a Branchop value of 10 corrosponds to a branch, and 01 corrosponds to a jump. As non-branching instructions have a BranchOp value of 00, by making branches corrospond to a value of 11, I can use the LSB in order to determine if either a branch or a jump is in the execution stage. This achieves the same effect as the Active signal, without needing additional logic.
 
 ## **#7 Changed location of speculative branching (January 11th):**
 While going over my design decisions for handelling branch prediction, I began to really think about why I decided to specualtively branch in the decode stage rather than the fetch stage. I decided the only real reason I did this was because it was simpler to implement, and would require less work. However, although I believe this can be a valid reason to make a given design decision, I decided it was not worth it to leave 1 clock cycle on the table for correctly predicted branches in this case. I decided this, because I want my processor to have a relatively high performance, without adding excessive complexity. Doing speculative branch prediction in the fetch stage is not excessivley complex, and it will give me even more experience in developing digital systems, which is the purpose of this project, so I decided it was best to do specualtive branching in the fetch stage.

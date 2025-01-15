@@ -161,7 +161,7 @@ I decided to implement an extra decoder in order to deal with branching logic. T
 
 Also note that as this only actively uses signals from the execution stage, the signals in the following truth table will be named accordingly.
 
-The truth table for determining PCRes, as well as the flag operation that is performed is described as follows:
+The truth table for determining PCSrcRes, as well as the flag operation that is performed is described as follows:
 
 | Instructions             | BranchOpE | funct3E | Flag Operation | PCSrcRes |
 |--------------------------|-----------|---------|----------------|----------|

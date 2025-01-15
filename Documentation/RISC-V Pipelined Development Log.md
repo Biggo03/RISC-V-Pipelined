@@ -420,17 +420,17 @@ Note that I plan on going with the predicted branch in the fetch stage, as to st
 
 The possible branching cases are listed below, along with the changes that must be made to PCSrc, and any flushes that may need to occur with each case.
 - Not a branching instruction: PCSrc -> PCPlus4F
-  - PCPred predicts not taken, PCRes will concur
-- Jump: PCSrc -> PCTargetB (from BTB)
+  - PCSrcPred predicts not taken, PCSrcRes will concur
+- Jump: PCSrc -> PredPCTargetF (from BTB)
 - Branch predicted as not taken: PCSrc -> PCPlus4F
-  - PCPred will predict not taken, once in execution stage, PCRes agrees
-- Branch predicted as taken: PCSrc -> PCTargetB (From BTB)
-  - PCPred predicts taken, once in execution stage, PCRes agrees
+  - PCSrcPred will predict not taken, once in execution stage, PCSrcRes agrees
+- Branch predicted as taken: PCSrc -> PredPCTargetF (From BTB)
+  - PCSrcPred predicts taken, once in execution stage, PCSrcRes agrees
 - Branch predicted not taken, but mispredicted: PCSrc -> PCTargetE, FlushD, FlushE
-  - PCPred predicts not taken, once in execution stage, PCRes disagrees
+  - PCSrcPred predicts not taken, once in execution stage, PCSrcRes disagrees
 - Branch predicted taken, but mispredicted: PCSrc -> PCPlus4E, FlushD, FlushE
-  - PCPred predicts taken, once in execution stage, PCRes disagrees
-- Branch predicted taken correctly, but PCTargetE != PCTargetB: PCSrc -> PCTargetE, FlushD, FlushE
+  - PCSrcPred predicts taken, once in execution stage, PCSrcRes disagrees
+- Branch predicted taken correctly, but PCTargetE != PredPCTargetF: PCSrc -> PCTargetE, FlushD, FlushE
 
 * Note that all mispredicted cases PCSrc change and flushes will be applied once the branch reaches the execution stage. In the fetch stage the behaviour will be the same as if the branch prediction was correct (as can't verify validity of branch prediction in fetch stage)
 
@@ -438,16 +438,16 @@ The last case brings up an important issue, the fact that if a branch is predict
 
 The BranchOp signal will be used to determine whether a branch or jump instruction is in the execution stage. This must be known, as if there is a branch or jump prediction there must be checks done to ensure it is valid.
 
-Another control signal that must be used in order to resolve the edgecase of a correctly predicted take, but the BTB and Execution stage PCTargets are not equal. This will be called TargetMatch, and will be true (1) when PCTargetB and PCTargetE are equal, and will be false (0) otherwise. This signal will be computed in the execution stage, once both PCTargetB and PCTargetE are valid. This control signal can be used later in order to change entries in the BTB when needed.
+Another control signal that must be used in order to resolve the edgecase of a correctly predicted take, but the BTB and Execution stage PCTargets are not equal. This will be called TargetMatch, and will be true (1) when PredPCTargetE and PCTargetE are equal, and will be false (0) otherwise. This signal will be computed in the execution stage, once both PredPCTargetE and PCTargetE are valid. This control signal can be used later in order to change entries in the BTB when needed.
 
 Finally, the logic of the branch prediction unit can be described, along with the changes that must be made to the hazard unit to accomadate the need for more flushes.
 
 This first table describes the behaviour caused by the inital branch prediction:
-| Op[6:5]   | PCSrcPredF | PCSrc   |
-|-----------|------------|---------|
-|Non-branch |Not Taken   |PCPlus4F |
-|branch/jump|Taken       |PCTargetB|
-|branch/jump|Not Taken   |PCPlus4F |
+| Op[6:5]   | PCSrcPredF | PCSrc    |
+|-----------|------------|----------|
+|Non-branch |Not Taken   |PCPlus4F  |
+|branch/jump|Taken       |PredPCTargetF|
+|branch/jump|Not Taken   |PCPlus4F  |
 
 Op[6:5] can be used, as based on the opcodes of the RISC-V instruction set I'm using, and all possilbe extensions, branching and jumping instructions are the only ones where the first two bits of the opcode are both 1.
 
@@ -464,7 +464,7 @@ This second table describes the behaviour based on the comparison of the predict
 These tables with the proper binary values can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md). It will be listed under the Branch Control Unit section.
 
 **Back-to-Back Branches Edgecase:**
-One edge case that must also be considered, is the resolution of PCSrc when there are two branches one after the other. In this case, the way everything has been setup, PCSrc will be driven by two values. As such, once Verilog implementation begins, it must be ensured that the second table result takes precedence over the first IF the PCSrcPredE and PCRes are NOT equal. If they are equal, then the result of the first table should take precedence, as this means that the program should continue as if the prediction was correct. This is reflected in the tables in the DecodeRes result.
+One edge case that must also be considered, is the resolution of PCSrc when there are two branches one after the other. In this case, the way everything has been setup, PCSrc will be driven by two values. As such, once Verilog implementation begins, it must be ensured that the second table result takes precedence over the first IF the PCSrcPredE and PCSrcRes are NOT equal. If they are equal, then the result of the first table should take precedence, as this means that the program should continue as if the prediction was correct. This is reflected in the tables in the DecodeRes result.
 
 ### **2. Branch Predictor Design:**
 This block has several components, being the GHR, the local branch predictors, and the BTB. It will also need multiplexers and decoders in order to retrieve the proper data as well.
@@ -473,30 +473,30 @@ Note that for both the GHR, and local state machines, I intend on allowing the s
 
 **GHR:**
 
-This will be a simple four state state machine, with one state for each possible combination of the last two branches. The state machines output will be described in the table below:
+This will be a simple four state state machine, with one state for each possible combination of the last two branches. The output of this state machine will be a signal called LocalSrc, as this is used to select the local branch predictor. The state machines output will be described in the table below:
 
-| Last Branches  | Output |
-|----------------|--------|
-|untaken, untaken|00      |
-|untaken, taken  |01      |
-|taken, untaken  |10      |
-|taken, taken    |11      | 
+| Last Branches  | LocalSrc |
+|----------------|----------|
+|untaken, untaken|00        |
+|untaken, taken  |01        |
+|taken, untaken  |10        |
+|taken, taken    |11        | 
 
 The outputs will be used in order to determine which of the local branch predictors are to be used. Note that this is effectively a shift register.
 
-It will change states using the **PCRes** signal, as this is always 1 when a branch is taken, and 0 otherwise. It should also only change when a branch instruction is in the execution stage. As such, this state machine will be enabled by **BranchOpE[0]**
+It will change states using the **PCSrcRes** signal, as this is always 1 when a branch is taken, and 0 otherwise. It should also only change when a branch instruction is in the execution stage. As such, this state machine will be enabled by **BranchOpE[0]**
 
 **Local Branch Predictors:**
 
-These branch predictors will have 4 states, with the following outputs:
-| State            | Output |
-|------------------|--------|
-|Strongly Taken    |1       |
-|Weakly Taken      |1       |
-|Weakly not Taken  |0       |
-|Strongly not Taken|0       | 
+These branch predictors will have 4 states, and their outputs will be called LocalPred. The state machines outputs will be as follows:
+| State            | PCPredF |
+|------------------|---------|
+|Strongly Taken    |1        |
+|Weakly Taken      |1        |
+|Weakly not Taken  |0        |
+|Strongly not Taken|0        | 
 
-As with the GHR, these should only be updated in the execution stage, after the result of a branch has been confirmed, as such, the state machine will be enabled by **BranchOpE[0]**, and will move one state towards strongly taken when PCRes = 1, and one state towards weakly taken when PCRes = 0.
+As with the GHR, these should only be updated in the execution stage, after the result of a branch has been confirmed, as such, the state machine will be enabled by **BranchOpE[0]**, and will move one state towards strongly taken when PCSrcRes = 1, and one state towards weakly taken when PCSrcRes = 0.
 
 As there are to be 4096 local branch predictors, there will need to be a buffer storing the outputs of these state machines, indexed by the 10 LSB's of the current address. The indexed predictor will of course be the one that is updated.
 
@@ -514,8 +514,26 @@ This naive overwrite policy will be used, as I beleive that more information abo
 
 I will make the BTB contain both the local branch predictors current outputs, as well as the BTB's branch target addresses. This is because putting them in two seperate storage buffers would require twice as much decoding hardware, and as both the branch target address, and local predictors results are needed at the same time, and share the same index, it's unlikely doing it in this manner will impact performance.
 
-The signal names for each signal will be decided when doing the Verilog coding, and creating the entries in the Technical documentation. This is because these designs are relatively trivial in comparison to the previously designed branch control unit.
+Therfore there will be two top level modules, the GHR, and the Branching Buffer, each with their input signals and outputs described below:
 
+**GHR**
+| Signal      | Direction | Description |
+|-------------|-----------|-------------|
+|BranchOpE[0] |Input      |Enables the state machine|
+|PCSrcRes     |Input      |Determines the state transition to occur on the next clock cycle|
+|LocalSrc     |Output     |Represents the current state of the machine|
+
+**Branching Buffer**
+| Signal      | Direction | Description |
+|-------------|-----------|-------------|
+|PCF[9:0]     |Input      |The current index to be fetched|
+|TargetMatch  |Input      |Determines if the current PredPCTargetF and PCTargetE are equal|
+|BranchOpE[0] |Input      |Enables the state machine|
+|LocalSrc     |Input      |Determines which local state machine at the current index is to be used|
+|PCSrcPred    |Output     |The prediction of the current indexes branching behaviour|
+|PredPCTargetF|Output     |The predicted branch target address of the current index|
+
+Note that PredPCTargetF's suffix is to show that the result is coming from the fetch stage. This value will be passed along the pipeline to the execution stage, where PredPCTargetE will be used to determine TargetMatch.
 
 # **Challenges**
 

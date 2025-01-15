@@ -38,7 +38,7 @@ module branchdecoder(input [2:0] funct3,
             2'b01: TempPCSrc = 1'b1; //Jumping instructions
             
             //B-type instructions
-            2'b10: begin
+            2'b11: begin
                 
                 //Type of branch dependant on funct3
                 case(funct3)

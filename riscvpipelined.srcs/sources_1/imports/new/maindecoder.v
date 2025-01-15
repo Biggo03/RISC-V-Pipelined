@@ -43,7 +43,7 @@ module maindecoder(input [6:0] op,
             7'b0010011: controls = 15'b1_000_1_0_000_00_10_0_x; //I-Type ALU Instructions
             7'b0000011: controls = 15'b1_000_1_0_100_00_00_1_x; //I-Type Load Instructions
             7'b0100011: controls = 15'b0_001_1_1_0xx_00_00_1_x; //S-Type Instructions
-            7'b1100011: controls = 15'b0_010_0_0_0xx_10_01_x_0; //B-Type Instructions
+            7'b1100011: controls = 15'b0_010_0_0_0xx_11_01_x_0; //B-Type Instructions
             7'b1101111: controls = 15'b1_011_x_0_010_01_xx_0_0; //jal
             7'b1100111: controls = 15'b1_000_x_0_010_01_xx_0_1; //jalr
             7'b0110111: controls = 15'b1_100_x_0_011_00_xx_0_x; //lui

@@ -386,7 +386,7 @@ Finally, when a branch is predicted as taken, there must be a way to tell where 
 
 As there are 1024 entries per global state, and 4 global states, there will be 4096 total branch prediction entries, each being two bits. As each entry is indexed using 10 bits, and the target address also needs to be stored, this give a total amount of space taken up as: (1024 * (10 + 32)) + (1024*4*2) = 51200 bits, or 50KiB. This should be acceptable considering the 270KB of available BRAM for the target FPGA, as this leave about 264KB left over for the planned cache system, as well as anything else that may need it.
 
-## **Microarchitecture Changes (Dec 31st \- Present):**
+## **Branching Logic Desin (Dec 31st \- January 15th):**
 In order to accomodate more advanced branch prediction, the microarchitecture needs to be changed. As of now, the branch decoder only outputs PCSrcE, which updates the PC if a branch is taken. With dynamic branch prediction, will want to update the PC as soon as a B-type instruction is detected in the fetch stage, based on the branch predictors current output. This is done using the BTB, which was discussed in the previous section.
 
 I will list everything that I believe needs to be done in order to implement the branch prediction system described in the previous section. I will then go over the design of the two major components needed to implement the system, being the branch control unit, and the branch predictor itself. This list is here for me to reference to makes sure all requirements are being met.
@@ -486,6 +486,14 @@ The outputs will be used in order to determine which of the local branch predict
 
 It will change states using the **PCSrcRes** signal, as this is always 1 when a branch is taken, and 0 otherwise. It should also only change when a branch instruction is in the execution stage. As such, this state machine will be enabled by **BranchOpE[0]**
 
+**Branch Target Buffer (BTB):**
+
+This is a buffer that will simply contains the branch target address associated with a given index, which again will be the 10 LSB's of the current address. This will start out with no valid, or tag bits, as I believe that they would not add much performance benifit, at least without making more major changes to the current microarchitecture.
+
+The TargetMatch signal can be used to replace outdated, or uninitialized entries in the buffer. As a reminder, this signal is 1 whenenver the BTB's branch target address, and actual branch target address are equal, and 0 otherwise. As such, whenever TargetMatch is 0, it will indicate that the newly calcualted address is to replace the old BTB entry.
+
+This naive overwrite policy will be used, as I beleive that more information about the location and density of branches would be needed in order to make a more sophisticated overwrite policy worth the area and effort.
+
 **Local Branch Predictors:**
 
 These branch predictors will have 4 states, and their outputs will be called LocalPred. The state machines outputs will be as follows:
@@ -498,17 +506,13 @@ These branch predictors will have 4 states, and their outputs will be called Loc
 
 As with the GHR, these should only be updated in the execution stage, after the result of a branch has been confirmed, as such, the state machine will be enabled by **BranchOpE[0]**, and will move one state towards strongly taken when PCSrcRes = 1, and one state towards weakly taken when PCSrcRes = 0.
 
+When TargetMatch indicates a mismatch between the predicted branch target address, and the actual branch target address, it will reset the current local branch predictor to the weakly not taken state.
+
 As there are to be 4096 local branch predictors, there will need to be a buffer storing the outputs of these state machines, indexed by the 10 LSB's of the current address. The indexed predictor will of course be the one that is updated.
 
 All local state machines will be setup to initially be in the weakly untaken state. This allows for a quick switch to the taken state if branches do occur, but other than that, this is a relatively arbitrary decision.
 
-**Branch Target Buffer (BTB):**
-
-This is a buffer that will simply contains the branch target address associated with a given index, which again will be the 10 LSB's of the current address. This will start out with no valid, or tag bits, as I believe that they would not add much performance benifit, at least without making more major changes to the current microarchitecture.
-
-The TargetMatch signal can be used to replace outdated, or uninitialized entries in the buffer. As a reminder, this signal is 1 whenenver the BTB's branch target address, and actual branch target address are equal, and 0 otherwise. As such, whenever TargetMatch is 0, it will indicate that the newly calcualted address is to replace the old BTB entry.
-
-This naive overwrite policy will be used, as I beleive that more information about the location and density of branches would be needed in order to make a more sophisticated overwrite policy worth the area and effort.
+When TargetMatch is true, the local state machine will be reset to its initial state (weakly untaken). This is because the new branch is likely unrelated to the previously stored branch. Resetting to a weakly taken state will reduce the odds of an extra misprediction in the case of a loop. If a predicted strongly not taken then a loop will take two iterations to get to a correct prediction, therefore ensuring it is in a weak state can reduce the number of mispredictions, as it will only take one iteration to get to the correct state.
 
 **Overall Design:**
 
@@ -527,7 +531,7 @@ Therfore there will be two top level modules, the GHR, and the Branching Buffer,
 | Signal      | Direction | Description |
 |-------------|-----------|-------------|
 |PCF[9:0]     |Input      |The current index to be fetched|
-|TargetMatch  |Input      |Determines if the current PredPCTargetF and PCTargetE are equal|
+|TargetMatch  |Input      |Determines if the current PredPCTargetF and PCTargetE are equal, resets local predictors to weakly taken state|
 |BranchOpE[0] |Input      |Enables the state machine|
 |LocalSrc     |Input      |Determines which local state machine at the current index is to be used|
 |PCTargetE    |Input      |Replaces the branch target address of the current index if there is a mismatch|
@@ -535,6 +539,26 @@ Therfore there will be two top level modules, the GHR, and the Branching Buffer,
 |PredPCTargetF|Output     |The predicted branch target address of the current index|
 
 Note that PredPCTargetF's suffix is to show that the result is coming from the fetch stage. This value will be passed along the pipeline to the execution stage, where PredPCTargetE will be used to determine TargetMatch.
+
+## Microarchitecture changes (January 15th \- Present):**
+
+The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, and the Control Unit.
+
+### Control Unit Changes (January 15th \- Present):**
+
+Signals no longer needed:
+- PCSrcE
+
+New signals needed:
+- PCSrc
+  - Effectively a replacement for PCSrcE considering it's determined using signals from multiple stages.
+- InstrF[6:5]
+  - This is the instructions OpCode, used for determining if the current instruction is a branch or jump.
+- PCF[9:0]
+ - These are the bits used for indexing the Branch Target Buffer, and the local branch predictors.
+- TargetMatch
+  - Indicates whether or not the predicted branch target and actual branch target for a given branch are equal.
+  - Used for BTB target address replacement
 
 # **Challenges**
 

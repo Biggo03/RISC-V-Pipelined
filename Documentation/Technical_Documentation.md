@@ -188,12 +188,12 @@ The value of PCNext based on PCSrc are given by the following table:
 |PCPlus4E |Rollback sequential fetch     |10    |
 
 
-This table will describe the result of PCSrc based on BranchOpD, and the branch predictors prediction.
-| Instruction Type | Op[6:5] | PCSrcPredF |  PCSrc |
-|------------------|---------|------------|--------|
-|Non-Branching     |10/00/01 |0           |00      |
-|Branch/Jump       |11       |1           |01      |
-|Branch            |11       |0           |00      |
+This table will describe the result of PCSrc based on OpF[6:5], and the branch predictors prediction.
+| Instruction Type | OpF[6:5] | PCSrcPredF |  PCSrc |
+|------------------|----------|------------|--------|
+|Non-Branching     |10/00/01  |0           |00      |
+|Branch/Jump       |11        |1           |01      |
+|Branch            |11        |0           |00      |
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
 | TargetMatch | BranchOpE[0] | PCSrcPredE | PCSrcRes | PCSrc   |
@@ -252,15 +252,15 @@ The Branching Buffer is updated in the **Execute stage** when the branch result 
 ### **Branching Buffer: Detailed Design**
 
 #### **Inputs and Outputs**
-| Signal         | Direction | Description                                                                 |
-|----------------|-----------|-----------------------------------------------------------------------------|
-| `PCF[9:0]`     | Input      | Indexes the buffer to retrieve prediction data for the current instruction. |
+| Signal         | Direction  | Description                                                                 |
+|----------------|------------|-----------------------------------------------------------------------------|
+| `PCF[9:0]`     | Input      | Indexes the buffer to retrieve prediction data for the current instruction.|
 | `TargetMatch`  | Input      | Indicates if the predicted and resolved branch targets match.              |
 | `BranchOpE[0]` | Input      | Enables updates to the buffer in the Execute stage.                        |
-| `PCTargetE`    | Input      | Resolved branch target address for the current branch.                     |
+| `PCTargetE`    | Input      | Resolved branch target address for the current branch (execute stage).     |
 | `LocalSrc`     | Input      | Determines which local predictor state machine to access.                  |
-| `PCSrcPred`    | Output     | Predicted branch decision for the current instruction.                     |
-| `PredPCTargetF`| Output     | Predicted branch target address for the current instruction.               |
+| `PCSrcPred`    | Output     | Predicted branch decision for the current instruction (fetch stage).       |
+| `PredPCTargetF`| Output     | Predicted branch target address for the current instruction (fetch stage). |
 
 #### **Update Logic**
 Updates to the Branching Buffer occur in the **Execute stage**, gated by `BranchOpE[0]`. The following rules apply:
@@ -269,8 +269,6 @@ Updates to the Branching Buffer occur in the **Execute stage**, gated by `Branch
 
 #### **Initial State**
 - All buffer entries are initialized to **weakly untaken** for local predictors and a default branch target of 0.
-
-
 
 ## Immediate Extension
 The immediate extension unit needs to extend immediates depending on the type of instruction the immediate recieves. The type of extension is controlled by the signal ImmSrc. Note that this extension unit takes advantage of the fact that the most significant bit of all immediates is always held in bit 31 of instr. The following table describes the extension units behaviour.

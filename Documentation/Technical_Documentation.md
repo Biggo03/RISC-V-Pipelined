@@ -207,7 +207,70 @@ This second table describes the behaviour based on the comparison of the predict
 
 Note that in the above table, N/A in the PCSrc column means that the result will be dependant on the result of table 1. To accomodate this, logic internal to the Branch Control Unit will determine how PCSrc is determined.
 
-Flushes will also be requiered in some cases, and these will be reflected in the Hazard Unit section.
+## Branch Predictor
+
+The branch predictor is made up of the GHR, the BTB, and a bank of local predictors. As they are indexed at the same time, the BTB and local predictors are lumped into a block called the Branching Buffer. All outputs used by other blocks come from the Branching Buffer. The tables describing the state machines, and combinational logic are below
+
+### **GHR:**
+
+The following table describes the output of each state.
+
+| Current State  | LocalSrc |
+|----------------|----------|
+|U, U            |00        |
+|U, T            |01        |
+|T, U            |10        |
+|T, T            |11        | 
+
+The following table describes the state transitions based on the current state, and input
+
+| Current State | PCSrcRes | Next State |
+|---------------|----------|------------|
+| U, U          | 0        | U, U       |
+|               | 1        | U, T       |
+| U, T          | 0        | T, U       |
+|               | 1        | T, T       |
+| T, U          | 0        | U, U       |
+|               | 1        | U, T       |
+| T, T          | 0        | T, U       |
+|               | 1        | T, T       |
+
+**Note: This will only update when BranchOpE[0] is 1**
+
+### **Branching Buffer: Conceptual Overview**
+
+The Branching Buffer is responsible for storing branch prediction information, including:
+1. **Branch Target Addresses:** Predicted target addresses for branches, stored in the Branch Target Buffer (BTB).
+2. **Local Branch Predictor States:** Predicts whether branches are likely to be taken or not, based on past behavior.
+
+The Branching Buffer is indexed using the **10 least significant bits (LSBs)** of the program counter (`PCF[9:0]`). Each indexed entry provides:
+- A predicted branch target address (`PredPCTargetF`).
+- A predicted branch decision (`PCSrcPred`).
+
+The Branching Buffer is updated in the **Execute stage** when the branch result is resolved. If the predicted target address does not match the resolved target (`TargetMatch = 0`), the buffer entry is updated with the resolved address.
+
+### **Branching Buffer: Detailed Design**
+
+#### **Inputs and Outputs**
+| Signal         | Direction | Description                                                                 |
+|----------------|-----------|-----------------------------------------------------------------------------|
+| `PCF[9:0]`     | Input      | Indexes the buffer to retrieve prediction data for the current instruction. |
+| `TargetMatch`  | Input      | Indicates if the predicted and resolved branch targets match.              |
+| `BranchOpE[0]` | Input      | Enables updates to the buffer in the Execute stage.                        |
+| `PCTargetE`    | Input      | Resolved branch target address for the current branch.                     |
+| `LocalSrc`     | Input      | Determines which local predictor state machine to access.                  |
+| `PCSrcPred`    | Output     | Predicted branch decision for the current instruction.                     |
+| `PredPCTargetF`| Output     | Predicted branch target address for the current instruction.               |
+
+#### **Update Logic**
+Updates to the Branching Buffer occur in the **Execute stage**, gated by `BranchOpE[0]`. The following rules apply:
+1. If `TargetMatch = 0`, the resolved branch target (`PCTargetE`) replaces the current buffer entry.
+2. The local branch predictor's state is updated based on the resolved branch outcome (`PCSrcRes`).
+
+#### **Initial State**
+- All buffer entries are initialized to **weakly untaken** for local predictors and a default branch target of 0.
+
+
 
 ## Immediate Extension
 The immediate extension unit needs to extend immediates depending on the type of instruction the immediate recieves. The type of extension is controlled by the signal ImmSrc. Note that this extension unit takes advantage of the fact that the most significant bit of all immediates is always held in bit 31 of instr. The following table describes the extension units behaviour.

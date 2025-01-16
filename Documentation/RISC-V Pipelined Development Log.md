@@ -473,7 +473,7 @@ Note that for both the GHR, and local state machines, I intend on allowing the s
 
 **GHR:**
 
-This will be a simple four state state machine, with one state for each possible combination of the last two branches. The output of this state machine will be a signal called LocalSrc, as this is used to select the local branch predictor. The state machines output will be described in the table below:
+This will be a simple four state state machine, with one state for each possible combination of the last two branches. The output of this state machine will be a signal called LocalSrc, which will be used to determine which of the four local branch predictors will be used for a given index. The state machines output will be described in the table below:
 
 | Last Branches  | LocalSrc |
 |----------------|----------|
@@ -500,7 +500,7 @@ As with the GHR, these should only be updated in the execution stage, after the 
 
 As there are to be 4096 local branch predictors, there will need to be a buffer storing the outputs of these state machines, indexed by the 10 LSB's of the current address. The indexed predictor will of course be the one that is updated.
 
-All local state machines will be setup to initially be in the weakly taken state.
+All local state machines will be setup to initially be in the weakly untaken state. This allows for a quick switch to the taken state if branches do occur, but other than that, this is a relatively arbitrary decision.
 
 **Branch Target Buffer (BTB):**
 
@@ -530,6 +530,7 @@ Therfore there will be two top level modules, the GHR, and the Branching Buffer,
 |TargetMatch  |Input      |Determines if the current PredPCTargetF and PCTargetE are equal|
 |BranchOpE[0] |Input      |Enables the state machine|
 |LocalSrc     |Input      |Determines which local state machine at the current index is to be used|
+|PCTargetE    |Input      |Replaces the branch target address of the current index if there is a mismatch|
 |PCSrcPred    |Output     |The prediction of the current indexes branching behaviour|
 |PredPCTargetF|Output     |The predicted branch target address of the current index|
 

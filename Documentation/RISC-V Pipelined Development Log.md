@@ -569,7 +569,7 @@ New signals needed:
   - The predicted branch target address fetched from the BTB
 
 
-### **Fetch and Execution Stage Changes (January 16th \- Present):**
+### **Fetch and Execution Stage Changes (January 16th):**
 
 The fetch stage needs the following changes:
 - A larger Multiplexer to handle more of the possible branch targets

@@ -180,20 +180,20 @@ Note that within this table. FD = flag dependant, meaning it depends on the resu
 This takes data from the main decoder in order to predict whether a branch is to be taken or not, as well as data from the Branch Resolution Unit in order to verify the prediction. In the case of a mispredicton it will properly set the next PC address, all rollbacks will be dealt with using the hazard control unit. The Active Signal is set in the decode stage if a branch occurs, when active in the execution stage, signals that the PCSrc signal from the execution stage is to take precedence. In all other cases, the PCSrc signal from the decode stage takes precedence. The TargetMatch signal is set high when the address fetched from the BTB mathces that determined in the execution stage. In all other cases, it will be set low.
 
 The value of PCNext based on PCSrc are given by the following table:
-| PCNext  | Function                     |PCSrc |
-|---------|------------------------------|------|
-|PCPlus4F |Sequential fetch              |00    |
-|PCTargetB|Predicted branch address      |01    |
-|PCTargetE|Actual/resolved branch address|11    |
-|PCPlus4E |Rollback sequential fetch     |10    |
+| PCNext      | Function                     |PCSrc |
+|-------------|------------------------------|------|
+|PCPlus4F     |Sequential fetch              |00    |
+|PredPCTargetF|Predicted branch address      |01    |
+|PCTargetE    |Actual/resolved branch address|11    |
+|PCPlus4E     |Rollback sequential fetch     |10    |
 
 
-This table will describe the result of PCSrc based on OpF[6:5], and the branch predictors prediction.
-| Instruction Type | OpF[6:5] | PCSrcPredF |  PCSrc |
-|------------------|----------|------------|--------|
-|Non-Branching     |10/00/01  |0           |00      |
-|Branch/Jump       |11        |1           |01      |
-|Branch            |11        |0           |00      |
+This table will describe the result of PCSrc based on InstrF[6:5] (Same as OpF[6:5]), and the branch predictors prediction.
+| Instruction Type | InstrF[6:5] | PCSrcPredF |  PCSrc |
+|------------------|-------------|------------|--------|
+|Non-Branching     |10/00/01     |0           |00      |
+|Branch/Jump       |11           |1           |01      |
+|Branch            |11           |0           |00      |
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
 | TargetMatch | BranchOpE[0] | PCSrcPredE | PCSrcRes | PCSrc   |
@@ -247,20 +247,20 @@ The Branching Buffer is indexed using the **10 least significant bits (LSBs)** o
 - A predicted branch target address (`PredPCTargetF`).
 - A predicted branch decision (`PCSrcPred`).
 
-The Branching Buffer is updated in the **Execute stage** when the branch result is resolved. If the predicted target address does not match the resolved target (`TargetMatch = 0`), the buffer entry is updated with the resolved address.
+The Branching Buffer is updated in the **Execute stage** when the branch result is resolved. If the predicted target address does not match the resolved target (`TargetMatch = 0`), the buffer entry is updated with the resolved address, and the local branch predictor is reset to the state "weakly untaken".
 
 ### **Branching Buffer: Detailed Design**
 
 #### **Inputs and Outputs**
 | Signal         | Direction  | Description                                                                 |
 |----------------|------------|-----------------------------------------------------------------------------|
-| `PCF[9:0]`     | Input      | Indexes the buffer to retrieve prediction data for the current instruction.|
-| `TargetMatch`  | Input      | Indicates if the predicted and resolved branch targets match.              |
-| `BranchOpE[0]` | Input      | Enables updates to the buffer in the Execute stage.                        |
-| `PCTargetE`    | Input      | Resolved branch target address for the current branch (execute stage).     |
-| `LocalSrc`     | Input      | Determines which local predictor state machine to access.                  |
-| `PCSrcPred`    | Output     | Predicted branch decision for the current instruction (fetch stage).       |
-| `PredPCTargetF`| Output     | Predicted branch target address for the current instruction (fetch stage). |
+| `PCF[9:0]`     | Input      | Indexes the buffer to retrieve prediction data for the current instruction. |
+| `TargetMatch`  | Input      | Indicates if the predicted and resolved branch targets match.               |
+| `BranchOpE[0]` | Input      | Enables updates to the buffer in the Execute stage.                         |
+| `PCTargetE`    | Input      | Resolved branch target address for the current branch (execute stage).      |
+| `LocalSrc`     | Input      | Determines which local predictor state machine to access.                   |
+| `PCSrcPredF`   | Output     | Predicted branch decision for the current instruction (fetch stage).       |
+| `PredPCTargetF`| Output     | Predicted branch target address for the current instruction (fetch stage).  |
 
 #### **Update Logic**
 Updates to the Branching Buffer occur in the **Execute stage**, gated by `BranchOpE[0]`. The following rules apply:

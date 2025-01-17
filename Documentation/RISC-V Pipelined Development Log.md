@@ -412,7 +412,7 @@ Each of these possiblities will be discussed later in this section.
 
 This new PCSrc signal will need to take into account both the prediction made by the branch predictor, as well as the actual resolved branch value. Because of this, two internal signals will be created:
 
-- PCSrcRes: The result produced by the branch decoder, holding the resolved result of a given branch that is currently in the execution stage.
+- PCSrcResE: The result produced by the branch decoder, holding the resolved result of a given branch that is currently in the execution stage.
 - PCSrcPredF: The result produced by the branch predictor in the **Fetch** stage.
 - PCSrcPredE: the previous value of PCSrcPredF computed in the **Fetch** stage. This is the signal that will be compared against PCSrcRes in order to determine the validity of the prediction.
 
@@ -420,16 +420,16 @@ Note that I plan on going with the predicted branch in the fetch stage, as to st
 
 The possible branching cases are listed below, along with the changes that must be made to PCSrc, and any flushes that may need to occur with each case.
 - Not a branching instruction: PCSrc -> PCPlus4F
-  - PCSrcPred predicts not taken, PCSrcRes will concur
+  - PCSrcPred predicts not taken, PCSrcResE will concur
 - Jump: PCSrc -> PredPCTargetF (from BTB)
 - Branch predicted as not taken: PCSrc -> PCPlus4F
-  - PCSrcPred will predict not taken, once in execution stage, PCSrcRes agrees
+  - PCSrcPred will predict not taken, once in execution stage, PCSrcResE agrees
 - Branch predicted as taken: PCSrc -> PredPCTargetF (From BTB)
-  - PCSrcPred predicts taken, once in execution stage, PCSrcRes agrees
+  - PCSrcPred predicts taken, once in execution stage, PCSrcResE agrees
 - Branch predicted not taken, but mispredicted: PCSrc -> PCTargetE, FlushD, FlushE
-  - PCSrcPred predicts not taken, once in execution stage, PCSrcRes disagrees
+  - PCSrcPred predicts not taken, once in execution stage, PCSrcResE disagrees
 - Branch predicted taken, but mispredicted: PCSrc -> PCPlus4E, FlushD, FlushE
-  - PCSrcPred predicts taken, once in execution stage, PCSrcRes disagrees
+  - PCSrcPred predicts taken, once in execution stage, PCSrcResE disagrees
 - Branch predicted taken correctly, but PCTargetE != PredPCTargetF: PCSrc -> PCTargetE, FlushD, FlushE
 
 * Note that all mispredicted cases PCSrc change and flushes will be applied once the branch reaches the execution stage. In the fetch stage the behaviour will be the same as if the branch prediction was correct (as can't verify validity of branch prediction in fetch stage)
@@ -443,7 +443,7 @@ Another control signal that must be used in order to resolve the edgecase of a c
 Finally, the logic of the branch prediction unit can be described, along with the changes that must be made to the hazard unit to accomadate the need for more flushes.
 
 This first table describes the behaviour caused by the inital branch prediction:
-| Op[6:5]   | PCSrcPredF | PCSrc    |
+| OpF[6:5]  | PCSrcPredF | PCSrc    |
 |-----------|------------|----------|
 |Non-branch |Not Taken   |PCPlus4F  |
 |branch/jump|Taken       |PredPCTargetF|
@@ -452,7 +452,7 @@ This first table describes the behaviour caused by the inital branch prediction:
 Op[6:5] can be used, as based on the opcodes of the RISC-V instruction set I'm using, and all possilbe extensions, branching and jumping instructions are the only ones where the first two bits of the opcode are both 1.
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
-| TargetMatch | BranchOpE[0] | PCSrcPredE | PCSrcRes | PCSrc   | FlushD | FlushE |
+| TargetMatch | BranchOpE[0] | PCSrcPredE | PCSrcResE| PCSrc   | FlushD | FlushE |
 |-------------|--------------|------------|----------|---------|--------|--------|
 |1            |1             |Taken       |Taken     |DecodeRes|False   |False   |
 |0            |1             |Taken       |Taken     |PCTargetE|True    |True    |
@@ -464,7 +464,7 @@ This second table describes the behaviour based on the comparison of the predict
 These tables with the proper binary values can be found in [Technical_dDocumentation](Documentation/Technical_Documentation.md). It will be listed under the Branch Control Unit section.
 
 **Back-to-Back Branches Edgecase:**
-One edge case that must also be considered, is the resolution of PCSrc when there are two branches one after the other. In this case, the way everything has been setup, PCSrc will be driven by two values. As such, once Verilog implementation begins, it must be ensured that the second table result takes precedence over the first IF the PCSrcPredE and PCSrcRes are NOT equal. If they are equal, then the result of the first table should take precedence, as this means that the program should continue as if the prediction was correct. This is reflected in the tables in the DecodeRes result.
+One edge case that must also be considered, is the resolution of PCSrc when there are two branches one after the other. In this case, the way everything has been setup, PCSrc will be driven by two values. As such, once Verilog implementation begins, it must be ensured that the second table result takes precedence over the first IF the PCSrcPredE and PCSrcResE are NOT equal. If they are equal, then the result of the first table should take precedence, as this means that the program should continue as if the prediction was correct. This is reflected in the tables in the DecodeRes result.
 
 ### **2. Branch Predictor Design:**
 This block has several components, being the GHR, the local branch predictors, and the BTB. It will also need multiplexers and decoders in order to retrieve the proper data as well.
@@ -484,7 +484,7 @@ This will be a simple four state state machine, with one state for each possible
 
 The outputs will be used in order to determine which of the local branch predictors are to be used. Note that this is effectively a shift register.
 
-It will change states using the **PCSrcRes** signal, as this is always 1 when a branch is taken, and 0 otherwise. It should also only change when a branch instruction is in the execution stage. As such, this state machine will be enabled by **BranchOpE[0]**
+It will change states using the **PCSrcResE** signal, as this is always 1 when a branch is taken, and 0 otherwise. It should also only change when a branch instruction is in the execution stage. As such, this state machine will be enabled by **BranchOpE[0]**
 
 **Branch Target Buffer (BTB):**
 
@@ -504,7 +504,7 @@ These branch predictors will have 4 states, and their outputs will be called Loc
 |Weakly not Taken  |0        |
 |Strongly not Taken|0        | 
 
-As with the GHR, these should only be updated in the execution stage, after the result of a branch has been confirmed, as such, the state machine will be enabled by **BranchOpE[0]**, and will move one state towards strongly taken when PCSrcRes = 1, and one state towards weakly taken when PCSrcRes = 0.
+As with the GHR, these should only be updated in the execution stage, after the result of a branch has been confirmed, as such, the state machine will be enabled by **BranchOpE[0]**, and will move one state towards strongly taken when PCSrcResE = 1, and one state towards weakly taken when PCSrcResE = 0.
 
 When TargetMatch indicates a mismatch between the predicted branch target address, and the actual branch target address, it will reset the current local branch predictor to the weakly not taken state.
 
@@ -524,7 +524,7 @@ Therfore there will be two top level modules, the GHR, and the Branching Buffer,
 | Signal      | Direction | Description |
 |-------------|-----------|-------------|
 |BranchOpE[0] |Input      |Enables the state machine|
-|PCSrcRes     |Input      |Determines the state transition to occur on the next clock cycle|
+|PCSrcResE    |Input      |Determines the state transition to occur on the next clock cycle|
 |LocalSrc     |Output     |Represents the current state of the machine|
 
 **Branching Buffer**
@@ -542,23 +542,48 @@ Note that PredPCTargetF's suffix is to show that the result is coming from the f
 
 ## Microarchitecture changes (January 15th \- Present):**
 
-The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, and the Control Unit.
+The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, Execution stage and the Control Unit.
 
-### Control Unit Changes (January 15th \- Present):**
+### Control Unit Changes (January 15th \- January 16th):**
 
 Signals no longer needed:
 - PCSrcE
 
 New signals needed:
-- PCSrc
+- PCSrc (output)
   - Effectively a replacement for PCSrcE considering it's determined using signals from multiple stages.
-- InstrF[6:5]
+- InstrF[6:5] (input)
   - This is the instructions OpCode, used for determining if the current instruction is a branch or jump.
-- PCF[9:0]
+- PCF[9:0] (input)
  - These are the bits used for indexing the Branch Target Buffer, and the local branch predictors.
-- TargetMatch
+- TargetMatch (input)
   - Indicates whether or not the predicted branch target and actual branch target for a given branch are equal.
   - Used for BTB target address replacement
+  - Resets local branch predictors to initial untaken state
+- PCSrcResE (internal)
+  - Used to be called PCSrcE,
+  - Indicates if branch in the execution stage is actually taken
+- PCSrcPredE (input)
+  - Used to compare to PCSrcResE to see if they are the same
+- PredPCTargetF (output)
+  - The predicted branch target address fetched from the BTB
+
+
+### **Fetch and Execution Stage Changes (January 16th \- Present):**
+
+The fetch stage needs the following changes:
+- A larger Multiplexer to handle more of the possible branch targets
+
+The Execution Stage needs the following changes:
+- Comparator for PCTargetE, and PredPCTargetE
+- Will output TargetMatch
+
+The Decode stage pipeline register has the following new input signals:
+- PCSrcPredF
+- PredPCTargetF
+The Execute stage pipeline register has the following new input signals:
+- PCSrcPredD
+- PredPCTargetD
 
 # **Challenges**
 
@@ -645,11 +670,11 @@ This lead to numerous changes, which have been reflected in the development log,
 |ImmSrc          |█████████████|               |     |████████████████████|             |     |     |                  |
 |ALUSrc          |█████████████|               |     |                    |             |     |     |                  |
 |MemWrite        |█████████████|               |     |                    |             |     |     |                  |
-|ResultSrc       |█████████████|               |     |                    |             |     |     |                  |
+|ResultSrc       |█████████████|               |     |                    |█████████████|     |     |                  |
 |BranchOP        |█████████████|               |     |                    |             |█████|█████|                  |
 |PCSrcPred       |             |               |     |                    |             |     |█████|                  |
 |PCSrcRes        |             |               |     |                    |             |█████|█████|                  |
-|PCSrc           |             |               |     |                    |             |     |█████|                  |
+|PCSrc           |             |               |     |                    |█████████████|     |█████|                  |
 |ALUOp           |█████████████|               |█████|                    |             |     |     |                  |
 |ALUControl      |█████████████|               |█████|                    |             |     |     |                  |
 |WidthOp         |█████████████|███████████████|     |                    |             |     |     |                  |

@@ -29,8 +29,12 @@ reg [1:0] PresentState, NextState;
 //State transition logic
 always @(posedge clk, posedge reset) begin
     
-    if (reset) PresentState <= UT; // Arbitrary reset state
-    else PresentState <= NextState;
+    if (reset) begin
+    PresentState <= UT; // Arbitrary reset state
+    NextState <= UT; //Default stay in initialized state
+    end else begin
+        PresentState <= NextState;
+    end
     
 end
 

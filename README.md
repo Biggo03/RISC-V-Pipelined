@@ -11,11 +11,15 @@ This project demonstrates a deeper understanding of complex processor architectu
 The working schematic of the microarchitecture, as well as a project development log, and technical documentation will be found in the "Documentation" folder.
 
 ## Planned Key Features
-- Pipelined operation for improved performance
 - Implementation of branch prediction
-- Enhancements to the memory system of single-cycle design
-- Caching
-- Implementation of RV32I instructions
+- Improved memory system
+  - Main memory
+  - Turn instruction and data memory into L1 instruction and data caches
+
+## Implemented Key Features
+- Pipelined operation for improved performance
+- Implements RV32I instructions
+- Separate Instruction and data memories
 - Testbenches for hardware validation
 
 ## Technical Details

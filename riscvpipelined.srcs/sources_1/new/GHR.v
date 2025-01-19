@@ -5,7 +5,7 @@
 // Create Date: 01/18/2025 06:52:48 PM
 // Module Name: GHR
 // Project Name: riscvpipelined
-// Description: State machine that updates based on if a branch is taken or untaken
+// Description: Global state machine that updates based on if a branch is taken or untaken
 // 
 // Dependencies:
 // Additional Comments: 
@@ -16,7 +16,7 @@
 module GHR(input clk, reset,
            input BranchOpEb0,
            input PCSrcResE,
-           output [1:0] LocalSrc);
+           output reg [1:0] LocalSrc);
 
 // Local parameters for state bits. Output matches state bits
 localparam UU = 2'b00;
@@ -32,8 +32,10 @@ always @(posedge clk, posedge reset) begin
     if (reset) begin
     PresentState <= UT; // Arbitrary reset state
     NextState <= UT; //Default stay in initialized state
+    LocalSrc <= UT;
     end else begin
         PresentState <= NextState;
+        LocalSrc <= NextState;
     end
     
 end
@@ -68,7 +70,5 @@ always @(*) begin
     end
     
 end
-
-assign LocalSrc = PresentState;
 
 endmodule

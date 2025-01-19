@@ -540,7 +540,7 @@ Therfore there will be two top level modules, the GHR, and the Branching Buffer,
 
 Note that PredPCTargetF's suffix is to show that the result is coming from the fetch stage. This value will be passed along the pipeline to the execution stage, where PredPCTargetE will be used to determine TargetMatch.
 
-## Microarchitecture changes (January 15th \- Present):**
+## Microarchitecture changes (January 15th \- January 17th):**
 
 The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, Execution stage and the Control Unit.
 
@@ -584,6 +584,17 @@ The Decode stage pipeline register has the following new input signals:
 The Execute stage pipeline register has the following new input signals:
 - PCSrcPredD
 - PredPCTargetD
+
+## Verilog Coding (January 18th \- Present):
+
+I will go over the new modules made, as well as the changes made to existing modules, in order to implement branch prediction. I will start with the new modules, before changing existing modules, as issues may arise with the design, and while testing. This decision allows for more flexibility when implementing the new modules into the larger design.
+
+This section will also cover testing of said modules in the same entry.
+
+### GHR (January 18th):
+This module was implemented as a standard state machine, with a process for the combinational logic (next state logic), and the sequential logic (state transition logic). The next state logic resets the machine to the UT state when th reset signal is high. As the output is the same as the preent state, an assign statement is used to set the output, LocalSrc to the present state. Local parameters are used for the state names, as this adds clarity, and will make any changes easier to make.
+
+The testbench tested the reset, then had a for loop to test the transitions when the enable (BranchOpE[0]) is high, and another for loop to ensure no transitions occured when the enable is low. a signal was used to hold the expected output value for each loop iteration, and to assert DUT had the correct output.
 
 # **Challenges**
 

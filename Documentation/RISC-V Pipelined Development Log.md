@@ -592,9 +592,14 @@ I will go over the new modules made, as well as the changes made to existing mod
 This section will also cover testing of said modules in the same entry.
 
 ### GHR (January 18th):
-This module was implemented as a standard state machine, with a process for the combinational logic (next state logic), and the sequential logic (state transition logic). The next state logic resets the machine to the UT state when th reset signal is high. As the output is the same as the preent state, an assign statement is used to set the output, LocalSrc to the present state. Local parameters are used for the state names, as this adds clarity, and will make any changes easier to make.
+This module was implemented as a standard state machine, with a process for the combinational logic (next state logic), and the sequential logic (state transition logic). The next state logic resets the machine to the UT state when the reset signal is high. As the output is the same as the present state, it is also set to NextState in the state transition process. Local parameters are used for the state names, as this adds clarity, and will make any changes easier to make.
 
 The testbench tested the reset, then had a for loop to test the transitions when the enable (BranchOpE[0]) is high, and another for loop to ensure no transitions occured when the enable is low. a signal was used to hold the expected output value for each loop iteration, and to assert DUT had the correct output.
+
+### Local Predictor (January 19th):
+This module was implemented as a state machine, with a process for the combinational logic (next state logic), and the sequential logic (state transition logic). The next state logic resets the machine to the WU state when the reset signal is high. As the output (PCSrcPred) matches the MSB of the state bits, it is also set to this in the state transition process. Local parameters are used for the state names.
+
+The testbench tested the reset, then had a for loop to test the transitions when the enable is high, and another for loop to ensure no transitions occured when the enable is low. a signal was used to hold the expected output value for each loop iteration, and to assert DUT had the correct output.
 
 # **Challenges**
 

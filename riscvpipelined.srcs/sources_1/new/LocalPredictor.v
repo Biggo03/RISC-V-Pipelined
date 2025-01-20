@@ -41,7 +41,7 @@ module LocalPredictor(input clk, reset,
     end             
     
     //Next state logic
-    always @(*) begin
+    always @(Enable, PresentState, PCSrcResE, posedge clk) begin
         
         if (Enable) begin
             

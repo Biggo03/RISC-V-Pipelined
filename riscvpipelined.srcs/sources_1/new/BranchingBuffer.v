@@ -31,7 +31,7 @@ module BranchingBuffer(input clk, reset,
     wire [3:0] LPOutputs [1023:0];
     
     wire [4095:0] Enable;
-    reg [4095:0] LocalReset;
+    reg [1023:0] LocalReset;
     
     genvar i;
     integer n;
@@ -45,7 +45,7 @@ module BranchingBuffer(input clk, reset,
             
             // i/4 so have group of 4, i%4 to increment internal entry
             LocalPredictor LP(.clk(clk),
-                              .reset(LocalReset[i]),
+                              .reset(LocalReset[i/4]),
                               .PCSrcResE(PCSrcResE),
                               .Enable(Enable[i]),
                               .PCSrcPred(LPOutputs[i/4][i % 4]));

@@ -32,8 +32,8 @@ module LocalPredictor_TB();
     
     LocalPredictor DUT(clk, reset, PCSrcResE, Enable, PCSrcPred);
     
-    always @(*) begin
-        clk = ~clk;
+    always begin
+        clk = ~clk; #5;
     end
     
     
@@ -48,6 +48,8 @@ module LocalPredictor_TB();
     
         assert(PCSrcPred === 0) else $fatal("Initialization Failed");
         
+        #5;
+        
         Enable = 1;
     
          //Check switching states works correctly
@@ -56,12 +58,13 @@ module LocalPredictor_TB();
                 PCSrcResE = ~PCSrcResE;
             end
             
-            if (PCSrcResE == 1 && PCSrcPredExp < 3) PCSrcPredExp = PCSrcPred + 1;
-            else if (PCSrcPredExp > 0) PCSrcPredExp = PCSrcPredExp - 1;
-            
             #10;
             
             assert(PCSrcPred === PCSrcPredExp[1]) else $fatal("State change error");
+            
+            //Change expected after assertion, as transition occurs on next clock edge
+            if (PCSrcResE == 1 && PCSrcPredExp < 3) PCSrcPredExp = PCSrcPredExp + 1;
+            else if (PCSrcResE == 0 && PCSrcPredExp > 0) PCSrcPredExp = PCSrcPredExp - 1;
             
         end
         
@@ -76,6 +79,13 @@ module LocalPredictor_TB();
         
             assert (PCSrcPred === PCSrcPredExp) else $fatal("Enable Error");
         end
+        
+        Enable = 1; reset = 1; PCSrcResE = 1;
+        
+        #50;
+        
+        assert (PCSrcPred === 0) else $fatal("reset not prioritized");
+        
         
         $display("Simulation Succesful!");
         $stop;

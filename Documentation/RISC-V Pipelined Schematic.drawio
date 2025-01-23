@@ -2279,7 +2279,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="SNDaI4a_RkwnUYkz3ZX-" name="Control Unit">
-    <mxGraphModel dx="-427" dy="1061" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" math="0" shadow="0">
+    <mxGraphModel dx="-1322" dy="581" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -2632,11 +2632,23 @@
             </Array>
           </mxGeometry>
         </mxCell>
+        <mxCell id="h-u-IFWjo1eA9gmAmSHY-1" value="" style="triangle;whiteSpace=wrap;html=1;rotation=90;" vertex="1" parent="1">
+          <mxGeometry x="2865" y="915" width="30" height="68.5" as="geometry" />
+        </mxCell>
+        <mxCell id="h-u-IFWjo1eA9gmAmSHY-2" value="" style="endArrow=none;html=1;rounded=0;fontSize=12;startSize=8;endSize=8;curved=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="0L7pkR9KdwpI0O4B7MY0-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="2880" y="910" as="sourcePoint" />
+            <mxPoint x="3010" y="990" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="h-u-IFWjo1eA9gmAmSHY-3" value="Clk" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="2860" y="885" width="40" height="30" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
   <diagram id="NyQl7-XiMxnJubUQCbTW" name="Branch Predictor">
-    <mxGraphModel dx="-905" dy="796" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" math="0" shadow="0">
+    <mxGraphModel dx="-1441" dy="513" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -2943,6 +2955,24 @@
         </mxCell>
         <mxCell id="glVEFQtT2IckrfYiXil7-3" value="&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;PCTargetE&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="3695" y="518" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ZgPpimpE65LS8ixf7F5K-1" value="" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="3800" y="568" as="sourcePoint" />
+            <mxPoint x="3870" y="568" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZgPpimpE65LS8ixf7F5K-2" value="PCSrcResE" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="3720" y="555" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="C8IkhnO9a-jTFvUgVvCs-1" value="PCE[9:0]" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="3705" y="436" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="C8IkhnO9a-jTFvUgVvCs-2" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="3770" y="452" as="sourcePoint" />
+            <mxPoint x="3870" y="452" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>

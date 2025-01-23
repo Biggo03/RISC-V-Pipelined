@@ -80,11 +80,11 @@ module LocalPredictor_TB();
             assert (PCSrcPred === PCSrcPredExp) else $fatal("Enable Error");
         end
         
-        Enable = 1; reset = 1; PCSrcResE = 1;
+        Enable = 1; reset = 1;
         
         #50;
         
-        assert (PCSrcPred === 0) else $fatal("reset not prioritized");
+        assert (PCSrcPred === 0) else $fatal("Taken Reset failed");
         
         
         $display("Simulation Succesful!");

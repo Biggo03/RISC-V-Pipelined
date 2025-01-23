@@ -530,11 +530,13 @@ Therfore there will be two top level modules, the GHR, and the Branching Buffer,
 **Branching Buffer**
 | Signal      | Direction | Description |
 |-------------|-----------|-------------|
-|PCF[9:0]     |Input      |The current index to be fetched|
-|TargetMatch  |Input      |Determines if the current PredPCTargetF and PCTargetE are equal, resets local predictors to weakly taken state|
+|PCF[9:0]     |Input      |The current indexes prediction to be fetched|
+|PCE[9:0]     |Input      |Current index to be compared to actual branch|
+|TargetMatch  |Input      |Determines if the current PredPCTargetF and PCTargetE are equal, resets local predictor to weakly taken state|
 |BranchOpE[0] |Input      |Enables the state machine|
 |LocalSrc     |Input      |Determines which local state machine at the current index is to be used|
 |PCTargetE    |Input      |Replaces the branch target address of the current index if there is a mismatch|
+|PCSrcResE    |Input      |Updates the current local predictor to move towards strongly taken, or strongly untaken|
 |PCSrcPred    |Output     |The prediction of the current indexes branching behaviour|
 |PredPCTargetF|Output     |The predicted branch target address of the current index|
 
@@ -600,6 +602,31 @@ The testbench tested the reset, then had a for loop to test the transitions when
 This module was implemented as a state machine, with a process for the combinational logic (next state logic), and the sequential logic (state transition logic). The next state logic resets the machine to the WU state when the reset signal is high. As the output (PCSrcPred) matches the MSB of the state bits, it is also set to this in the state transition process. Local parameters are used for the state names.
 
 The testbench tested the reset, then had a for loop to test the transitions when the enable is high, and another for loop to ensure no transitions occured when the enable is low. a signal was used to hold the expected output value for each loop iteration, and to assert DUT had the correct output.
+
+### **Branching Buffer (January 19th):**
+I will start by going over the internal storage signals used within this module. BufferEntry is a reg signal containing 1024 32-bit entries, these entries are the branch target addresses. LPOutputs is a wire signal containing 1024 4-bit entries, these entries are the outputs of each of the local branch predictors for a given branch. These signals were initially put together, however this caused some issues. One issue was that the output of the branch predictors could not be set to a reg signal, the other was that when synthesized together, Vivado created a ridiculous amount of registers in order to store the data. Creating these signals seperately, but indexing them essentially the same allowed the local predictors to connect directly to the appropriate LPOutputs entry, and allowed the design to synthesize with the storage being a reasonable number of LUT's used as RAM (704 6-input LUT's as RAM). The other internal signals were a 4096-bit Enable wire signal, with one bit for each local predictor, and a LocalReset signal, which is used to reset all four of a branches local predictors to their initial state. Finally there is a genvar i used in creating the local predictors in a generate statement.
+
+The Enable signal is set using a conditional assignment operator working on BranchOpEb0. When BranchOpEb0 is 0, it is set to all 0's, when BranchOpEb0 is 1, the bit at the index {PCE, LocalSrc} is set high. This ensures only the proper local predictor is enabled at a given time. The enable signal essentially uses the first 10-bits (PCE) to index the specific branch, and then the last 2 bit's to select between that branches four local predictors.
+
+The generate statement creates 4096 instances of the local predictor module. The local predictors reset signal is tied to the index of LocalReset[i/4], where i is the genvar. This allocates 4 branch predictors to the be reset by that one bit of LocalReset, as it will round to the nearest index. For example, index 0, 1, 2, and 3 will all be tied to LocalReset[0]. All local predictors PCSrcResE signal is connected to the signal of the same name. They are connected to the Enable[i], which hold with the previous paragraphs indexing scheme, where the last 2 bits are based on LocalSrc. Every group of 4 bits has a unique reset signal, and each bit within that group has it's own unique enable signal. Finally the output of the local predictor is connected to LPOutputs[i/4][i % 4]. Again, this follows the above indexing scheme. The larger 1024 width array is indexed by i/4, giving a specific branch, and that branches entries are indexed using modulo 4. So again, each group of 4 local predictors is connected to an external entry of LPOutputs, and each of those 4 local predictors is connected to a corrosponding internal entry of LPOutputs.
+
+The process containing the logic for the execution stage is triggered on the posedge of the clock. This process also handles the system reset of the branch predictors, setting LocalReset to all 1's when reset is asserted. If TargetMatch is not true, and BranchOpEb0 is true, then it resets the local predictors associated with PCE, and replaces the target address in the BTB associated with PCE with PCTargetE. This is done as the above signal conditions indicate a branch is currently in the execution stage, and that that branches BTB entry was incorrect. If none of the above conditions are satisfied, then it simply sets LocalReset to 0. This is done so that no local predictor will have a reset signal asserted in the normal case. Note that this may cause an extra misprediction if the same branch enters the execution stage two cycles in a row, however this is very unlikely to occur, and I felt it was not needed to attempt to solve this problem.
+
+The fetch stage logic assigns the output signal PCSrcPredF to the entry of LPOutputs corrosponding to the current value of PCF, and LocalSrc (LPOutputs[PCF][LocalSrc]). It also assigns the value of PredPCTargetF to the entry of BufferEntry corrosponding to the current value of PCF.
+
+**Testing:**
+This module was tested in a SystemVerilog testbench, I will list the steps that were taken to ensure proper functionality.
+- Initialized using reset signal
+- Populated each entry of BTB with a unique value
+- Ensured correct BTB entry was fetched for each possible value of PCF
+- Checked if local predictor updated properly in base conditions (LocalSrc = 0, PCF = PCE = 0)
+  - Done by putting local predictor into weakly taken state, and then weakly untaken state again
+- A seprate branches local predictor was then put into the strongly taken state, then reset
+  - Checked that the local predictors were reset properly, and BTB entry was updated
+- Swtiched to a different PCF to ensure no other predictors or BTB entrie were affected
+- Switched to another branch entry, changed BTB, and indexed a different local predictor (LocalSrc = 0)
+  - Waited for local predictor to be put into weakly taken state, and checked output reflected this
+- Switched to a different local predictor (LocalSrc = 0), and ensured that this entry was unchanged.
 
 # **Challenges**
 
@@ -675,7 +702,6 @@ When adding the block diagram for the Branch Control Unit and Branch Resolution 
 While going over my design decisions for handelling branch prediction, I began to really think about why I decided to specualtively branch in the decode stage rather than the fetch stage. I decided the only real reason I did this was because it was simpler to implement, and would require less work. However, although I believe this can be a valid reason to make a given design decision, I decided it was not worth it to leave 1 clock cycle on the table for correctly predicted branches in this case. I decided this, because I want my processor to have a relatively high performance, without adding excessive complexity. Doing speculative branch prediction in the fetch stage is not excessivley complex, and it will give me even more experience in developing digital systems, which is the purpose of this project, so I decided it was best to do specualtive branching in the fetch stage.
 
 This lead to numerous changes, which have been reflected in the development log, as well as the technical documentation. It will also require more changes be made to the microarchitecture diagram.
-
 
 
 # **List of Control Signals, and their Location:**

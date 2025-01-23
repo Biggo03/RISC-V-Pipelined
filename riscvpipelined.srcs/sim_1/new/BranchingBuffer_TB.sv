@@ -94,7 +94,7 @@ module BranchingBuffer_TB();
         #10; 
         
         //Trigger reset of first indexed local predictor
-        PCE = 0; TargetMatch = 0; PCTargetE = 1000;
+        PCE = 0; TargetMatch = 0; PCTargetE = 1000; PCSrcResE = 0;
         #10;
         assert (PCSrcPredF === 0 && PredPCTargetF == 1000) else $fatal("Local reset failed (first)");
         
@@ -104,15 +104,23 @@ module BranchingBuffer_TB();
         assert (PCSrcPredF === 1) else $fatal("Local reset failed (second)");
         
         //Ensure taking correct local predictor based on LocalSrc
-        PCE = 100; PCTargetE = 1001; LocalSrc = 1; TargetMatch = 0;
+        PCE = 100; PCTargetE = 1001; LocalSrc = 1; TargetMatch = 0; PCSrcResE = 1;
         #10;
         assert (PCSrcPredF === 0 && PredPCTargetF == 1) else $fatal("LocalSrc indexed incorrectly");
         
         //Test to see if replacement for PCE100 worked correctly, and if local predictor updated properly
-        //Need to wait two cycles, as reset needs to be deasserted
         TargetMatch = 1; PCF = 100;
         #20;
-        assert (PCSrcPredF === 1 && PredPCTargetF === 1001) else $fatal("Incorrect local branch update on change");
+        assert (PCSrcPredF === 1 && PredPCTargetF === 1001) else $fatal("Incorrect local branch update on change (first)");
+        
+        //Ensure other local predictors not changed
+        LocalSrc = 0; PCSrcResE = 0;
+        #10;
+        assert (PCSrcPredF === 0 && PredPCTargetF === 1001) else $fatal("Incorrect local branch update on change (second)");
+        
+        PCSrcResE = 1;
+        #20; //Wait two cycles for local predictor to be in weakly taken
+        assert (PCSrcPredF === 1 && PredPCTargetF === 1001) else $fatal("Incorrect local branch update on change (second)");
         
         $display("Simulation Succesful!");
         $stop;

@@ -30,9 +30,9 @@ module LocalPredictor(input clk, reset,
     always @(posedge clk, posedge reset) begin
         
         if (reset) begin
+            PCSrcPred <= 0;
             PresentState <= WU;
             NextState <= WU;
-            PCSrcPred <= 0;
         end else begin
             PresentState <= NextState;
             PCSrcPred <= NextState[1];
@@ -41,7 +41,7 @@ module LocalPredictor(input clk, reset,
     end             
     
     //Next state logic
-    always @(Enable, PresentState, PCSrcResE, posedge clk) begin
+    always @(Enable, PresentState, PCSrcResE, clk) begin
         
         if (Enable) begin
             

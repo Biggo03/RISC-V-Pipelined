@@ -34,7 +34,6 @@ module BranchingBuffer(input clk, reset,
     reg [1023:0] LocalReset;
     
     genvar i;
-    integer n;
     
     
     //Every group of 4 bits corrosponds to a given PCE index

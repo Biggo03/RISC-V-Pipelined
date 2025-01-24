@@ -626,7 +626,10 @@ This module was tested in a SystemVerilog testbench, I will list the steps that 
 - Swtiched to a different PCF to ensure no other predictors or BTB entrie were affected
 - Switched to another branch entry, changed BTB, and indexed a different local predictor (LocalSrc = 0)
   - Waited for local predictor to be put into weakly taken state, and checked output reflected this
-- Switched to a different local predictor (LocalSrc = 0), and ensured that this entry was unchanged.
+- Switched to a different local predictor (LocalSrc = 0), and ensured that this entry was changed appropriately.
+
+### Branch Predictor (January 23rd):**
+This module is just the structural instantiation of both the GHR, and the branch predictor, there is no behavioral Verilog in this module. As the GHR's only role it to update LocalSrc based on PCSrcResE and BranchOpE[0], I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified.
 
 # **Challenges**
 

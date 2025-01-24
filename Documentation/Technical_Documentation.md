@@ -196,14 +196,14 @@ This table will describe the result of PCSrc based on InstrF[6:5] (Same as OpF[6
 |Branch            |11           |0           |00      |
 
 This second table describes the behaviour based on the comparison of the prediction, and the actual branch:
-| TargetMatch | BranchOpE[0] | PCSrcPredE | PCSrcRes | PCSrc   |
-|-------------|--------------|------------|----------|---------|
-|1            |1             |1           |1         |N/A      |
-|0            |1             |1           |1         |11       |
-|N/A          |1             |1           |0         |10       |
-|N/A          |1             |0           |1         |11       |
-|N/A          |1             |0           |0         |N/A      |
-|N/A          |0             |N/A         |N/A       |N/A      |
+| TargetMatchE | BranchOpE[0] | PCSrcPredE | PCSrcResE | PCSrc   |
+|--------------|--------------|------------|-----------|---------|
+|1             |1             |1           |1          |N/A      |
+|0             |1             |1           |1          |11       |
+|x             |1             |1           |0          |10       |
+|x             |1             |0           |1          |11       |
+|x             |1             |0           |0          |N/A      |
+|x             |0             |x           |x          |N/A      |
 
 Note that in the above table, N/A in the PCSrc column means that the result will be dependant on the result of table 1. To accomodate this, logic internal to the Branch Control Unit will determine how PCSrc is determined.
 

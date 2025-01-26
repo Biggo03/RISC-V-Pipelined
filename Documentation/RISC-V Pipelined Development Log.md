@@ -552,12 +552,16 @@ Signals no longer needed:
 - PCSrcE
 
 New signals needed:
-- PCSrc (output)
+- PCSrc [1:0] (output)
   - Effectively a replacement for PCSrcE considering it's determined using signals from multiple stages.
 - InstrF[6:5] (input)
   - This is the instructions OpCode, used for determining if the current instruction is a branch or jump.
 - PCF[9:0] (input)
  - These are the bits used for indexing the Branch Target Buffer, and the local branch predictors.
+- PCE[9:0] (input)
+  - Gives index of branch currently in the execution stage
+- PCTargetE [31:0] (input)
+  - Needed to replace incorrect BTB entries
 - TargetMatch (input)
   - Indicates whether or not the predicted branch target and actual branch target for a given branch are equal.
   - Used for BTB target address replacement
@@ -614,7 +618,15 @@ The process containing the logic for the execution stage is triggered on the pos
 
 The fetch stage logic assigns the output signal PCSrcPredF to the entry of LPOutputs corrosponding to the current value of PCF, and LocalSrc (LPOutputs[PCF][LocalSrc]). It also assigns the value of PredPCTargetF to the entry of BufferEntry corrosponding to the current value of PCF.
 
+### **Branch Control Unit (January 23rd):**
+This module was created using an assignment statement, and two always processes. The assignment statement concatonates all the inputs for second stage logic into one signal. This was done so a case statement could easily be used for the rollback, and final output logic. The first always process handles the first stage or prediction logic. If a branch is detected in the fetch stage, and the predictor predicts a jump it sets an intermediate signal to hold the PCSrc value corrosponding to PCTargetF, or the predicted target address, otherwise, it sets the intermediate signal to hold the PCSrc value corrosponding to PCPlus4F.
+
+The second always process is a case statement, using the previously mentioned concatonated signal as it's case signal. This implements the branch control unit's rollback or second stage logic. In three cases, the output is set to rollback the changes in some way, and in all other cases, it sets the output to the intermediate signal updated by the first always process.
+
+This module was tested using a SystemVerilog testbench, which first tested to ensure the first stage outputs were correct, and then checked all possible inputs for the rollback / second stage, and ensured the output was as expected. A task was used to simplify the rollback assertions, as they were quite repetitive.
+
 **Testing:**
+
 This module was tested in a SystemVerilog testbench, I will list the steps that were taken to ensure proper functionality.
 - Initialized using reset signal
 - Populated each entry of BTB with a unique value
@@ -628,7 +640,7 @@ This module was tested in a SystemVerilog testbench, I will list the steps that 
   - Waited for local predictor to be put into weakly taken state, and checked output reflected this
 - Switched to a different local predictor (LocalSrc = 0), and ensured that this entry was changed appropriately.
 
-### Branch Predictor (January 23rd):**
+### Branch Predictor (January 23rd):
 This module is just the structural instantiation of both the GHR, and the branch predictor, there is no behavioral Verilog in this module. As the GHR's only role it to update LocalSrc based on PCSrcResE and BranchOpE[0], I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified.
 
 # **Challenges**

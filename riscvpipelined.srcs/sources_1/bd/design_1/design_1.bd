@@ -1,0 +1,235 @@
+{
+  "design": {
+    "design_info": {
+      "boundary_crc": "0x1D05C83B521D9AEE",
+      "device": "xc7z010clg400-1",
+      "gen_directory": "../../../../riscvpipelined.gen/sources_1/bd/design_1",
+      "name": "design_1",
+      "rev_ctrl_bd_flag": "RevCtrlBdOff",
+      "synth_flow_mode": "Hierarchical",
+      "tool_version": "2022.2"
+    },
+    "design_tree": {
+      "instrmem_0": "",
+      "datamem_0": "",
+      "riscvpipelined_0": ""
+    },
+    "ports": {
+      "reset": {
+        "type": "rst",
+        "direction": "I",
+        "parameters": {
+          "POLARITY": {
+            "value": "ACTIVE_HIGH"
+          }
+        }
+      },
+      "clk": {
+        "type": "clk",
+        "direction": "I",
+        "parameters": {
+          "FREQ_HZ": {
+            "value": "100000000"
+          }
+        }
+      }
+    },
+    "components": {
+      "instrmem_0": {
+        "vlnv": "xilinx.com:module_ref:instrmem:1.0",
+        "xci_name": "design_1_instrmem_0_0",
+        "xci_path": "ip\\design_1_instrmem_0_0\\design_1_instrmem_0_0.xci",
+        "inst_hier_path": "instrmem_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "instrmem",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "A": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "RD": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          }
+        }
+      },
+      "datamem_0": {
+        "vlnv": "xilinx.com:module_ref:datamem:1.0",
+        "xci_name": "design_1_datamem_0_0",
+        "xci_path": "ip\\design_1_datamem_0_0\\design_1_datamem_0_0.xci",
+        "inst_hier_path": "datamem_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "datamem",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "clk": {
+            "type": "clk",
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "100000000",
+                "value_src": "user_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "design_1_clk",
+                "value_src": "default_prop"
+              }
+            }
+          },
+          "WE": {
+            "direction": "I"
+          },
+          "WidthSrc": {
+            "direction": "I",
+            "left": "1",
+            "right": "0"
+          },
+          "A": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "WD": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "RD": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          }
+        }
+      },
+      "riscvpipelined_0": {
+        "vlnv": "xilinx.com:module_ref:riscvpipelined:1.0",
+        "xci_name": "design_1_riscvpipelined_0_0",
+        "xci_path": "ip\\design_1_riscvpipelined_0_0\\design_1_riscvpipelined_0_0.xci",
+        "inst_hier_path": "riscvpipelined_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "riscvpipelined",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "clk": {
+            "type": "clk",
+            "direction": "I",
+            "parameters": {
+              "ASSOCIATED_RESET": {
+                "value": "reset",
+                "value_src": "constant"
+              }
+            }
+          },
+          "reset": {
+            "type": "rst",
+            "direction": "I",
+            "parameters": {
+              "POLARITY": {
+                "value": "ACTIVE_HIGH"
+              }
+            }
+          },
+          "InstrF": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "ReadDataM": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "PCF": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "ALUResultM": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "WriteDataM": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "WidthSrcMOUT": {
+            "direction": "O",
+            "left": "1",
+            "right": "0"
+          },
+          "MemWriteM": {
+            "direction": "O"
+          }
+        }
+      }
+    },
+    "nets": {
+      "clk_1": {
+        "ports": [
+          "clk",
+          "datamem_0/clk",
+          "riscvpipelined_0/clk"
+        ]
+      },
+      "datamem_0_RD": {
+        "ports": [
+          "datamem_0/RD",
+          "riscvpipelined_0/ReadDataM"
+        ]
+      },
+      "instrmem_0_RD": {
+        "ports": [
+          "instrmem_0/RD",
+          "riscvpipelined_0/InstrF"
+        ]
+      },
+      "reset_1": {
+        "ports": [
+          "reset",
+          "riscvpipelined_0/reset"
+        ]
+      },
+      "riscvpipelined_0_ALUResultM": {
+        "ports": [
+          "riscvpipelined_0/ALUResultM",
+          "datamem_0/A"
+        ]
+      },
+      "riscvpipelined_0_MemWriteM": {
+        "ports": [
+          "riscvpipelined_0/MemWriteM",
+          "datamem_0/WE"
+        ]
+      },
+      "riscvpipelined_0_PCF": {
+        "ports": [
+          "riscvpipelined_0/PCF",
+          "instrmem_0/A"
+        ]
+      },
+      "riscvpipelined_0_WidthSrcMOUT": {
+        "ports": [
+          "riscvpipelined_0/WidthSrcMOUT",
+          "datamem_0/WidthSrc"
+        ]
+      },
+      "riscvpipelined_0_WriteDataM": {
+        "ports": [
+          "riscvpipelined_0/WriteDataM",
+          "datamem_0/WD"
+        ]
+      }
+    }
+  }
+}

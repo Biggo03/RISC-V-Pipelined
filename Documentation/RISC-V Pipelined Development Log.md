@@ -551,45 +551,79 @@ The microarchitecture diagram needed some changes due to this logic change. I wi
 Signals no longer needed:
 - PCSrcE
 
-New signals needed:
-- PCSrc [1:0] (output)
-  - Effectively a replacement for PCSrcE considering it's determined using signals from multiple stages.
-- InstrF[6:5] (input)
+New input signals needed:
+- InstrF[6:5]
   - This is the instructions OpCode, used for determining if the current instruction is a branch or jump.
-- PCF[9:0] (input)
+- PCF[9:0]
  - These are the bits used for indexing the Branch Target Buffer, and the local branch predictors.
-- PCE[9:0] (input)
+- PCE[9:0]
   - Gives index of branch currently in the execution stage
-- PCTargetE [31:0] (input)
+- PCTargetE [31:0]
   - Needed to replace incorrect BTB entries
-- TargetMatch (input)
+- TargetMatchE
   - Indicates whether or not the predicted branch target and actual branch target for a given branch are equal.
   - Used for BTB target address replacement
   - Resets local branch predictors to initial untaken state
-- PCSrcResE (internal)
-  - Used to be called PCSrcE,
-  - Indicates if branch in the execution stage is actually taken
-- PCSrcPredE (input)
+- PCSrcPredE
   - Used to compare to PCSrcResE to see if they are the same
-- PredPCTargetF (output)
+
+New output signals needed:
+- PCSrc [1:0] 
+  - Effectively a replacement for PCSrcE considering it's determined using signals from multiple stages.
+- PredPCTargetF [31:0]
   - The predicted branch target address fetched from the BTB
 
+New internal signals:
+- PCSrcResE
+  - Used to be called PCSrcE,
+  - Indicates if branch in the execution stage is actually taken
 
-### **Fetch and Execution Stage Changes (January 16th):**
+### **Fetch, Decode and Execution Stage Changes (January 16th):**
 
 The fetch stage needs the following changes:
 - A larger Multiplexer to handle more of the possible branch targets
 
+This requires the following new signals:
+- Inputs:
+  - PredPCTargetF [31:0]
+  - PCPlus4E [31:0]
+  - Change PCSrcE to PCSrc
+- Outputs:
+  - None
+
+There are no changes taht directly need to be made to the decode stage, however it's pipeline register will need to accomadate some of the new signals.
+
+The Decode stage pipeline register has the following new signals:
+- Input:
+  - PCSrcPredF [1:0]
+  - PredPCTargetF [31:0]
+- Output:
+  - PCSrcPredD [1:0]
+  - PredPCTargetF [31:0]
+
 The Execution Stage needs the following changes:
 - Comparator for PCTargetE, and PredPCTargetE
-- Will output TargetMatch
+- Will output TargetMatchE, PCE, and PCSrcPredE for use in branch prediction
 
-The Decode stage pipeline register has the following new input signals:
-- PCSrcPredF
-- PredPCTargetF
-The Execute stage pipeline register has the following new input signals:
-- PCSrcPredD
-- PredPCTargetD
+This requires the following new signals:
+- Inputs:
+  - None
+- Outputs:
+  - TargetMatchE [31:0]
+  - PCE [9:0]
+  - PCSrcPredE 
+The Execute stage pipeline register has the following new signals:
+- Input:
+  - PCSrcPredD [1:0]
+  - PredPCTargetD [31:0]
+- Output:
+  - PCSrcPredE [1:0]
+  - PredPCTargetE [31:0]
+
+Other new execute stage outputs:
+- TargetMatchE [31:0]
+- PCSrcPredE [1:0]
+- PCE [31:0]
 
 ## Verilog Coding (January 18th \- Present):
 

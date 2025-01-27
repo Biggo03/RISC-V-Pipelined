@@ -589,6 +589,7 @@ The hazard control units only change is in relation to FlushD and FlushE. As PCS
 
 The fetch stage needs the following changes:
 - A larger Multiplexer to handle more of the possible branch targets
+- Output InstrF[6:5] for use in the control unit
 
 
 This requires the following new signals:
@@ -622,7 +623,8 @@ The Execution Stage needs the following changes:
 
 This requires the following new signals:
 - Inputs:
-  - None
+  - PCSrcPredD 
+  - PredPCTargetD [31:0]
 - Outputs:
   - TargetMatchE
   - PCE [9:0]
@@ -634,8 +636,9 @@ The Execute stage pipeline register has the following new signals:
   - PCSrcPredD 
   - PredPCTargetD [31:0]
 - Output:
-  - PCSrcPredE [1:0]
+  - PCSrcPredE
   - PredPCTargetE [31:0]
+
 
 ### Datapath Module Changes (January 26th):
 The dataoath module will need to handle the new signals passing between pipeline stages, and between itself and the control unit. As such it will have a number of new inputs, outputs, and internal signals.
@@ -662,7 +665,7 @@ This module will need to handle the signals going in between the control unit an
 - PCSrcPredE
 - TargetMatchE
 
-Additonally, the signal **PCSrcE** will need to be changed to be called **PCSrc** at the top level, and made 2-bits:
+Additonally, the signal **PCSrcE** will need to be changed to be called **PCSrc** at the top level, and made 2-bits.
 
 ## Verilog Coding (January 18th \- Present):
 

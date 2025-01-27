@@ -386,7 +386,7 @@ Finally, when a branch is predicted as taken, there must be a way to tell where 
 
 As there are 1024 entries per global state, and 4 global states, there will be 4096 total branch prediction entries, each being two bits. As each entry is indexed using 10 bits, and the target address also needs to be stored, this give a total amount of space taken up as: (1024 * (10 + 32)) + (1024*4*2) = 51200 bits, or 50KiB. This should be acceptable considering the 270KB of available BRAM for the target FPGA, as this leave about 264KB left over for the planned cache system, as well as anything else that may need it.
 
-## **Branching Logic Desin (Dec 31st \- January 15th):**
+## **Branching Logic Design (Dec 31st \- January 15th):**
 In order to accomodate more advanced branch prediction, the microarchitecture needs to be changed. As of now, the branch decoder only outputs PCSrcE, which updates the PC if a branch is taken. With dynamic branch prediction, will want to update the PC as soon as a B-type instruction is detected in the fetch stage, based on the branch predictors current output. This is done using the BTB, which was discussed in the previous section.
 
 I will list everything that I believe needs to be done in order to implement the branch prediction system described in the previous section. I will then go over the design of the two major components needed to implement the system, being the branch control unit, and the branch predictor itself. This list is here for me to reference to makes sure all requirements are being met.
@@ -542,12 +542,12 @@ Therfore there will be two top level modules, the GHR, and the Branching Buffer,
 
 Note that PredPCTargetF's suffix is to show that the result is coming from the fetch stage. This value will be passed along the pipeline to the execution stage, where PredPCTargetE will be used to determine TargetMatch.
 
-## Microarchitecture changes (January 15th \- January 17th):**
+## **Microarchitecture changes (January 15th \- January 17th):**
+**(Changes on January 26th)**
+The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, Decode stage, Execution stage, Control Unit, and Hazard Control Unit.
 
-The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, Execution stage and the Control Unit.
-
-### Control Unit Changes (January 15th \- January 16th):**
-
+### **Control Unit Changes (January 15th \- January 16th):**
+**(Changes on January 26th)**
 Signals no longer needed:
 - PCSrcE
 
@@ -555,7 +555,7 @@ New input signals needed:
 - InstrF[6:5]
   - This is the instructions OpCode, used for determining if the current instruction is a branch or jump.
 - PCF[9:0]
- - These are the bits used for indexing the Branch Target Buffer, and the local branch predictors.
+  - These are the bits used for indexing the Branch Target Buffer, and the local branch predictors.
 - PCE[9:0]
   - Gives index of branch currently in the execution stage
 - PCTargetE [31:0]
@@ -578,10 +578,15 @@ New internal signals:
   - Used to be called PCSrcE,
   - Indicates if branch in the execution stage is actually taken
 
-### **Fetch, Decode and Execution Stage Changes (January 16th):**
+### Hazard Control Unit Changes (January 26th):**
 
+The hazard control units only change is in relation to FlushD and FlushE. As PCSrcE changes to PCSrc, and is now 2-bits, the input will need to change from: PCSrcE -> PCSrc[1], as this is the bit now used to determine when a flush is needed.
+
+### **Fetch, Decode and Execution Stage Changes (January 16th):**
+**(Changes on January 26th)**
 The fetch stage needs the following changes:
 - A larger Multiplexer to handle more of the possible branch targets
+
 
 This requires the following new signals:
 - Inputs:
@@ -591,7 +596,9 @@ This requires the following new signals:
 - Outputs:
   - None
 
-There are no changes taht directly need to be made to the decode stage, however it's pipeline register will need to accomadate some of the new signals.
+### Decode Stage Changes (January 16th):
+**(Changes on January 26th)**
+There are no changes that directly need to be made to the decode stage, however it's pipeline register will need to accomadate some of the new signals.
 
 The Decode stage pipeline register has the following new signals:
 - Input:
@@ -601,9 +608,12 @@ The Decode stage pipeline register has the following new signals:
   - PCSrcPredD [1:0]
   - PredPCTargetF [31:0]
 
+### Execution Stage Changes (January 16th)
+**(Changes on January 26th)**
 The Execution Stage needs the following changes:
 - Comparator for PCTargetE, and PredPCTargetE
 - Will output TargetMatchE, PCE, and PCSrcPredE for use in branch prediction
+
 
 This requires the following new signals:
 - Inputs:
@@ -611,7 +621,9 @@ This requires the following new signals:
 - Outputs:
   - TargetMatchE [31:0]
   - PCE [9:0]
-  - PCSrcPredE 
+  - PCSrcPredE
+
+
 The Execute stage pipeline register has the following new signals:
 - Input:
   - PCSrcPredD [1:0]
@@ -751,6 +763,9 @@ When adding the block diagram for the Branch Control Unit and Branch Resolution 
 While going over my design decisions for handelling branch prediction, I began to really think about why I decided to specualtively branch in the decode stage rather than the fetch stage. I decided the only real reason I did this was because it was simpler to implement, and would require less work. However, although I believe this can be a valid reason to make a given design decision, I decided it was not worth it to leave 1 clock cycle on the table for correctly predicted branches in this case. I decided this, because I want my processor to have a relatively high performance, without adding excessive complexity. Doing speculative branch prediction in the fetch stage is not excessivley complex, and it will give me even more experience in developing digital systems, which is the purpose of this project, so I decided it was best to do specualtive branching in the fetch stage.
 
 This lead to numerous changes, which have been reflected in the development log, as well as the technical documentation. It will also require more changes be made to the microarchitecture diagram.
+
+## Added more detail to Microarchitecture changes (January 26th):
+The listed changes to the microarchitecture were initially done with suffecient detail to update the technical documentation, and microarchitecture diagram. However, for implemeenting changes to the actual HDL code, a more standard, organized approach was needed. As such I seperated each modules changes into their own sections, gave an overview of the changes made, and listed the new input signals, output signals, and internal signals needed. This way, when I'm changing the modules, I know exactly what to change in the module declaration, and how to use the new signals within the module itself.
 
 
 # **List of Control Signals, and their Location:**

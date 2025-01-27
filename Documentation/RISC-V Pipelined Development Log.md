@@ -544,10 +544,12 @@ Note that PredPCTargetF's suffix is to show that the result is coming from the f
 
 ## **Microarchitecture changes (January 15th \- January 17th):**
 **(Changes on January 26th)**
-The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, Decode stage, Execution stage, Control Unit, and Hazard Control Unit.
+
+The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, Decode stage, Execution stage, Control Unit, Hazard Control Unit. Changes that must be made to the top level riscvpipelined processer module will also be discussed.
 
 ### **Control Unit Changes (January 15th \- January 16th):**
 **(Changes on January 26th)**
+
 Signals no longer needed:
 - PCSrcE
 
@@ -582,8 +584,9 @@ New internal signals:
 
 The hazard control units only change is in relation to FlushD and FlushE. As PCSrcE changes to PCSrc, and is now 2-bits, the input will need to change from: PCSrcE -> PCSrc[1], as this is the bit now used to determine when a flush is needed.
 
-### **Fetch, Decode and Execution Stage Changes (January 16th):**
+### **Fetch Stage Changes (January 16th):**
 **(Changes on January 26th)**
+
 The fetch stage needs the following changes:
 - A larger Multiplexer to handle more of the possible branch targets
 
@@ -598,18 +601,20 @@ This requires the following new signals:
 
 ### Decode Stage Changes (January 16th):
 **(Changes on January 26th)**
+
 There are no changes that directly need to be made to the decode stage, however it's pipeline register will need to accomadate some of the new signals.
 
 The Decode stage pipeline register has the following new signals:
 - Input:
-  - PCSrcPredF [1:0]
+  - PCSrcPredF 
   - PredPCTargetF [31:0]
 - Output:
-  - PCSrcPredD [1:0]
+  - PCSrcPredD 
   - PredPCTargetF [31:0]
 
-### Execution Stage Changes (January 16th)
+### Execution Stage Changes (January 16th):
 **(Changes on January 26th)**
+
 The Execution Stage needs the following changes:
 - Comparator for PCTargetE, and PredPCTargetE
 - Will output TargetMatchE, PCE, and PCSrcPredE for use in branch prediction
@@ -619,23 +624,45 @@ This requires the following new signals:
 - Inputs:
   - None
 - Outputs:
-  - TargetMatchE [31:0]
+  - TargetMatchE
   - PCE [9:0]
   - PCSrcPredE
 
 
 The Execute stage pipeline register has the following new signals:
 - Input:
-  - PCSrcPredD [1:0]
+  - PCSrcPredD 
   - PredPCTargetD [31:0]
 - Output:
   - PCSrcPredE [1:0]
   - PredPCTargetE [31:0]
 
-Other new execute stage outputs:
-- TargetMatchE [31:0]
-- PCSrcPredE [1:0]
-- PCE [31:0]
+### Datapath Module Changes (January 26th):
+The dataoath module will need to handle the new signals passing between pipeline stages, and between itself and the control unit. As such it will have a number of new inputs, outputs, and internal signals.
+
+These new signals will be listed here.
+
+Inputs:
+- PredPCTargetF [31:0] 
+- PCSrcPredF
+
+Outputs:
+- PCSrcPredE
+- TargetMatchE 
+
+Internal Signals:
+- PredPCTargetD [31:0] 
+- PredPCTargetE [31:0]
+- PCSrcPredD
+
+### Riscvpipelined Module Changes (January 26th):
+This module will need to handle the signals going in between the control unit and the datapath, as such a number of new internal signals will be needed. They are as follows:
+- PredPCTargetF [31:0] 
+- PCSrcPredF
+- PCSrcPredE
+- TargetMatchE
+
+Additonally, the signal **PCSrcE** will need to be changed to be called **PCSrc** at the top level, and made 2-bits:
 
 ## Verilog Coding (January 18th \- Present):
 
@@ -688,6 +715,8 @@ This module was tested in a SystemVerilog testbench, I will list the steps that 
 
 ### Branch Predictor (January 23rd):
 This module is just the structural instantiation of both the GHR, and the branch predictor, there is no behavioral Verilog in this module. As the GHR's only role it to update LocalSrc based on PCSrcResE and BranchOpE[0], I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified.
+
+### Updating Control Unit (January 26th):
 
 # **Challenges**
 

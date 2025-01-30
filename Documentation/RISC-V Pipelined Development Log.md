@@ -542,22 +542,27 @@ Therfore there will be two top level modules, the GHR, and the Branching Buffer,
 
 Note that PredPCTargetF's suffix is to show that the result is coming from the fetch stage. This value will be passed along the pipeline to the execution stage, where PredPCTargetE will be used to determine TargetMatch.
 
-## **Microarchitecture changes (January 15th \- January 17th):**
-**(Changes on January 26th)**
+## **Microarchitecture Changes and Updates (January 15th \- January 17th):**
+**(Changes on January 26th, January 29th)**
 
-The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are primarily in relation to the Fetch stage, Decode stage, Execution stage, Control Unit, Hazard Control Unit. Changes that must be made to the top level riscvpipelined processer module will also be discussed.
+The microarchitecture diagram needed some changes due to this logic change. I will outline the changes made in this section. Changes being made are in relation to the Fetch stage, Decode stage, Execution stage, Control Unit, Hazard Control Unit. Changes that must be made to the top level riscvpipelined processer module will also be discussed.
 
-### **Control Unit Changes (January 15th \- January 16th):**
-**(Changes on January 26th)**
+Additionally, the addition of the Branch Processing Unit (BPU) will also be discussed.
 
-Signals no longer needed:
-- PCSrcE
+### Branch Processing Unit Creation (January 29th):
+This new module will contain all the branching logic units, these include the Branch Predictor (which itself contains the GHR), The Branch Control Unit, and the Branch Resolution Unit.
 
-New input signals needed:
+Input signals needed:
+- Flags
+  - Used by the Branch Resolution Unit to determine the actual result of a branch
+- funct3E[2:0]
+  - Used by the Branch Resolution Unit to determine the current branch condition
+- BranchOpE[1:0]
+  - Used by all three internal modules, for determining if the intruction in the execution stage is a branch/jump
 - InstrF[6:5]
-  - This is the instructions OpCode, used for determining if the current instruction is a branch or jump.
+  - This is the instructions OpCode, used for determining if the current instruction is a branch or jump
 - PCF[9:0]
-  - These are the bits used for indexing the Branch Target Buffer, and the local branch predictors.
+  - These are the bits used for indexing the Branch Target Buffer, and the local branch predictors
 - PCE[9:0]
   - Gives index of branch currently in the execution stage
 - PCTargetE [31:0]
@@ -569,16 +574,26 @@ New input signals needed:
 - PCSrcPredE
   - Used to compare to PCSrcResE to see if they are the same
 
-New output signals needed:
+Output signals needed:
 - PCSrc [1:0] 
   - Effectively a replacement for PCSrcE considering it's determined using signals from multiple stages.
 - PredPCTargetF [31:0]
   - The predicted branch target address fetched from the BTB
+- PCSrcPredF
+  - Prediction of whether or not the current branch will be taken or not
 
-New internal signals:
-- PCSrcResE
-  - Used to be called PCSrcE,
-  - Indicates if branch in the execution stage is actually taken
+### **Control Unit Changes (January 15th \- January 16th):**
+**(Changes on January 26th, January 29th)**
+
+The control unit will no longer be resolving branches, so signals connected to the Branch Resolution Unit (Previously the Branch Decoder), will need to be removed.
+
+Input signals to be removed:
+- Flags (N, Z, C, V)
+- funct3E
+- BranchOpE
+
+Output signals to be removed:
+- PCSrcResE (Previously PCSrc)
 
 ### Hazard Control Unit Changes (January 26th):**
 
@@ -796,8 +811,11 @@ While going over my design decisions for handelling branch prediction, I began t
 
 This lead to numerous changes, which have been reflected in the development log, as well as the technical documentation. It will also require more changes be made to the microarchitecture diagram.
 
-## Added more detail to Microarchitecture changes (January 26th):
+## #8 Added more detail to Microarchitecture changes (January 26th):
 The listed changes to the microarchitecture were initially done with suffecient detail to update the technical documentation, and microarchitecture diagram. However, for implemeenting changes to the actual HDL code, a more standard, organized approach was needed. As such I seperated each modules changes into their own sections, gave an overview of the changes made, and listed the new input signals, output signals, and internal signals needed. This way, when I'm changing the modules, I know exactly what to change in the module declaration, and how to use the new signals within the module itself.
+
+## #9 Moved Branching control logic outside of control unit (January 29th):
+After really looking at the changes that would need to be made to the control unit in order to accomadate the changes made by adding branch prediction, I decided that the added complexity to the control unit module would be too much. To maintain modularity and scalability, it would be best to move the modules handelling branch prediction outside of the control unit, and into their own top level module alongsife the controller-datapth (much like the hazard control unit). Additionally, it will make it far easier to implement this unit with the existing hardware. This requires quite a few changes, mainly to the microarchitecture diagram, but also to a number of entries in the development log. Furthermore, I'll need to give this new module a name, that's not the Branch Control Unit, as that's already a module. As such, It will be called the Branch Processing Unit, or BPU, as this name reflects that it will be processing all branching related decisions and logic.
 
 
 # **List of Control Signals, and their Location:**

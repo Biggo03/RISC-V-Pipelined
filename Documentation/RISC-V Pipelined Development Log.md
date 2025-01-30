@@ -734,8 +734,6 @@ This module was tested in a SystemVerilog testbench, I will list the steps that 
 ### Branch Predictor (January 23rd):
 This module is just the structural instantiation of both the GHR, and the branch predictor, there is no behavioral Verilog in this module. As the GHR's only role it to update LocalSrc based on PCSrcResE and BranchOpE[0], I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified.
 
-### Updating Control Unit (January 26th):
-
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**

@@ -597,7 +597,7 @@ Input signals to be removed:
 Output signals to be removed:
 - PCSrcResE (Previously PCSrc)
 
-### Hazard Control Unit Changes (January 26th):**
+### Hazard Control Unit Changes (January 26th):
 
 The hazard control units only change is in relation to FlushD and FlushE. As PCSrcE changes to PCSrc, and is now 2-bits, the input will need to change from: PCSrcE -> PCSrc[1], as this is the bit now used to determine when a flush is needed.
 
@@ -779,6 +779,10 @@ Once that was determined, I needed to figure out how to actually implement this 
 This leads to another one of the challenges, being determining the best course of action considering tradeoffs in complexity, and performance. I decided to determine the speculative branch in the decode stage, as this lead to no need for extra hardware in the fetch stage to determine if a branch or jump is occuring. If the speculative branch occured in the fetch stage, extra hardware would be needed in order to determine if a branch was occuring, and fetch the corrosponding target address from the BTB. That being said, doing this would result in a 0 cycle penalty for correctly predicted taken branches, whereas what was implemented results in a 1 cycle penalty for predicted taken branches.
 
 Initially I decided to go with the less time optimized decode stage speculative branch, but I thought that I'm leaving an entire stall cycle on the table. At the point of writing this, the instruction memory was not synthesized, but looking at the data memory, which will have a very similar structure, there was a lot of extra timinig slack that could be utilized. I also looked at the timing of the fetch stage, and again saw a lot of extra slack. Because of this, it's extremely unlikely that adding extra logic to handle speculative branching in the fetch stage would increase the clock cycle of the design. Note that this decision was made while writing this entry, as I thought more about why I made the decision I did. More specifics about this change can be found in [Changelog Section #7](#7-changed-location-of-speculative-branching-january-11th).
+
+## 5 Handeling Complexity of Branch Prediction Changes (January 31st):
+This has been a challenge throughout the implementation of the branch prediction system. The numerous new signals, and changes to the microarchitecture were difficult to manage, especially when changes had to be made after signals and modules were already integrated into both the documentation and the microarchitecture. When I initially encapsulated the branching logic within the control unit, I saw that the complexity of the control unit was getting out of control, which led me to create the Branch Processing Unit. This change helped with signal management, and increased modularity of the design, both of which helped in restraining the complexity of the design. Handling the complexity of the design remained a major challenge and required careful signal management and modularity.
+
 
 # **Changelog**
 

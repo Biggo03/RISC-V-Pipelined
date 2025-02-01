@@ -7,7 +7,7 @@
 // Project Name: riscvpipelined
 // Description: Combination of GHR and BranchingBuffer in order to determine branch predictions
 // 
-// Dependencies:
+// Dependencies: GHR (GHR.v), BranchingBuffer (BranchingBuffer.v)
 // Additional Comments: 
 //                      
 //

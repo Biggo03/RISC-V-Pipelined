@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module BranchControlUnit(input [1:0] Op,
+module BranchControlUnit(input [1:0] OpF,
                          input PCSrcPredF, PCSrcPredE,
                          input BranchOpEb0,
                          input TargetMatchE,
@@ -36,7 +36,7 @@ module BranchControlUnit(input [1:0] Op,
     //Prediction logic
     always @(*) begin
         
-        if (Op == 2'b11 & PCSrcPredF) FirstStageOut = PredPCTargetF;
+        if (OpF == 2'b11 & PCSrcPredF) FirstStageOut = PredPCTargetF;
         else FirstStageOut = PCPlus4F;
         
     end

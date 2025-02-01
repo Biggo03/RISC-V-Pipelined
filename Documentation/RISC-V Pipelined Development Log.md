@@ -553,6 +553,8 @@ Additionally, the addition of the Branch Processing Unit (BPU) will also be disc
 This new module will contain all the branching logic units, these include the Branch Predictor (which itself contains the GHR), The Branch Control Unit, and the Branch Resolution Unit.
 
 Input signals needed:
+- clk, reset
+  - For the sequential portions of the branching logic
 - Flags
   - Used by the Branch Resolution Unit to determine the actual result of a branch
 - funct3E[2:0]
@@ -733,6 +735,10 @@ This module was tested in a SystemVerilog testbench, I will list the steps that 
 
 ### Branch Predictor (January 23rd):
 This module is just the structural instantiation of both the GHR, and the branch predictor, there is no behavioral Verilog in this module. As the GHR's only role it to update LocalSrc based on PCSrcResE and BranchOpE[0], I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified.
+
+### Branch Processing Unit (January 31st):
+This module is the instantiation of all the modules related to branching, being the Branch Resolution Unit, Branch Predictor, and Branch Control unit. As this is just a structural instantiation, I just ensured it synthesized properly, and that the elaborated RTL design was as expected.
+
 
 # **Challenges**
 

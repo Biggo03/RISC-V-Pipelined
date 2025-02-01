@@ -8,7 +8,7 @@
 // Description: Control unit for pipelined riscv processor
 // 
 // Dependencies: maindecoder (maindecoder.v), ALUdecoder (ALUdecoder.v), 
-//               widthdecoder (widthdecoder.v), branchdecoder (branchdecoder.v)
+//               widthdecoder (widthdecoder.v), BranchResolutionUnit (BranchResolutionUnit.v)
 //
 // Additional Comments: 
 //            Input sources: Decode stage, Execute stage
@@ -23,13 +23,17 @@ module controlunit(input [6:0] OpD,
                    input funct7b5D,
                    input [1:0] BranchOpE,
                    input N, Z, C, V,
-                   output [3:0] ALUControlD,
-                   output [2:0] ImmSrcD, WidthSrcD, ResultSrcD,
+                   //Main Decoder Outputs
+                   output [2:0] ImmSrcD, ResultSrcD,
                    output [1:0] BranchOpD,
-                   output PCSrcE,
-                   output ALUSrcD,
+                   output ALUSrcD, PCBaseSrcD,
                    output RegWriteD, MemWriteD,
-                   output PCBaseSrcD);
+                   //ALU Decoder Output
+                   output [3:0] ALUControlD,
+                   //Width Decoder Output
+                   output [2:0] WidthSrcD,
+                   //Branch Resolution Unit Output
+                   output PCSrcE);
         
     
     //Internal control signals
@@ -61,13 +65,13 @@ module controlunit(input [6:0] OpD,
                           .WidthSrc (WidthSrcD));     
     
     //Branch Decoder   
-    branchdecoder BranchDec(.funct3 (funct3E),
-                            .BranchOp (BranchOpE),
-                            .N (N),
-                            .Z (Z),
-                            .C (C),
-                            .V (V),
-                            .PCSrc (PCSrcE));
+    BranchResolutionUnit BranchRes(.funct3 (funct3E),
+                                   .BranchOp (BranchOpE),
+                                   .N (N),
+                                   .Z (Z),
+                                   .C (C),
+                                   .V (V),
+                                   .PCSrc (PCSrcE));
         
         
 endmodule   

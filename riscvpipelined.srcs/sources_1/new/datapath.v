@@ -46,7 +46,7 @@ module datapath(input clk, reset,
                 output [1:0] BranchOpE,
                 output N, Z, C, V,
                 //Output Signals (Branch Processing Unit)
-                output [31:0] PCE, //Only need 10LSB's
+                output [31:0] PCE, PCTargetE, //Only need 10LSB's
                 output PCSrcPredE,
                 output TargetMatchE,
                 //Output Data Signals (Hazard Control Unit)
@@ -67,7 +67,7 @@ module datapath(input clk, reset,
     wire PCSrcPredD;
     
     //Execute Stage Outputs:
-    wire [31:0] ALUResultE, WriteDataE, PCTargetE, PCPlus4E, ImmExtE;
+    wire [31:0] ALUResultE, WriteDataE, PCPlus4E, ImmExtE;
     wire [2:0] WidthSrcE, ResultSrcE;
     wire MemWriteE, RegWriteE;
     

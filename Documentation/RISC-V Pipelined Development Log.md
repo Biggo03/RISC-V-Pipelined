@@ -668,6 +668,7 @@ Inputs:
 Outputs:
 - PCSrcPredE
 - TargetMatchE 
+- PCTargetE [31:0] (Changed from internal)
 - PCE [9:0]
 
 Internal Signals:
@@ -740,10 +741,18 @@ This module is just the structural instantiation of both the GHR, and the branch
 This module is the instantiation of all the modules related to branching, being the Branch Resolution Unit, Branch Predictor, and Branch Control unit. As this is just a structural instantiation, I just ensured it synthesized properly, and that the elaborated RTL design was as expected.
 
 
-## Changes to Existing Architecture (Feb. 2nd):
+### Changes to Existing Architecture (Feb. 2nd):
+**Strategy:**
+
 When modifying the existing architecture, I decided it was best to update individual lower-level modules first, propagate necessary signal changes to higher-level modules, then move down to the next lower-level module. For example, I would first apply the required changes to the fetch module, then update the datapath module by modifying its port instantiations and adding the necessary intermediate signals. Finally, I would apply these changes to the riscvpipelined module. I would then repeat this process for all other low-level module modifications. Ideally, this approach minimizes the number of loose ends, reducing the likelihood of missing signal or port declarations.
 
 The only exception to this approach is the Control Unit and the introduction of the Branch Processing Unit (BPU). In this case, I first plan to remove the outdated branch decoder from the control unit and update its signals accordingly. Once this is done, I will integrate the BPU, ensuring that its signals remain internal, as they do not need to be output from the riscvpipelined module. This allows all required internal signals to be instantiated before they are added to the datapath module following the plan outlined above.
+
+**Specifics:**
+
+The process proceeded almost exactly as planned. I removed the branch decoder from the control unit, added the BPU to the riscvpipelined module, I then modified the fetch stage and propagated those changes upward through the datapath and riscvpipelined module. I then repeated this for the Decode, and Execute stage.
+
+One notable issue during testing was that the TargetMatch signal in the Execute stage required an always process to ensure it consistently resolved to either 0 or 1. Once this was done, it passed more tests successfully, and the final issue was the signal PCTargetE being internal to the datapath. Once it was properly set as a port of the datapath, the Branch Processing Unit had everything it needed to properly predict, and sepculatively execute instructions. 
 
 
 # **Challenges**

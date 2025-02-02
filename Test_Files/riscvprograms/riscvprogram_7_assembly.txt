@@ -1,0 +1,152 @@
+Instruction               Description                                  Address
+
+RISCV Program 5:
+
+lui x18, 709518           #x18 = -1388781568 (0xAD38E000)              0
+addi x18, x18, 2000  	  #x18 = -1388779568  (0xAD38E7D0)             4
+sw x18, 40(x0)		  #mem[40] = 0xAD38E7D0                        8
+lh x19, 40(x0)            #x19 = -6192  (0xFFFFE7D0)                   12
+lhu x20, 42(x0)		  #x20 = 44344 (0x0000AD38)                    16
+sltu x21, x20, x19        #unsigned(x20) < unsigned(x19), x21 = 1      20
+bne x0, x21, branch       #x21 != x0, therefore should branch          24
+add x19, x0, x0	          #shoudln't run (x19 = 0)                     28
+branch:
+xor x19, x19, x20	  #x19 = -46360 (0xFFFF4AE8)                   32
+auipc x20, 4              #x20 = (36 + 16384) = 16420 (0x00004024)     36
+addi x19, x19, -1516      #x19 = -47876 (0xFFFF44FC)                   40
+slti x21, x19, 20	  #signed(x19) < 20, x21 = 1                   44
+sltiu x22, x19, 20        #unsigned(x19) > 20, x22 = 0                 48
+add x21, x21, x22         #x21 = 1                                     52
+add x20, x19, x20	  #x20 = 16420 + (-47876) = -31456             56
+add x20, x20, x21         #x20 = -31456 + 1 = -31455 (0xFFFF8521)      60 
+jalr x21, x0, 72						       64
+addi x20, x0, 0           #Shouldn't run (x20 = 0)                     68
+srli x20, x20, 22         #x20 = 1023 (0x000003FF)                     72
+sub x20, x20, x21         #x20 = 1023 - 68 = 955                       76
+addi x20, x20, -930       #x20 = 959 - 934 = 25                        80
+sw x20, 144(x0)           #mem[144] = 25                               84       
+add x18, x0, x0           #x18 = 0 (place holder)                      88
+
+RISCV Program 4:
+
+addi x1, x0, 500          #x1 = 500 (0x000001F4)                       92
+sb x1, 40(x0)             #mem[40] = 0xXXXXXXF4                        96
+addi x1, x0, 1950         #x1 = 1950 (0x0000079E)	               100
+sh x1, 42(x0)             #mem[40] = 0x079EXXF4                        104
+addi x2, x0, -1           #x2 = -1 (0xFFFFFFFF)                        108
+sb x2, 41(x0)             #mem[40] = 0x079EFFF4			       112
+bgeu x2, x11, branch1     #unsigned(x2) > unsigned(x1) -> branch       116
+sh x1, 40(x0)             #shouldn't run (if ran mem[40]=0x00016184)   120
+branch1:                                           
+lb x1, 40(x0)             #x1 = 0xFFFFFFF4 (-12)                       124                     
+lbu x2, 42(x0)            #x2 = 0x0000009E (158)                       128
+andi x2, x2, 125          #x2 = 4                                      132
+ori x2, x2, 25            #x2 = 29                                     136
+xori x2, x2, 4            #x2 = 25                                     140
+add x2, x2, x1            #x2 = 13				       144
+addi x2, x2, 12           #x2 = 25				       148
+sw x2, 148(x0)            #mem[148] = 25                               152
+add x18, x0, x0           #x18 = 0 (place holder)  		       156
+
+RISCV Program 3:
+
+addi x3, x0, 15         #x3 = 15                                       160      
+addi x4, x0, 14         #x4 = 14                                       164
+bge x3, x4, branch1     #should branch                                 168
+addi x3, x0, -1         #shouldn't run                                 172
+branch1: 
+slli x5, x3, 14         #x5 = 15 << 14 = 229376                        176
+srli x5, x5, 15         #x5 = 229376 >> 15 = 7                         180
+addi x5, x5, 18         #x5 = 7+18 = 25                                184
+addi x6, x0, -1         #x6 = -1                                       188
+srai x6, x6, 10         #SRA x6 by 10 (should still be -1)             192
+bltu x3, x6, store      #should branch                                 196
+addi x5, x0, 2          #Shouldn't run                                 200
+sw x5, 100(x0)          #Shouldn't run                                 204
+store: 
+sw x5, 152(x0)          #store x5 at address 152                       208
+done: 
+add x18, x0, x0         #x18 = 0 (place holder) 		       212
+
+RISCV Program 2:
+
+addi x7, x0, 15         #x7 = 15                                       216      
+addi x8, x0, 14         #x8 = 14                                       220
+bne x8, x7, branch1     #should branch                                 224
+addi x9, x0, -1         #shouldn't run                                 228
+branch1: 
+sll x9, x7, x8          #x9 = 15 << 14 = 229376                        232
+srl x9, x9, x7          #x9 = 229376 >> 15 = 7                         236
+addi x9, x9, 18         #x9 = 7+18 = 25                                240
+addi x10, x0, -1        #x22 = -1                                      244
+sra x10, x10, x8        #x10 = -1 >>> 14 = -1                          248
+blt x10, x7, store      #should branch                                 252
+addi x9, x0, 2          #Shouldn't run                                 256
+sw x9, 100(x0)          #Shouldn't run                                 260
+store: 
+sw x9, 156(x0)          #store x9 at address 156                       264
+done: 
+add x18, x0, x0         #x18 = 0 (place holder)                        268
+
+RISCV Program 1:
+
+addi x11, x0, 5         #x11 = 5                                       272
+addi x12, x0, 12        #x12 = 12                                      276
+addi x14, x12, -9       #x14 = (12 - 9) = 3                            280
+or x13, x14, x11        #x13 = (3 or 5) = 7                            284
+and x15, x12, x13       #x15 = (12 AND 7) = 4                          288
+add x15, x15, x13       #x15 = 4 + 7 = 11                              292
+beq x15, x14, end       #Shouldn't be taken                            296
+slt x13, x12, x13       #x13 = (12 < 7) = 1                            300
+beq x13, x0, around     #Should be taken                               304
+addi x15, x0, 0         #Shouldn't execute                             308
+around:
+slt x13, x14, x11       #x13 = (3 < 5) = 1                             312
+add x14, x13, x15       #x14 = (1 + 11) = 12                           316
+sub x14, x14, x11       #x14 = (12 - 5) = 7                            320
+sw x14, 84(x12)         #[96] = 7                                      324
+lw x11, 96(x0)          #x11 = [96] = 7                                328
+add x16, x11, x15       #x16 = (7 + 11) = 18                           332
+jal x12, end            #jump to end, x12 = 340                        336
+addi x12, x12, -272     #Shouldn't execute                             340
+addi x11, x0, 1         #Shouldn't execute                             344
+end:
+add x11, x11, x16       #x11 = (7 + 18) = 25                           348
+sw x11, -180(x12)       #[160] = 25                                    352
+done: 
+add x18, x0, x0         #x18 = 0 (place holder)                        356
+
+NEW:
+
+addi x17, x0, 1        #Entire section just to use reg                 356xxx
+addi x22, x17, 1                                                       360
+addi x23, x22, 1                                                       364
+addi x24, x23, 1                                                       368
+addi x25, x24, 1                                                       372
+addi x26, x25, 1                                                       376
+addi x27, x26, 1                                                       380
+addi x28, x27, 1                                                       384
+addi x29, x28, 1                                                       388
+addi x30, x29, 1                                                       392
+addi x31, x30, 1                                                       396
+lw x1, 144(x0)         #x1 = 25                                        400
+lw x2, 148(x0)         #x2 = 25                                        404
+lw x3, 152(x0)         #x3 = 25                                        408
+lw x4, 156(x0)         #x4 = 25                                        412
+lw x5, 160(x0)         #x5 = 25                                        416
+add x6, x0, x0         #x6 = 0                                         420
+add x6, x6, x1         #x6 = 25                                        424
+sub x6, x6, x2         #x6 = 0                                         428
+add x6, x6, x3         #x6 = 25                                        432
+sub x6, x6, x4         #x6 = 0                                         436
+add x6, x6, x5         #x6 = 25                                        440
+sub x6, x6, x4         #x6 = 0                                         444
+
+Loop:
+addi x1, x1, -1        #should loop 25 times	          	       448 456
+addi x6, x6, 1         #Add 1 to x6 each loop			       452 460
+bnez x1, Loop	       #Loop back until x1 = 0			       456 464
+
+sw x6, 100(x0)         #[100] = 25                                     460
+done:
+beq x0, x0, done       #Infinite loop                                  464

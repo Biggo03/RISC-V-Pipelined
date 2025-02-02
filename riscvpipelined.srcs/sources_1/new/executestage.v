@@ -45,7 +45,8 @@ module executestage(//Input Data Signals
                     output [2:0] WidthSrcE, ResultSrcE,
                     output [1:0] BranchOpE,
                     output MemWriteE, RegWriteE,
-                    output PCSrcPredE, TargetMatchE);                     /////////////////////
+                    output PCSrcPredE, 
+                    output reg TargetMatchE);                     /////////////////////
      
      localparam REG_WIDTH = 227;
                     
@@ -75,7 +76,10 @@ module executestage(//Input Data Signals
             funct3E, RD1E, RD2E, PCE, RdE, ImmExtE, Rs1E, Rs2E, PCPlus4E, PredPCTargetE, PCSrcPredE} = EOutputs;
    
    //Test Branch Prediction
-    assign TargetMatchE = (PCTargetE == PredPCTargetE);
+    always @(*) begin
+        if (PCTargetE == PredPCTargetE) TargetMatchE = 1;
+        else TargetMatchE = 0;
+    end
     
     
     //Inputs for ALU and PCTarget adder

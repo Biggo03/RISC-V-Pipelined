@@ -25,10 +25,8 @@ module riscvpipelined(input clk, reset,
                       
     //Control unit inputs
     wire [6:0] OpD;
-    wire [2:0] funct3D, funct3E;
+    wire [2:0] funct3D;
     wire funct7b5D;
-    wire [1:0] BranchOpE;
-    wire N, Z, C, V;
     
     //Control unit outputs
     wire [3:0] ALUControlD;
@@ -36,7 +34,6 @@ module riscvpipelined(input clk, reset,
     wire [1:0] BranchOpD;
     wire RegWriteD, MemWriteD;
     wire ALUSrcD, PCBaseSrcD;
-    wire PCSrcE; //Also input to hazard control unit
     
     //Hazard control unit inputs
     wire [4:0] Rs1D, Rs2D;
@@ -50,26 +47,34 @@ module riscvpipelined(input clk, reset,
     wire StallF, StallD;
     wire FlushD, FlushE;
     
+    //Branch Processing Unit Inputs:
+    wire N, Z, C, V;
+    wire [2:0] funct3E;
+    wire [1:0] BranchOpE;
+    wire [31:0] PCE; //Only need 10 LSB's
+    wire [31:0] PCTargetE;
+    wire TargetMatchE;
+    wire PCSrcPredE;
+    
+    //Branch Processing Unit Outputs:
+    wire [1:0] PCSrc; //MSB also input to HCU
+    wire [31:0] PredPCTargetF;
+    wire PCSrcPredF;
+    
     
     controlunit CU(.OpD (OpD),
                    .funct3D (funct3D),
-                   .funct3E (funct3E),
                    .funct7b5D (funct7b5D),
-                   .BranchOpE (BranchOpE),
-                   .N (N),
-                   .Z (Z),
-                   .C (C),
-                   .V (V),
                    .ALUControlD (ALUControlD),
                    .ImmSrcD (ImmSrcD),
                    .WidthSrcD (WidthSrcD),
                    .ResultSrcD (ResultSrcD),
                    .BranchOpD (BranchOpD),
-                   .PCSrcE (PCSrcE),
                    .ALUSrcD (ALUSrcD),
                    .RegWriteD (RegWriteD),
                    .MemWriteD (MemWriteD),
                    .PCBaseSrcD (PCBaseSrcD));
+    
     
     hazardcontrol HCU(.Rs1D (Rs1D),
                       .Rs2D (Rs2D),
@@ -77,7 +82,7 @@ module riscvpipelined(input clk, reset,
                       .Rs2E (Rs2E),
                       .RdE (RdE),
                       .ResultSrcEb2 (ResultSrcEb2),
-                      .PCSrcE (PCSrcE),
+                      .PCSrcb1 (PCSrc[1]),
                       .RdM (RdM),
                       .RegWriteM (RegWriteM),
                       .RdW (RdW),
@@ -88,11 +93,31 @@ module riscvpipelined(input clk, reset,
                       .FlushE (FlushE),
                       .ForwardAE (ForwardAE),
                       .ForwardBE (ForwardBE));
+    
+    BranchProcessingUnit BPU(.clk(clk),
+                             .reset(reset),
+                             .N(N),
+                             .Z(Z),
+                             .C(C),
+                             .V(V),
+                             .funct3E(funct3E),
+                             .BranchOpE(BranchOpE),
+                             .InstrF(InstrF[6:5]),
+                             .PCF(PCF[9:0]),
+                             .PCE(PCE[9:0]),
+                             .PCTargetE(PCTargetE),
+                             .TargetMatchE(TargetMatchE),
+                             .PCSrcPredE(PCSrcPredE),
+                             //Outputs
+                             .PCSrc(PCSrc),
+                             .PredPCTargetF(PredPCTargetF),
+                             .PCSrcPredF(PCSrcPredF));
 
     datapath DP(.clk (clk),
                 .reset (reset),
                 .InstrF (InstrF),
                 .ReadDataM (ReadDataM),
+                .PredPCTargetF(PredPCTargetF),
                 .ALUControlD (ALUControlD),
                 .WidthSrcD (WidthSrcD),
                 .ResultSrcD (ResultSrcD),
@@ -102,7 +127,8 @@ module riscvpipelined(input clk, reset,
                 .RegWriteD (RegWriteD),
                 .ALUSrcD (ALUSrcD),
                 .PCBaseSrcD (PCBaseSrcD),
-                .PCSrcE (PCSrcE),
+                .PCSrc (PCSrc),
+                .PCSrcPredF(PCSrcPredF),
                 .ForwardAE (ForwardAE),
                 .ForwardBE (ForwardBE),
                 .FlushD (FlushD),
@@ -123,6 +149,9 @@ module riscvpipelined(input clk, reset,
                 .Z (Z),
                 .C (C),
                 .V (V),
+                .PCE(PCE),
+                .PCSrcPredE(PCSrcPredE),
+                .TargetMatchE(TargetMatchE),
                 .Rs1D (Rs1D),
                 .Rs2D (Rs2D),
                 .Rs1E (Rs1E),

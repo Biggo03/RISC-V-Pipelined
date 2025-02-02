@@ -17,18 +17,22 @@
 
 
 module fetchstage(input clk, reset,
-                  input [31:0] PCTargetE,
-                  input PCSrcE, StallF,
+                  input [31:0] PCTargetE, PCPlus4E,
+                  input [31:0] PredPCTargetF,
+                  input [1:0] PCSrc,
+                  input StallF,
                   output [31:0] PCF, PCPlus4F);
 
     //Intermedoate PC value
     wire [31:0] PCNextF;
     
     //PC Register logic
-    mux2 PCmux(.d0 (PCPlus4F),
-               .d1 (PCTargetE),
-               .s (PCSrcE), 
-               .y (PCNextF));
+    mux4 PCmux(.d0(PCPlus4F),
+               .d1(PredPCTargetF),
+               .d2(PCPlus4E),
+               .d3(PCTargetE),
+               .s(PCSrc),
+               .y(PCNextF));
     
     flop PCreg(.clk (clk),
                .en (~StallF), 

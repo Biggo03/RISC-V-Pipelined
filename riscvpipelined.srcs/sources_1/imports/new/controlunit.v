@@ -19,10 +19,8 @@
 
 
 module controlunit(input [6:0] OpD,
-                   input [2:0] funct3D, funct3E,
+                   input [2:0] funct3D,
                    input funct7b5D,
-                   input [1:0] BranchOpE,
-                   input N, Z, C, V,
                    //Main Decoder Outputs
                    output [2:0] ImmSrcD, ResultSrcD,
                    output [1:0] BranchOpD,
@@ -31,9 +29,7 @@ module controlunit(input [6:0] OpD,
                    //ALU Decoder Output
                    output [3:0] ALUControlD,
                    //Width Decoder Output
-                   output [2:0] WidthSrcD,
-                   //Branch Resolution Unit Output
-                   output PCSrcE);
+                   output [2:0] WidthSrcD);
         
     
     //Internal control signals
@@ -62,16 +58,7 @@ module controlunit(input [6:0] OpD,
     //Width Decoder
     widthdecoder WidthDec(.funct3 (funct3D),
                           .WidthOp (WidthOp),
-                          .WidthSrc (WidthSrcD));     
-    
-    //Branch Decoder   
-    BranchResolutionUnit BranchRes(.funct3 (funct3E),
-                                   .BranchOp (BranchOpE),
-                                   .N (N),
-                                   .Z (Z),
-                                   .C (C),
-                                   .V (V),
-                                   .PCSrc (PCSrcE));
+                          .WidthSrc (WidthSrcD));
         
         
 endmodule   

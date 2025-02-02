@@ -606,7 +606,6 @@ The hazard control units only change is in relation to FlushD and FlushE. As PCS
 
 The fetch stage needs the following changes:
 - A larger Multiplexer to handle more of the possible branch targets
-- Output InstrF[6:5] for use in the control unit
 
 
 This requires the following new signals:
@@ -628,7 +627,7 @@ The Decode stage pipeline register has the following new signals:
   - PredPCTargetF [31:0]
 - Output:
   - PCSrcPredD 
-  - PredPCTargetF [31:0]
+  - PredPCTargetD [31:0]
 
 ### Execution Stage Changes (January 16th):
 **(Changes on January 26th)**
@@ -658,7 +657,7 @@ The Execute stage pipeline register has the following new signals:
 
 
 ### Datapath Module Changes (January 26th):
-The dataoath module will need to handle the new signals passing between pipeline stages, and between itself and the control unit. As such it will have a number of new inputs, outputs, and internal signals.
+The datapath module will need to handle the new signals passing between pipeline stages, and between itself and the control unit. As such it will have a number of new inputs, outputs, and internal signals.
 
 These new signals will be listed here.
 
@@ -669,6 +668,7 @@ Inputs:
 Outputs:
 - PCSrcPredE
 - TargetMatchE 
+- PCE [9:0]
 
 Internal Signals:
 - PredPCTargetD [31:0] 
@@ -740,6 +740,12 @@ This module is just the structural instantiation of both the GHR, and the branch
 This module is the instantiation of all the modules related to branching, being the Branch Resolution Unit, Branch Predictor, and Branch Control unit. As this is just a structural instantiation, I just ensured it synthesized properly, and that the elaborated RTL design was as expected.
 
 
+## Changes to Existing Architecture (Feb. 2nd):
+When modifying the existing architecture, I decided it was best to update individual lower-level modules first, propagate necessary signal changes to higher-level modules, then move down to the next lower-level module. For example, I would first apply the required changes to the fetch module, then update the datapath module by modifying its port instantiations and adding the necessary intermediate signals. Finally, I would apply these changes to the riscvpipelined module. I would then repeat this process for all other low-level module modifications. Ideally, this approach minimizes the number of loose ends, reducing the likelihood of missing signal or port declarations.
+
+The only exception to this approach is the Control Unit and the introduction of the Branch Processing Unit (BPU). In this case, I first plan to remove the outdated branch decoder from the control unit and update its signals accordingly. Once this is done, I will integrate the BPU, ensuring that its signals remain internal, as they do not need to be output from the riscvpipelined module. This allows all required internal signals to be instantiated before they are added to the datapath module following the plan outlined above.
+
+
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**
@@ -781,7 +787,7 @@ This leads to another one of the challenges, being determining the best course o
 Initially I decided to go with the less time optimized decode stage speculative branch, but I thought that I'm leaving an entire stall cycle on the table. At the point of writing this, the instruction memory was not synthesized, but looking at the data memory, which will have a very similar structure, there was a lot of extra timinig slack that could be utilized. I also looked at the timing of the fetch stage, and again saw a lot of extra slack. Because of this, it's extremely unlikely that adding extra logic to handle speculative branching in the fetch stage would increase the clock cycle of the design. Note that this decision was made while writing this entry, as I thought more about why I made the decision I did. More specifics about this change can be found in [Changelog Section #7](#7-changed-location-of-speculative-branching-january-11th).
 
 ## 5 Handeling Complexity of Branch Prediction Changes (January 31st):
-This has been a challenge throughout the implementation of the branch prediction system. The numerous new signals, and changes to the microarchitecture were difficult to manage, especially when changes had to be made after signals and modules were already integrated into both the documentation and the microarchitecture. When I initially encapsulated the branching logic within the control unit, I saw that the complexity of the control unit was getting out of control, which led me to create the Branch Processing Unit. This change helped with signal management, and increased modularity of the design, both of which helped in restraining the complexity of the design. Handling the complexity of the design remained a major challenge and required careful signal management and modularity.
+This has been a challenge throughout the implementation of the branch prediction system. The numerous new signals, and changes to the microarchitecture were difficult to manage, especially when changes had to be made after signals and modules were already integrated into both the documentation and the microarchitecture. When I initially encapsulated the branching logic within the control unit, I saw that the complexity of the control unit was getting out of control, which led me to create the Branch Processing Unit. This change helped with signal management, and increased modularity of the design, both of which helped in restraining the complexity of the design. Handling the complexity of the design remained a major challenge and required careful signal management and modularity. 
 
 
 # **Changelog**

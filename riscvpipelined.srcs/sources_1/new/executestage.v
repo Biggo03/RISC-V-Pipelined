@@ -22,6 +22,7 @@ module executestage(//Input Data Signals
                     input [31:0] ResultW, ForwardDataM,
                     input [31:0] PCD, PCPlus4D,
                     input [31:0] ImmExtD,
+                    input [31:0] PredPCTargetD,          /////////////
                     input [2:0] funct3D,
                     input [4:0] RdD, Rs1D, Rs2D,
                     //Input Control Signals
@@ -31,26 +32,28 @@ module executestage(//Input Data Signals
                     input  RegWriteD, MemWriteD,
                     input PCBaseSrcD, ALUSrcD,
                     input [1:0] ForwardAE, ForwardBE,
-                    input FlushE,
+                    input FlushE, PCSrcPredD,            //////////////
                     //Output Data Signals
                     output [31:0] ALUResultE, WriteDataE,
                     output [31:0] PCTargetE, PCPlus4E,
                     output [31:0] ImmExtE,
+                    output [31:0] PCE,             ////////// Only need 10 LSB's
                     output [4:0] Rs1E, Rs2E, RdE,
                     output [2:0] funct3E,
                     output N, Z, C, V,
                     //Output Control Signals
                     output [2:0] WidthSrcE, ResultSrcE,
                     output [1:0] BranchOpE,
-                    output MemWriteE, RegWriteE);
+                    output MemWriteE, RegWriteE,
+                    output PCSrcPredE, TargetMatchE);                     /////////////////////
      
-     localparam REG_WIDTH = 194;
+     localparam REG_WIDTH = 227;
                     
     //Signals for holding inputs and outputs of Execute pipeline register
     wire [REG_WIDTH-1:0] EInputs, EOutputs;
     
     assign EInputs = {BranchOpD, WidthSrcD, ResultSrcD, MemWriteD, ALUControlD, PCBaseSrcD, ALUSrcD, RegWriteD,
-                      funct3D, RD1D, RD2D, PCD, RdD, ImmExtD, Rs1D, Rs2D, PCPlus4D};
+                      funct3D, RD1D, RD2D, PCD, RdD, ImmExtD, Rs1D, Rs2D, PCPlus4D, PredPCTargetD, PCSrcPredD};
                       
     wire EReset;
     
@@ -63,12 +66,16 @@ module executestage(//Input Data Signals
                                           .Q (EOutputs));
     
     //Intermediate signals from pipeline register
-    wire [31:0] RD1E, RD2E, PCE;
+    wire [31:0] RD1E, RD2E;
+    wire [31:0] PredPCTargetE;
     wire [3:0] ALUControlE;
     wire PCBaseSrcE, ALUSrcE;
     
-    assign {BranchOpE, WidthSrcE, ResultSrcE, MemWriteE, ALUControlE, PCBaseSrcE, ALUSrcE, RegWriteE,
-                                        funct3E, RD1E, RD2E, PCE, RdE, ImmExtE, Rs1E, Rs2E, PCPlus4E} = EOutputs;
+    assign {BranchOpE, WidthSrcE, ResultSrcE, MemWriteE, ALUControlE, PCBaseSrcE, ALUSrcE, RegWriteE, 
+            funct3E, RD1E, RD2E, PCE, RdE, ImmExtE, Rs1E, Rs2E, PCPlus4E, PredPCTargetE, PCSrcPredE} = EOutputs;
+   
+   //Test Branch Prediction
+    assign TargetMatchE = (PCTargetE == PredPCTargetE);
     
     
     //Inputs for ALU and PCTarget adder

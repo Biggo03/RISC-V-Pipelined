@@ -21,14 +21,15 @@
 
 module datapath(input clk, reset,
                 //Input Data Signals
-                input [31:0] InstrF, ReadDataM,
+                input [31:0] InstrF, ReadDataM, PredPCTargetF,
                 //Input Control Signals
                 input [3:0] ALUControlD,
                 input [2:0] WidthSrcD, ResultSrcD, ImmSrcD,
                 input [1:0] BranchOpD, 
                 input MemWriteD, RegWriteD,
                 input ALUSrcD, PCBaseSrcD,
-                input PCSrcE,
+                input [1:0] PCSrc,
+                input PCSrcPredF,
                 //Input Hazard Control Signals
                 input [1:0] ForwardAE, ForwardBE,
                 input FlushD, FlushE,
@@ -44,6 +45,10 @@ module datapath(input clk, reset,
                 output funct7b5D,
                 output [1:0] BranchOpE,
                 output N, Z, C, V,
+                //Output Signals (Branch Processing Unit)
+                output [31:0] PCE, //Only need 10LSB's
+                output PCSrcPredE,
+                output TargetMatchE,
                 //Output Data Signals (Hazard Control Unit)
                 output [4:0] Rs1D, Rs2D,
                 output [4:0] Rs1E, Rs2E, RdE,
@@ -57,8 +62,9 @@ module datapath(input clk, reset,
     wire [31:0] PCPlus4F;
     
     //Decode Stage Outputs:
-    wire [31:0] ImmExtD, PCD, PCPlus4D;
+    wire [31:0] ImmExtD, PCD, PCPlus4D, PredPCTargetD;
     wire [4:0] RdD;
+    wire PCSrcPredD;
     
     //Execute Stage Outputs:
     wire [31:0] ALUResultE, WriteDataE, PCTargetE, PCPlus4E, ImmExtE;
@@ -80,7 +86,9 @@ module datapath(input clk, reset,
     fetchstage Fetch(.clk (clk),
                      .reset (reset),
                      .PCTargetE (PCTargetE),
-                     .PCSrcE (PCSrcE),
+                     .PCPlus4E(PCPlus4E),
+                     .PredPCTargetF(PredPCTargetF),
+                     .PCSrc (PCSrc),
                      .StallF (StallF),
                      .PCF (PCF),
                      .PCPlus4F (PCPlus4F));
@@ -90,10 +98,13 @@ module datapath(input clk, reset,
                        .InstrF (InstrF),
                        .PCF (PCF),
                        .PCPlus4F (PCPlus4F),
+                       .PredPCTargetF(PredPCTargetF),
+                       .PCSrcPredF(PCSrcPredF),
                        .ImmSrcD (ImmSrcD),
                        .StallD (StallD),
                        .FlushD (FlushD),
                        .ImmExtD (ImmExtD),
+                       .PredPCTargetD(PredPCTargetD),
                        .PCD (PCD),
                        .PCPlus4D (PCPlus4D),
                        .RdD (RdD),
@@ -101,7 +112,8 @@ module datapath(input clk, reset,
                        .Rs2D (Rs2D),
                        .OpD (OpD),
                        .funct3D (funct3D),
-                       .funct7b5D (funct7b5D));
+                       .funct7b5D (funct7b5D),
+                       .PCSrcPredD(PCSrcPredD));
 
     executestage Execute(.clk (clk),
                          .reset (reset),
@@ -112,6 +124,7 @@ module datapath(input clk, reset,
                          .PCD (PCD),
                          .PCPlus4D (PCPlus4D),
                          .ImmExtD (ImmExtD),
+                         .PredPCTargetD (PredPCTargetD),
                          .funct3D (funct3D),
                          .RdD (RdD),
                          .Rs1D (Rs1D),
@@ -127,11 +140,13 @@ module datapath(input clk, reset,
                          .ForwardAE (ForwardAE),
                          .ForwardBE (ForwardBE),
                          .FlushE (FlushE),
+                         .PCSrcPredD (PCSrcPredD),
                          .ALUResultE (ALUResultE),
                          .WriteDataE (WriteDataE),
                          .PCTargetE (PCTargetE),
                          .PCPlus4E (PCPlus4E),
                          .ImmExtE (ImmExtE),
+                         .PCE (PCE),
                          .Rs1E (Rs1E),
                          .Rs2E (Rs2E),
                          .RdE (RdE),
@@ -144,10 +159,13 @@ module datapath(input clk, reset,
                          .ResultSrcE (ResultSrcE),
                          .BranchOpE (BranchOpE),
                          .MemWriteE (MemWriteE),
-                         .RegWriteE (RegWriteE));
+                         .RegWriteE (RegWriteE),
+                         .PCSrcPredE(PCSrcPredE),
+                         .TargetMatchE(TargetMatchE));
     
     //Need whole ResultSrcE signal internally, only need MSB externally
     assign ResultSrcEb2 = ResultSrcE[2];
+    
     
     memorystage Memory(.clk (clk),
                        .reset (reset),

@@ -19,24 +19,25 @@
 module decodestage(input clk, reset,
                    //Input Data Signals
                    input [31:0] InstrF,
-                   input [31:0] PCF, PCPlus4F,
+                   input [31:0] PCF, PCPlus4F, PredPCTargetF, ////////////////////
+                   input PCSrcPredF,            /////////////////////
                    //Input Control Signals
                    input [2:0] ImmSrcD,
                    input StallD, FlushD,
                    //Output Data Signals
                    output [31:0] ImmExtD,
-                   output [31:0] PCD, PCPlus4D,
+                   output [31:0] PCD, PCPlus4D, PredPCTargetD, //////////////////
                    output [4:0] RdD, Rs1D, Rs2D,
                    output [6:0] OpD,
                    output [2:0] funct3D,
-                   output funct7b5D);
+                   output funct7b5D, PCSrcPredD); //////////////////////
     
-    localparam REG_WIDTH = 96;
+    localparam REG_WIDTH = 129;
     
     //Signals for holding inputs and outputs of Decode pipeline register
     wire [REG_WIDTH-1:0] DInputs, DOutputs;
     
-    assign DInputs = {InstrF, PCF, PCPlus4F};
+    assign DInputs = {InstrF, PCF, PCPlus4F, PredPCTargetF, PCSrcPredF};
     
     //Register should be cleared if either of flush or reset asserted
     wire DReset;
@@ -52,7 +53,7 @@ module decodestage(input clk, reset,
      //InstrD not actually output, but used in determining outputs.
      wire [31:0] InstrD;
     
-    assign {InstrD, PCD, PCPlus4D} = DOutputs;
+    assign {InstrD, PCD, PCPlus4D, PredPCTargetD, PCSrcPredD} = DOutputs;
     
     assign RdD = InstrD[11:7];
     assign Rs1D = InstrD[19:15];

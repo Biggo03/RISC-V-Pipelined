@@ -15,7 +15,7 @@
 
 module hazardcontrol(input [4:0] Rs1D, Rs2D,            //Decode stage inputs
                      input [4:0] Rs1E, Rs2E, RdE,       //Execute stage inputs
-                     input ResultSrcEb2, PCSrcE,    
+                     input ResultSrcEb2, PCSrcb1,    
                      input [4:0] RdM,                   //Memory stage inputs
                      input RegWriteM, 
                      input [4:0] RdW,                   //Write stage inputs
@@ -62,8 +62,8 @@ module hazardcontrol(input [4:0] Rs1D, Rs2D,            //Decode stage inputs
     assign StallD = LoadStall;
     
     //Flushes
-    assign FlushE = LoadStall | PCSrcE;
-    assign FlushD = PCSrcE;
+    assign FlushE = LoadStall | PCSrcb1;
+    assign FlushD = PCSrcb1;
     
     
 

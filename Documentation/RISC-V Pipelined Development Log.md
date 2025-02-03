@@ -329,7 +329,7 @@ The total on-chip power was measured at **0.176W**, with **48%** attributed to d
 
 The dynamic power further broke down as follows:
 
-| Process | Power Consumption | %change from siingle-cycle |
+| Process | Power Consumption | %change from single-cycle  |
 | :----   | :----             | :----                      |
 | Clocks  | 0.010W (12%)      | 66.7% increase             |
 | Signals | 0.018W (21%)      | 72.3% decrease             |
@@ -754,6 +754,50 @@ The process proceeded almost exactly as planned. I removed the branch decoder fr
 
 One notable issue during testing was that the TargetMatch signal in the Execute stage required an always process to ensure it consistently resolved to either 0 or 1. Once this was done, it passed more tests successfully, and the final issue was the signal PCTargetE being internal to the datapath. Once it was properly set as a port of the datapath, the Branch Processing Unit had everything it needed to properly predict, and sepculatively execute instructions. 
 
+## Perfromance Changes (Feb. 2nd):
+After implementing the changes from the branch predictor to the processor, every performance metric had changes. These changes will be reported and discussed in this section.
+
+### Utilization:
+The processor utilized the following when synthesized on the Zybo Z7-10 development board:
+
+| Module      | LUT’s (17600) | Registers (35200) | F7 Muxes (8800) | F8 Muxes (4400) | Bonded IOB (100) |
+| :----       | :----         | :----             | :----           | :----           | :----            |
+| Top         | 1788 (10.16%) | 1664 (3.64%)      | 320 (3.64%)     | 160 (3.64%)     | 67 (67%)         |
+| rvpipelined | 1588 (9.02%)  | 1664 (2.91%)      | 256 (2.91%)     | 128 (2.91%)     | 0 (0%)           |
+| dmem        | 168 (0.95%)   | 0 (0%)            | 64 (0.73%)      | 32 (0.72%)      | 0 (0%)           |
+
+Comparing utilization to previous pipelined processor:
+
+| Component | Change in Utilization |
+|-----------|-----------------------|
+| Lut's     | 2.24% Decrease        |
+| Registers | 0.24% Increase        |
+| F7 Muxes  | 17.3% Decrease        |
+| F8 Muxes  | No Change             |
+| IOB's     | No Change             |
+
+It can be seen that there was an overall decrease in utilization, primarily in the Lut's, and F7 Muxes. As more complexity was added to the system as a whole, these decreases are likely due to optimizations made for area by the synthesizer. As not every output of the processor is used, it may also optimize out certain signals entirely, again decreasing the utilization of the design. As such, this may not be the best representation of the utilization of the system if it was used in a real application.
+
+###  Timing:
+Optimizing syntehsis for performance, the design was able to acheive an **Fmax** of **71.989MHz** corrosponding to a minimum clock period of 13.891ns. This reflects a **2.1%** decresae in clock speed compared to the previous pipelined processor fmax of **73.486MHz**. This decrease is likely due to the increase in complexity of the design, leading to some logic paths possibly being larger than before.
+
+That being said, the logic delay improved when compared to the previous pipelined processor, improving from **2.527ns** to **2.115ns**, a 16.3% improvement in this area. This means that the main reason for the worse fmax was due to increased routing between components, which could again be due to the longer logic paths.
+
+### Power:
+The total on chip power was measured at **0.1W**, a  **43%** decrease compared to the previous pipelined processor. Of this 0.1W, **10%** is related to the dynamic power, with the other **90%** being related to static power.
+
+The dynamic power can further be broken down as follows:
+| Process | Power Consumption |
+| :----   | :----             |
+| Clocks  | 0.010W (93%)      |
+| Signals | <0.001W (4%)      |
+| Logic   | <0.001W (3%)      |
+| I/O     | <0.001W (0%)      |
+
+This overall decrease in power is far more than what could be expected, but it's likely to do with the decreased clock speed, lower utilization, and possibly other optimizations made by the synthesizer.
+
+### Remarks About Perfromance:
+It's important to note that these performance metrics should be taken with a grain of salt, and are much more likely to do with optimizations made by the synthesizer, rather than being directly related to the logic changes. Accurate real world utilization, power, and clock speed will be much easier to understand and measure once a memory system capable of running real world programs is implemented, which is the next step in the development of this processor.
 
 # **Challenges**
 

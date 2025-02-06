@@ -11,13 +11,14 @@ This project demonstrates a deeper understanding of complex processor architectu
 The working schematic of the microarchitecture, as well as a project development log, and technical documentation will be found in the "Documentation" folder.
 
 ## Planned Key Features
-- Implementation of branch prediction
 - Improved memory system
   - Main memory
   - Turn instruction and data memory into L1 instruction and data caches
+  - Larger shared L2 cache
 
 ## Implemented Key Features
 - Pipelined operation for improved performance
+- Implementation of branch prediction
 - Implements RV32I instructions
 - Separate Instruction and data memories
 - Testbenches for hardware validation

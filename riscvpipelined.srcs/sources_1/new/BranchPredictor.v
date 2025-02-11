@@ -25,23 +25,14 @@ module BranchPredictor(input clk, reset,
 
     wire [1:0] LocalSrc;
     
-    wire GatedClk;
-    reg ClkEnable;
-    
-    always @(negedge clk) begin
-        ClkEnable = BranchOpEb0;
-    end
-    
-    assign GatedClk = clk & ClkEnable;
-    
-    GHR GHR(.clk(GatedClk),
+    GHR GHR(.clk(clk),
             .reset(reset),
             .BranchOpEb0(BranchOpEb0),
             .PCSrcResE(PCSrcResE),
             .LocalSrc(LocalSrc));
             
 
-    BranchingBuffer BB(.clk(GatedClk),
+    BranchingBuffer BB(.clk(clk),
                        .reset(reset),
                        .PCTargetE(PCTargetE),
                        .PCF(PCF),

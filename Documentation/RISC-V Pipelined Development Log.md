@@ -735,10 +735,7 @@ This module was tested in a SystemVerilog testbench, I will list the steps that 
 - Switched to a different local predictor (LocalSrc = 0), and ensured that this entry was changed appropriately.
 
 ### Branch Predictor (January 23rd):
-**(Changes on February 10th, see Changelog Entry #10)**
-This module is just the structural instantiation of both the GHR, and the branch predictor, along with the creation of a gated clock signal. This gated clock signal was created using a falling edge latch that enables a signal called "ClkEnable" when a branching instruction is in the execution stage, which is then ANDed with the clk. This ensures that the gated clock only rises when the clock itself rises, avoiding any possible timing issues that would come with the gated clock rising midway through a clock cycle. This addition is intended to save power by stopping the clock signal from switching unnecessarily.
-
-I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified, and the RTL schematic is as expected.
+This module is just the structural instantiation of both the GHR, and the branch predictor I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified, and the RTL schematic is as expected.
 
 
 ### Branch Processing Unit (January 31st):
@@ -759,7 +756,7 @@ The process proceeded almost exactly as planned. I removed the branch decoder fr
 One notable issue during testing was that the TargetMatch signal in the Execute stage required an always process to ensure it consistently resolved to either 0 or 1. Once this was done, it passed more tests successfully, and the final issue was the signal PCTargetE being internal to the datapath. Once it was properly set as a port of the datapath, the Branch Processing Unit had everything it needed to properly predict, and sepculatively execute instructions. 
 
 ## Performance Changes (Feb. 2nd):
-**(Changes on February 10th, see Changelog Entry #10)**
+**(Changes on February 10th)**
 After implementing the changes from the branch predictor to the processor, every performance metric had changes. These changes will be reported and discussed in this section.
 
 ### Utilization:
@@ -801,18 +798,11 @@ The dynamic power can further be broken down as follows:
 
 This overall decrease in power is far more than what could be expected, but it's likely to do with the decreased clock speed, lower utilization, and possibly other optimizations made by the synthesizer.
 
-**Clock gating affect:** When the coarse clock gating was implemented on the branch predictor module, the clock speed and utilization went up slightly, but the power consumption remained the same. The dynamic power formula is proportional to frequency and activity factor, therefore, the increase in frequency should lead to an increase in dynamic power consumption. The fact that the dynamic power consumption remained the same indicates that the clock gating was able to proportionally reduce the activity factor, maintaining the previous power consumption. This makes sense when looking at the proportion of power condumption the clock is responsible for.
-
 ## Saved Cycles:
 This design change represents the most significant performance improvement, particularly for programs with a high number of branches. The exact efficiency of the branch predictor cannot be determined universally, as it depends on the characteristics of the executed program. To accurately assess the performance improvement, benchmark testing would be necessary. This may be done at a later date, as to do this at a proper scale a more sophisticated memory system would be useful, as this would allow for compiled C code to be run on the processor.
 
 ### Remarks About Perfromance:
 It's important to note that these performance metrics should be taken with a grain of salt, and are much more likely to do with optimizations made by the synthesizer, rather than being directly related to the logic changes. Accurate real world utilization, power, and clock speed will be much easier to understand and measure once a memory system capable of running real world programs is implemented, which is the next step in the development of this processor.
-
-# Memory System (February. 5th \- Present):
-As of this entry, the planned memory system consists of an L1 instruction cache, an L1 data cache, an L2 shared cache, and finally, the top of the hierarchy would be the 1Gb DDR3 RAM that is also on the FPGA board. IP will need to be used in order to interface with the DDR3 RAM memory. This setup will allow the CPU to function as expected, accessing both instruction and data memory while benefiting from caching improvements and increased total memory capacity. The first step in this implementation will be designing the L1 instruction and data caches. Once those are functional, the L2 shared cache/memory will be developed to interface with them. Once that is completed, the L2 cache will need to be configured to interface with the main memory, which will likely require the creation of an MMU. 
-
-Note that this section is very tentative, and the design is subject to change with more information.
 
 # **Challenges**
 
@@ -854,7 +844,7 @@ This leads to another one of the challenges, being determining the best course o
 
 Initially I decided to go with the less time optimized decode stage speculative branch, but I thought that I'm leaving an entire stall cycle on the table. At the point of writing this, the instruction memory was not synthesized, but looking at the data memory, which will have a very similar structure, there was a lot of extra timinig slack that could be utilized. I also looked at the timing of the fetch stage, and again saw a lot of extra slack. Because of this, it's extremely unlikely that adding extra logic to handle speculative branching in the fetch stage would increase the clock cycle of the design. Note that this decision was made while writing this entry, as I thought more about why I made the decision I did. More specifics about this change can be found in [Changelog Section #7](#7-changed-location-of-speculative-branching-january-11th).
 
-## 5 Handeling Complexity of Branch Prediction Changes (January 31st):
+## #5 Handeling Complexity of Branch Prediction Changes (January 31st):
 This has been a challenge throughout the implementation of the branch prediction system. The numerous new signals, and changes to the microarchitecture were difficult to manage, especially when changes had to be made after signals and modules were already integrated into both the documentation and the microarchitecture. When I initially encapsulated the branching logic within the control unit, I saw that the complexity of the control unit was getting out of control, which led me to create the Branch Processing Unit. This change helped with signal management, and increased modularity of the design, both of which helped in restraining the complexity of the design. Handling the complexity of the design remained a major challenge and required careful signal management and modularity. 
 
 
@@ -898,6 +888,3 @@ The listed changes to the microarchitecture were initially done with suffecient 
 
 ## #9 Moved Branching control logic outside of control unit (January 29th):
 After really looking at the changes that would need to be made to the control unit in order to accomadate the changes made by adding branch prediction, I decided that the added complexity to the control unit module would be too much. To maintain modularity and scalability, it would be best to move the modules handelling branch prediction outside of the control unit, and into their own top level module alongsife the controller-datapth (much like the hazard control unit). Additionally, it will make it far easier to implement this unit with the existing hardware. This requires quite a few changes, mainly to the microarchitecture diagram, but also to a number of entries in the development log. Furthermore, I'll need to give this new module a name, that's not the Branch Control Unit, as that's already a module. As such, It will be called the Branch Processing Unit, or BPU, as this name reflects that it will be processing all branching related decisions and logic.
-
-## #10 Added Coarse Clock Gating to Branch Predictors (February 10th):
-As the branch predictors, and branching buffer only need to be updated when a branching instruction is in the execution stage, I decided it would be a worthwhile change to clock gate both of these modules. This was done by adding a falling edge latch to the BranchingBuffer module that enables a signal called "ClkEnable" when a branching instruction is in the execution stage, which is then ANDed with the clk. This ensures that the gated clock only rises when the clock itself rises, avoiding any possible timing issues that would come with the gated clock rising midway through a clock cycle. It also would've been possible to more finely clock gate each individual local predictor, however I don't believe that the possible power saiving gained from this change would be worth the extra area, or complexity. This change will also be discussed in the sections that it affected. Note that this also changed the synthesis results of the design, which is in all likliehood due to the synthesizer finding a more efficient routing path than it did previously, rather than improvements made by this change. The timing saw a marginal improvement, the area got slightly larger, and the power stayed the same. This is unexpected, as the intention of this change is to save power by reducing the amount of times the clock signal switches, but regardless these were the results.

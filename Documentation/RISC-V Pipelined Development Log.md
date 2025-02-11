@@ -899,34 +899,3 @@ After really looking at the changes that would need to be made to the control un
 
 ## #10 Added Coarse Clock Gating to Branch Predictors (February 10th):
 As the branch predictors, and branching buffer only need to be updated when a branching instruction is in the execution stage, I decided it would be a worthwhile change to clock gate both of these modules. This was done by adding a falling edge latch to the BranchingBuffer module that enables a signal called "ClkEnable" when a branching instruction is in the execution stage, which is then ANDed with the clk. This ensures that the gated clock only rises when the clock itself rises, avoiding any possible timing issues that would come with the gated clock rising midway through a clock cycle. It also would've been possible to more finely clock gate each individual local predictor, however I don't believe that the possible power saiving gained from this change would be worth the extra area, or complexity. This change will also be discussed in the sections that it affected. Note that this also changed the synthesis results of the design, which is in all likliehood due to the synthesizer finding a more efficient routing path than it did previously, rather than improvements made by this change. The timing saw a marginal improvement, the area got slightly larger, and the power stayed the same. This is unexpected, as the intention of this change is to save power by reducing the amount of times the clock signal switches, but regardless these were the results.
-
-
-# **List of Control Signals, and their Location:**
-
-| Control Signal | Main Decoder| Width Decoder | ALU | Immediate Extension| Hazard Unit | BRU | BCU | Branch Predictor |
-|----------------|-------------|---------------|-----|--------------------|-------------|-----|-----|------------------|
-|RegWrite        |█████████████|               |     |                    |             |     |     |                  |
-|ImmSrc          |█████████████|               |     |████████████████████|             |     |     |                  |
-|ALUSrc          |█████████████|               |     |                    |             |     |     |                  |
-|MemWrite        |█████████████|               |     |                    |             |     |     |                  |
-|ResultSrc       |█████████████|               |     |                    |█████████████|     |     |                  |
-|BranchOP        |█████████████|               |     |                    |             |█████|█████|                  |
-|PCSrcPred       |             |               |     |                    |             |     |█████|                  |
-|PCSrcRes        |             |               |     |                    |             |█████|█████|                  |
-|PCSrc           |             |               |     |                    |█████████████|     |█████|                  |
-|ALUOp           |█████████████|               |█████|                    |             |     |     |                  |
-|ALUControl      |█████████████|               |█████|                    |             |     |     |                  |
-|WidthOp         |█████████████|███████████████|     |                    |             |     |     |                  |
-|WidthSrc        |             |███████████████|     |                    |             |     |     |                  |
-|PCBaseSrc       |█████████████|               |     |                    |             |     |     |                  |
-|ForwardAE       |             |               |     |                    |█████████████|     |     |                  |
-|ForwardAE       |             |               |     |                    |█████████████|     |     |                  |
-|ForwardAE       |             |               |     |                    |█████████████|     |     |                  |
-|ForwardBE       |             |               |     |                    |█████████████|     |     |                  |
-|ForwardBE       |             |               |     |                    |█████████████|     |     |                  |
-|ForwardBE       |             |               |     |                    |█████████████|     |     |                  |
-|LoadStall       |             |               |     |                    |█████████████|     |     |                  |
-|StallF          |             |               |     |                    |█████████████|     |     |                  |
-|StallD          |             |               |     |                    |█████████████|     |     |                  |
-|FlushE          |             |               |     |                    |█████████████|     |     |                  |
-|FlushD          |             |               |     |                    |█████████████|     |     |                  |

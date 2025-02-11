@@ -12,7 +12,7 @@ The working schematic of the microarchitecture, as well as a project development
 
 ## Planned Key Features
 - Improved memory system
-  - Main memory
+  - Main memory using Zybo boards 1GB DDR3 off chip memory
   - Turn instruction and data memory into L1 instruction and data caches
   - Larger shared L2 cache
 

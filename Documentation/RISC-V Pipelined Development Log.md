@@ -801,6 +801,8 @@ The dynamic power can further be broken down as follows:
 
 This overall decrease in power is far more than what could be expected, but it's likely to do with the decreased clock speed, lower utilization, and possibly other optimizations made by the synthesizer.
 
+**Clock gating affect:** When the coarse clock gating was implemented on the branch predictor module, the clock speed and utilization went up slightly, but the power consumption remained the same. The dynamic power formula is proportional to frequency and activity factor, therefore, the increase in frequency should lead to an increase in dynamic power consumption. The fact that the dynamic power consumption remained the same indicates that the clock gating was able to proportionally reduce the activity factor, maintaining the previous power consumption. This makes sense when looking at the proportion of power condumption the clock is responsible for.
+
 ## Saved Cycles:
 This design change represents the most significant performance improvement, particularly for programs with a high number of branches. The exact efficiency of the branch predictor cannot be determined universally, as it depends on the characteristics of the executed program. To accurately assess the performance improvement, benchmark testing would be necessary. This may be done at a later date, as to do this at a proper scale a more sophisticated memory system would be useful, as this would allow for compiled C code to be run on the processor.
 

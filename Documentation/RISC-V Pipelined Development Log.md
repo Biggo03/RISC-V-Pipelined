@@ -348,15 +348,15 @@ The signal power used decreased by the most significant amount. This is almost c
 
 At this point, the processor has effectively been pipelined, and is functional however there are still some improvements that can be made. Some of these improvements will be based around pure processor performance, and others will be based on processor usibility. In addtion, I will want to make changes that allow the processor to be properly implemented on the target FPGA, being the Zybo Z7-10 development board.
 
-As of now, I'm planning on implementing more sophisticated dynamic branch prediction, which would increase the CPI of the processor. This is a metric that hasn't been measured before, and is likely very dependant on the compiler used to generate the assembly code. As such, will have to rely on the theoretical benifits of this addition, rather than any concreete metric.
+As of now, I'm planning on implementing more sophisticated dynamic branch prediction, which would decrease the average CPI of the processor. This is a metric that hasn't been measured before, and is likely very dependant on the compiler used to generate the assembly code. As such, will have to rely on the theoretical benifits of this addition, rather than any concrete metric.
 
-The other changes I want to make as of now are related to memory managment, as well as program loading. As of now, there are two memories in the system, an instruction and data memory. I would like to change these so that they act as caches for a larger main memory. This main memory would ideally come from the 1GB memory on the Zybo board.
+The other changes I want to make as of now are related to memory managment, as well as program loading. As of now, there are two memories in the system, an instruction and data memory. I would like to change these so that they act as caches for a larger main memory.
 
 Finally, to make the processor more usable, I would like to make it possible to serially load programs into the main memory using a UART interface.
 
 The first addition will be branch prediction, and the second will likely be the implementation of the full memory system, and finally, serial program loading.
 
-# **Branch Prediction (December 29th \- Present):**
+# **Branch Prediction (December 29th \- Feb. 2nd):**
 
 ## **Overview (December 29th - 31st):**
 
@@ -685,7 +685,7 @@ This module will need to handle the signals going in between the control unit an
 
 Additonally, the signal **PCSrcE** will need to be changed to be called **PCSrc** at the top level, and made 2-bits.
 
-## Verilog Coding (January 18th \- Present):
+## Verilog Coding (January 18th \- Feb.2nd):
 
 I will go over the new modules made, as well as the changes made to existing modules, in order to implement branch prediction. I will start with the new modules, before changing existing modules, as issues may arise with the design, and while testing. This decision allows for more flexibility when implementing the new modules into the larger design.
 
@@ -735,7 +735,11 @@ This module was tested in a SystemVerilog testbench, I will list the steps that 
 - Switched to a different local predictor (LocalSrc = 0), and ensured that this entry was changed appropriately.
 
 ### Branch Predictor (January 23rd):
-This module is just the structural instantiation of both the GHR, and the branch predictor, there is no behavioral Verilog in this module. As the GHR's only role it to update LocalSrc based on PCSrcResE and BranchOpE[0], I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified.
+**(Changes on February 10th, see Changelog Entry #10)**
+This module is just the structural instantiation of both the GHR, and the branch predictor, along with the creation of a gated clock signal. This gated clock signal was created using a falling edge latch that enables a signal called "ClkEnable" when a branching instruction is in the execution stage, which is then ANDed with the clk. This ensures that the gated clock only rises when the clock itself rises, avoiding any possible timing issues that would come with the gated clock rising midway through a clock cycle. This addition is intended to save power by stopping the clock signal from switching unnecessarily.
+
+I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified, and the RTL schematic is as expected.
+
 
 ### Branch Processing Unit (January 31st):
 This module is the instantiation of all the modules related to branching, being the Branch Resolution Unit, Branch Predictor, and Branch Control unit. As this is just a structural instantiation, I just ensured it synthesized properly, and that the elaborated RTL design was as expected.
@@ -754,34 +758,35 @@ The process proceeded almost exactly as planned. I removed the branch decoder fr
 
 One notable issue during testing was that the TargetMatch signal in the Execute stage required an always process to ensure it consistently resolved to either 0 or 1. Once this was done, it passed more tests successfully, and the final issue was the signal PCTargetE being internal to the datapath. Once it was properly set as a port of the datapath, the Branch Processing Unit had everything it needed to properly predict, and sepculatively execute instructions. 
 
-## Perfromance Changes (Feb. 2nd):
+## Performance Changes (Feb. 2nd):
+**(Changes on February 10th, see Changelog Entry #10)**
 After implementing the changes from the branch predictor to the processor, every performance metric had changes. These changes will be reported and discussed in this section.
 
 ### Utilization:
 The processor utilized the following when synthesized on the Zybo Z7-10 development board:
 
-| Module      | LUT’s (17600) | Registers (35200) | F7 Muxes (8800) | F8 Muxes (4400) | Bonded IOB (100) |
+| Module      | LUTs (17600) | Registers (35200) | F7 Muxes (8800) | F8 Muxes (4400) | Bonded IOB (100) |
 | :----       | :----         | :----             | :----           | :----           | :----            |
-| Top         | 1788 (10.16%) | 1664 (3.64%)      | 320 (3.64%)     | 160 (3.64%)     | 67 (67%)         |
-| rvpipelined | 1588 (9.02%)  | 1664 (2.91%)      | 256 (2.91%)     | 128 (2.91%)     | 0 (0%)           |
+| Top         | 1805 (10.26%) | 1660 (4.72%)      | 361 (4.10%)     | 160 (3.64%)     | 67 (67%)         |
+| rvpipelined | 1605 (9.12%)  | 1660 (4.72%)      | 297 (3.38%)     | 128 (2.91%)     | 0 (0%)           |
 | dmem        | 168 (0.95%)   | 0 (0%)            | 64 (0.73%)      | 32 (0.72%)      | 0 (0%)           |
 
 Comparing utilization to previous pipelined processor:
 
 | Component | Change in Utilization |
 |-----------|-----------------------|
-| Lut's     | 2.24% Decrease        |
-| Registers | 0.24% Increase        |
-| F7 Muxes  | 17.3% Decrease        |
+| Lut's     | 1.31% Decrease        |
+| Registers | No Change             |
+| F7 Muxes  | 6.72% Decrease        |
 | F8 Muxes  | No Change             |
 | IOB's     | No Change             |
 
 It can be seen that there was an overall decrease in utilization, primarily in the Lut's, and F7 Muxes. As more complexity was added to the system as a whole, these decreases are likely due to optimizations made for area by the synthesizer. As not every output of the processor is used, it may also optimize out certain signals entirely, again decreasing the utilization of the design. As such, this may not be the best representation of the utilization of the system if it was used in a real application.
 
 ###  Timing:
-Optimizing syntehsis for performance, the design was able to acheive an **Fmax** of **71.989MHz** corrosponding to a minimum clock period of 13.891ns. This reflects a **2.1%** decresae in clock speed compared to the previous pipelined processor fmax of **73.486MHz**. This decrease is likely due to the increase in complexity of the design, leading to some logic paths possibly being larger than before.
+Optimizing syntehsis for performance, the design was able to acheive an **Fmax** of **73.757MHz** corrosponding to a minimum clock period of 13.558ns. This reflects a **0.368%** increase in clock speed compared to the previous pipelined processor fmax of **73.486MHz**. This increase is likely due to optimizations made by the synthesizer that weren't found previously.
 
-That being said, the logic delay improved when compared to the previous pipelined processor, improving from **2.527ns** to **2.115ns**, a 16.3% improvement in this area. This means that the main reason for the worse fmax was due to increased routing between components, which could again be due to the longer logic paths.
+The logic delay of was again 2.527ns, having no change compared to the last implementation of the processor. This supports the idea that the improvement in clock speed was primarily due to optimizations made by the synthesizer.
 
 ### Power:
 The total on chip power was measured at **0.1W**, a  **43%** decrease compared to the previous pipelined processor. Of this 0.1W, **10%** is related to the dynamic power, with the other **90%** being related to static power.
@@ -796,8 +801,16 @@ The dynamic power can further be broken down as follows:
 
 This overall decrease in power is far more than what could be expected, but it's likely to do with the decreased clock speed, lower utilization, and possibly other optimizations made by the synthesizer.
 
+## Saved Cycles:
+This design change represents the most significant performance improvement, particularly for programs with a high number of branches. The exact efficiency of the branch predictor cannot be determined universally, as it depends on the characteristics of the executed program. To accurately assess the performance improvement, benchmark testing would be necessary. This may be done at a later date, as to do this at a proper scale a more sophisticated memory system would be useful, as this would allow for compiled C code to be run on the processor.
+
 ### Remarks About Perfromance:
 It's important to note that these performance metrics should be taken with a grain of salt, and are much more likely to do with optimizations made by the synthesizer, rather than being directly related to the logic changes. Accurate real world utilization, power, and clock speed will be much easier to understand and measure once a memory system capable of running real world programs is implemented, which is the next step in the development of this processor.
+
+# Memory System (February. 5th \- Present):
+As of this entry, the planned memory system consists of an L1 instruction cache, an L1 data cache, an L2 shared cache, and finally, the top of the hierarchy would be the 1Gb DDR3 RAM that is also on the FPGA board. IP will need to be used in order to interface with the DDR3 RAM memory. This setup will allow the CPU to function as expected, accessing both instruction and data memory while benefiting from caching improvements and increased total memory capacity. The first step in this implementation will be designing the L1 instruction and data caches. Once those are functional, the L2 shared cache/memory will be developed to interface with them. Once that is completed, the L2 cache will need to be configured to interface with the main memory, which will likely require the creation of an MMU. 
+
+Note that this section is very tentative, and the design is subject to change with more information.
 
 # **Challenges**
 
@@ -883,6 +896,9 @@ The listed changes to the microarchitecture were initially done with suffecient 
 
 ## #9 Moved Branching control logic outside of control unit (January 29th):
 After really looking at the changes that would need to be made to the control unit in order to accomadate the changes made by adding branch prediction, I decided that the added complexity to the control unit module would be too much. To maintain modularity and scalability, it would be best to move the modules handelling branch prediction outside of the control unit, and into their own top level module alongsife the controller-datapth (much like the hazard control unit). Additionally, it will make it far easier to implement this unit with the existing hardware. This requires quite a few changes, mainly to the microarchitecture diagram, but also to a number of entries in the development log. Furthermore, I'll need to give this new module a name, that's not the Branch Control Unit, as that's already a module. As such, It will be called the Branch Processing Unit, or BPU, as this name reflects that it will be processing all branching related decisions and logic.
+
+## #10 Added Coarse Clock Gating to Branch Predictors (February 10th):
+As the branch predictors, and branching buffer only need to be updated when a branching instruction is in the execution stage, I decided it would be a worthwhile change to clock gate both of these modules. This was done by adding a falling edge latch to the BranchingBuffer module that enables a signal called "ClkEnable" when a branching instruction is in the execution stage, which is then ANDed with the clk. This ensures that the gated clock only rises when the clock itself rises, avoiding any possible timing issues that would come with the gated clock rising midway through a clock cycle. It also would've been possible to more finely clock gate each individual local predictor, however I don't believe that the possible power saiving gained from this change would be worth the extra area, or complexity. This change will also be discussed in the sections that it affected. Note that this also changed the synthesis results of the design, which is in all likliehood due to the synthesizer finding a more efficient routing path than it did previously, rather than improvements made by this change. The timing saw a marginal improvement, the area got slightly larger, and the power stayed the same. This is unexpected, as the intention of this change is to save power by reducing the amount of times the clock signal switches, but regardless these were the results.
 
 
 # **List of Control Signals, and their Location:**

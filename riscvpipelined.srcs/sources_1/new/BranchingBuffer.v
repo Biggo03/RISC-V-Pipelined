@@ -30,7 +30,8 @@ module BranchingBuffer(input clk, reset,
     (* ram_style = "block" *) reg [31:0] BufferEntry [1023:0];
     wire [3:0] LPOutputs [1023:0];
     
-    wire [4095:0] Enable;
+    //Local predictor inputs
+    wire [4095:0] Enable; 
     reg [1023:0] LocalReset;
     
     genvar i;
@@ -52,8 +53,8 @@ module BranchingBuffer(input clk, reset,
     endgenerate
     
     //Execute stage and reset logic
-    //Sequential s.t local predictor resets handelled appropriately
-    always @(posedge clk) begin
+    //Posedge on reset so clock gating doesn't affect reset behaviour
+    always @(posedge clk, posedge reset) begin
         if (reset) begin
             LocalReset <= {4096{1'b1}};
         end else if (~TargetMatch && BranchOpEb0) begin

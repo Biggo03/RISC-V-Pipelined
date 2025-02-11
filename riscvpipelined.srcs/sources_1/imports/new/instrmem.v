@@ -23,7 +23,7 @@
 module instrmem(input [31:0] A,
                 output [31:0] RD);
     
-    //Initialize a RAM array (32-bit words, store 64 words)
+    //Initialize a RAM array (32-bit words, store 128 words)
     reg [31:0] RAM [127:0];
     
     //Initialize instruction memory with given file

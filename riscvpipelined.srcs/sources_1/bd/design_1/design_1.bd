@@ -10,8 +10,8 @@
       "tool_version": "2022.2"
     },
     "design_tree": {
-      "instrmem_0": "",
       "datamem_0": "",
+      "instrmem_0": "",
       "riscvpipelined_0": ""
     },
     "ports": {
@@ -35,29 +35,6 @@
       }
     },
     "components": {
-      "instrmem_0": {
-        "vlnv": "xilinx.com:module_ref:instrmem:1.0",
-        "xci_name": "design_1_instrmem_0_0",
-        "xci_path": "ip\\design_1_instrmem_0_0\\design_1_instrmem_0_0.xci",
-        "inst_hier_path": "instrmem_0",
-        "reference_info": {
-          "ref_type": "hdl",
-          "ref_name": "instrmem",
-          "boundary_crc": "0x0"
-        },
-        "ports": {
-          "A": {
-            "direction": "I",
-            "left": "31",
-            "right": "0"
-          },
-          "RD": {
-            "direction": "O",
-            "left": "31",
-            "right": "0"
-          }
-        }
-      },
       "datamem_0": {
         "vlnv": "xilinx.com:module_ref:datamem:1.0",
         "xci_name": "design_1_datamem_0_0",
@@ -97,6 +74,29 @@
             "right": "0"
           },
           "WD": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "RD": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          }
+        }
+      },
+      "instrmem_0": {
+        "vlnv": "xilinx.com:module_ref:instrmem:1.0",
+        "xci_name": "design_1_instrmem_0_0",
+        "xci_path": "ip\\design_1_instrmem_0_0\\design_1_instrmem_0_0.xci",
+        "inst_hier_path": "instrmem_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "instrmem",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "A": {
             "direction": "I",
             "left": "31",
             "right": "0"

@@ -735,7 +735,7 @@ This module was tested in a SystemVerilog testbench, I will list the steps that 
 - Switched to a different local predictor (LocalSrc = 0), and ensured that this entry was changed appropriately.
 
 ### Branch Predictor (January 23rd):
-This module is just the structural instantiation of both the GHR, and the branch predictor I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified, and the RTL schematic is as expected.
+This module is just the structural instantiation of both the GHR, and the branch predictor. I feel it is unnecessary to test this module as a whole, as both modules have been suffeciently verified, and the RTL schematic is as expected.
 
 
 ### Branch Processing Unit (January 31st):

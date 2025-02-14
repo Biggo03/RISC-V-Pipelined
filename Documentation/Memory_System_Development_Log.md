@@ -68,35 +68,51 @@ Caches store a subset of the total data in the system and are designed to improv
     - This comes at the cost of greater complexity in terms of tag checking and replacement policies. This also means they will take up a larger area, and consume more power.
 
 ## Limitations of FPGA Hardware:
-The FPGA system has two ways of storing data. THe first is LUTRAM, which can be completely custom configured using HDL, but is limited to 6000 LUTRAM blocks, each one capable of storing 64-bits (Total storage capacity of about 48KB). The second is BRAM, which has a number of limitations. The BRAM blocks each store 36Kb of data, and have busses capable of sending/recieving 72-bits of data per access. Beyond that, they only support synchronous reads and writes, meaning that there will always be at least a single clock cycle delay between when an address is recieved, and when the appropriate data is read. There are 60 36Kb BRAMs, meaning they can store 270KB of data in total. 
+The FPGA system has two ways of storing data. The first is LUTRAM, which can be completely custom configured using HDL, but is limited to 6000 LUTRAM blocks, each one capable of storing 64-bits (Total storage capacity of about 48KB). The second is BRAM, which has a number of limitations. The BRAM blocks each store 36Kb of data, and have busses capable of sending/receiving 72-bits of data per access. BRAM only supports synchronous reads and writes, meaning that data is not available until the cycle after an address is provided. There are 60 36Kb BRAMs, meaning they can store 270KB of data in total. 
 
-As the LUTRAM is faster (no need for a cycle delay), and can be fully customized, it will be used for the L1 caches, allowing for each L1 cache to be 16KiB, retaining 16KiB for any other data storage needs of the system. This will ensure that on L1 cache hits, there will be no stalling. The L2 cache will be made using BRAM, giving it much higher storage capacity, at the cost of a 1-cycle delay. As the L2 cache also won't need to deal with variable width memory accesses the limitations of the BRAM won't be as much of an issue as it may be with the L1 caches. This design choice aligns with the function intended for each cache level, utilizing the strengths of the resources available, while minimizing their weaknesses.
+As the LUTRAM is faster (no need for a cycle delay), and can be fully customized, it will be used for both L1 caches, allowing for each L1 cache to be 16KiB, retaining 16KiB for any other data storage needs of the system. This will ensure that on L1 cache hits, there will be no stalling. The L2 cache will be made using BRAM, giving it much higher storage capacity, at the cost of a 1-cycle delay. As the L2 cache also won't need to deal with variable width memory accesses, the limitations of the BRAM won't be as much of an issue as it may be with the L1 caches. This design choice aligns with the function intended for each cache level, utilizing the strengths of the resources available, while minimizing their weaknesses.
 
 # L1 Instruction Cache design (February 13th, 2025 \- Present):
 
 ## Initial Design Decisions (February 13th, 2025):
-This cache is the simplest one to be implemented, as it will not need to deal with any writes. The starting specifications for this cach will be 4-way, with a 64B block size, meaning to store 16KiB, it must have 64 sets. This comes from the equation C = SEB, where S is the number of sets, E is the associativity, and B is the block size.
+This cache is the simplest one to be implemented, as it will not need to deal with any writes. The starting specifications for this cache will be 4-way, with a 64B block size, meaning to store 16KiB, it must have 64 sets. This comes from the equation C = SEB, where S is the number of sets, E is the associativity, and B is the block size.
 
-It is 4-ways, as this gives a good balance between a reduction in hit rate, while still not requiring extremely complex logic in order to handle. The other options were 2-way, and 8-way, both of which have the same benfits but in differing proportions. Starting with 4-way and seeing if the area, or hit rate is larger may prompt a switch to either 2-way or 8-way associativity. Direct caches were not considered beacuse they are far less flexible, in that if the multiple addresses resolve to the same set frequently, thrashing will occur. Beyond that, they don't allow for the implementation of a replacement policy, which I am interested in implementing in my caches.
+It is 4-ways, as this gives a good balance between a reduction in hit rate, while still not requiring extremely complex logic in order to handle. The other options were 2-way, and 8-way, both of which have the same benfits but in differing proportions. A 2-way cache would be less complex, but would have more conflit misses, whereas an 8-way cache would be more complex, but have less conflict misses. Starting with 4-way and seeing if the area, or hit rate is larger may prompt a switch to either 2-way or 8-way associativity. Direct caches were not considered because they are far less flexible, in that if the multiple addresses resolve to the same set frequently, then there will be a high number of conflict misses. Beyond that, they don't allow for the implementation of a replacement policy. Lack of need for a replacement policy is actually one of the strengths of a direct mapped cache, as it reduces complexity, however I want to gain experience in implementing these policies, which in this case makes it a weakness.
 
-The block size of 64B was chosen, as it's a middle ground of block size. Any less, and code with good spatial locality may not be very well accomodated, and any more (128B) would likely take up a lot of bandwidth, while providing more data to the cache than may be needed. Again, it will be tweaked to find the best hit rate possible.
+The block size of 64B was chosen, as it's a middle ground of block size. ASmaller block sizes would reduce the benefits of spatial locality, as fewer consecutive instructions are loaded together, leading to more frequent cache misses.Larger block sizes increase memory transfer overhead and may reduce efficiency for programs with frequent branching or poor spatial locality. Again, it will be tweaked to find the best hit rate possible.
 
 Note that although I tried to justify my decisions in block size and associativty, more knowledge of what the processor will be doing is really needed to decide what would be best. If there's very frequent branching, and low spatial locality in the code, then higher associativity, and lower block size would be more beneficial, as there would be a lower chance for cache conflicts. If there's a very little branching, then a lower associativity with a higher block size would be more beneficial, as this would reduce power consumption and bus transactions, taking advantage of the linear operation of the code. Going with the middle ground for both associativity and block size gives the processor flexibility in the types of programs it will be able to effectively run.
 
 When the cache is implemented in Verilog, it will be parameterized for these values so that they can easily be changed depending on the effeciency of the chosen block size and associativity. If a specific function is determined for the processor, then this will also allow for easy changes to accomodate the change in work flow.
 
-THe replacement policy for this cache will be LRU. This is one of the more complex replacement policies, but it will allow for programs that branch frequently to have more optimized memory accesses. If a block of code branches in and out of the range of a set frequently, and FIFO is used, then a set of instructions is more likely to be prematurely evicted. This is because the first block loaded in may be accessed more than the second block loaded in. In FIFO this block will be evicted, even if it is more likely to be needed again in the near future.
+The replacement policy for this cache will be LRU. This is a relatively complex replacement policy, but it is better suited for programs with frequent branching, as it optimizes memory accesses by retaining frequently used blocks. FIFO does not account for actual access patterns, meaning frequently used instructions may be evicted simply based on load order, whereas LRU retains the most recently used blocks, improving performance for looping and branching code. This is because the first block loaded in may be accessed more than the second block loaded in. In FIFO this block will be evicted, even if it is more likely to be needed again in the near future.
 
-To sumarize, the cache is to have the following initial parameters:
+To summarize, the cache is to have the following initial parameters:
 - S = 64
 - E = 4
 - B = 64
 - Replacement Policy = LRU
 
-Will wait until have branch prediction data available before implementing prefetching.
+Prefetching may be implemented utilizing the existing branch prediction system in the processor once the full memory system is setup, but not in the initial implementation.
 
+## Logic Design (February 14th, 2025 \- Present):
+The module will need to be able to do the following:
+- Index into a set, and further index a block within that set, and further index the appropriate word within that block.
+    - As each block contains 64 bytes, it will contain 16 words.
+    - Only needs to be word addressable, as instructions will always be word aligned.
+        - Means only need 
+- Determine when a set has no valid block for the current memory access.
+    - This will be when the valid bit is 0, OR if no block within the set has a matching tag.
+    - As LRU will need a way to determine which block within a set is LRU.
+        - Could achieve this using logbase2(E) LRU bits that update on each cache access, and show what when a given block within a set was last accessed.
+- If there is a miss, it will need to request the new data from the higher level in the memory hierarchy.
+    - Ideally do this in parallel with checking tag bits to reduce delay if there is a miss.
+    - Initially will be blocking.
+- If there is a miss, send a signal to the processor indicating that a pipeline stall is neccesary.
+- Be able to combinationally output the requested data.
+    - Doing this in a combinational manner will mean a 0-cycle delay for instruction accesses (Needed for effecient pipeline operation).
 
-
+I feel for this module, it will be much easier to write the Verilog based on the above requirements, and then explain the design from there
 
 # Changelog:
 

@@ -169,6 +169,10 @@ This module has multiple always statements, each one handelling different portio
 
 **Output logic:** This combinational block determines the cache output. If the set is active and a cache hit occurs, it selects the desired instruction word from the matching block based on the block index bits.
 
+**Testing:** 
+
+
+
 # Changelog:
 
 ## #1 Changed initial sizes of L1 and L2 caches (February 12th, 2025):
@@ -176,10 +180,28 @@ The initial plan of using BRAM for the L1 caches didn't end up being ideal, as t
 
 # Challenges:
 
-## #1 Determining insturction cache parameters, and policies:
+## #1 Determining instruction cache parameters and policies:
+Since my processor doesn't yet have a defined use case, selecting the instruction cache parameters and policies was challenging. While this wasn't a critical issue, since the design is fully parameterizable for different block sizes, set sizes, and associativity—I still wanted to choose an initial configuration that would provide a solid foundation for learning cache architecture and parameterized design.
 
-## #2 Maintaining reasonable level of complexity in Verilog modules
+I opted for a 4-way set-associative cache as a starting point, since it can be easily generalized to N-way associativity by adjusting parameters. Additionally, implementing a replacement policy was necessary, and I chose Least Recently Used (LRU) because it is typically more efficient in most cases and provided an interesting challenge for implementation.
 
-## #3 Making the cache Verilog code parameterizable
+## #2 Maintaining reasonable level of complexity in Verilog modules:
+I initially tried to encapsulate the entire instruction cache system within one module. This was a big mistake, as the complexity of the cache system does not lend itself to being encapsulated within one module very well. Doing this would have lead to messy Verilog, that would've been harder to understand and debug. As such, I decided to split the cache system into two main modules, that would be instantiated by a top-level module. One would be the cache set, handeling tag and valid bit comparison, reads, and evictions/writes, the other would be the cache controller, handeling communication with other parts of the system, and controlling the cache set behaviour.
 
-## #4 Making the LRU replacement policy within Verilog
+## #3 Making the cache set Verilog code parameterizable:
+Parameterizing the cache set module added complexity to the coding process, primarily due to the need for dynamic indexing and control structures. Instead of using case statements, which are typically more intuitive, I had to rely on for loops and if statements that adapt based on parameter values.
+
+Additionally, parameterization introduced some challenges in signal indexing, though this was less of an issue compared to the necessary shift in coding style. 
+
+## #4 Making the LRU replacement policy within Verilog:
+Designing the LRU replacement policy was challenging due to the need to ensure that only the necessary entries were updated while correctly maintaining the hierarchy of block usage.
+
+To track the LRU order, I implemented an array of log2(E)-bit LRUBits for each block. A value of all 1's indicates the Least Recently Used (LRU) block, which is replaced on a cache miss.
+
+While this structure provided a solid foundation, updating LRUBits correctly when a block was accessed was tricky. The key challenge was determining how to adjust the hierarchy without disrupting the ordering when a block in the middle was read.
+
+To solve this, I introduced an intermediate signal that stored the blocks previous LRUBits value. This signal allowed me to:
+1. Identify which blocks were previously more recently used than the accessed block.
+2. Increment only those blocks, moving them closer to the LRU position while keeping their relative order intact.
+
+This logic was implemented in a separate clocked process to ensure proper synchronization and prevent unintended latches. This approach ultimately provided a clean, efficient method for dynamically maintaining the LRU order in hardware.

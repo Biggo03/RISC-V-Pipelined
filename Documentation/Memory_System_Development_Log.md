@@ -95,12 +95,12 @@ To summarize, the cache is to have the following initial parameters:
 
 Prefetching may be implemented utilizing the existing branch prediction system in the processor once the full memory system is setup, but not in the initial implementation.
 
-## Logic Design (February 14th, 2025 \- Present):
+## Logic Design / Verilog Coding (February 14th, 2025 \- Present):
 The module will need to be able to do the following:
 - Index into a set, and further index a block within that set, and further index the appropriate word within that block.
     - As each block contains 64 bytes, it will contain 16 words.
     - Only needs to be word addressable, as instructions will always be word aligned.
-        - Means only need 
+        - Means only need to address words, not bytes.
 - Determine when a set has no valid block for the current memory access.
     - This will be when the valid bit is 0, OR if no block within the set has a matching tag.
     - As LRU will need a way to determine which block within a set is LRU.
@@ -111,10 +111,75 @@ The module will need to be able to do the following:
 - If there is a miss, send a signal to the processor indicating that a pipeline stall is neccesary.
 - Be able to combinationally output the requested data.
     - Doing this in a combinational manner will mean a 0-cycle delay for instruction accesses (Needed for effecient pipeline operation).
+- Will update cache blocks on clock cycle following miss, while passing desired data to the processor
+    - Acts as write-through, so won't need to wait an extra clock cycle after a block is replaced.
 
-I feel for this module, it will be much easier to write the Verilog based on the above requirements, and then explain the design from there
+I began implementation of my cache system in Verilog, which allowed me to gain a better understanding of the challenges that will come along with developing a cache of the nature described. As such, I will try to explain the issues that came while implementing the cache.
+
+The main issue I initially faced was the complexity of the cache itself. I initially tried to implement the cache in one module by itself, but the complexity of the cache control logic and the sets was too much to handle in one module. So I decided to start by creating a module for the cache sets. This module handles tag and valid bit comparison, reads, and evictions/writes. I plan on also creating a module for controlling the incoming and outgoing data from the cache, communicating with both the L2 cache, and the processor. These will then be combined in a top-level L1 instruction cache module. Going about the design in this way will increase modularity, and simplify the design process of each module.
+
+### Cache Set Module (February 16th 2025\- Present):
+This is the natural starting point for the cache, as everything is built based on how the sets are organized. This module has the following parameters:
+- B: Block size (in bytes)
+- NumTagBits: Number of bits in tag
+- E: Associativity of cache
+
+This module has the following inputs:
+- clk: The clock
+- reset: The reset signal
+- ActiveSet: Indicates if the set is currently being accessed (active high)
+- RepReady: Indicates if the replacement block has been fetched (active high)
+- Block: The Block index bits of the currently desired data (Note still just returns a word, not just indexed byte)
+- Tag: The tag of the currently desired data
+- ReplacementBlock: The block intended to replace old data
+
+This module has the following outputs:
+- Data: The currently desired block within the set
+- CacheMiss: Indicates that there was a cache miss (active high)
+
+This module has the following internal signals:
+- BlockTags: Stores the tags of the currently stored blocks within the set
+- ValidBits: Indicates if a given block is valid (active high)
+- MatchedBlock: Indicates if a given block matches the current tag, and is valid
+- LRUBits: Indicates the position of how recently a block was used
+    - Value of E indicates it is the LRU block, value of 0 indicates it was just used
+- LastLRUStatus: The LRUBits associated with a block that was just accessed
+- NextFill: Indicates how many blocks have been filled with valid data
+- SetData: All data currently stored within the set
+- i: A signal used for looping constructs
+
+This module has multiple always statements, each one handelling different portions of the set logic.
+
+**Reset Logic:** This always block handles the reset of the signal. On either a positive clock or reset edge, all data within the set is reset to a default value. These include:
+- ValidBits
+- NextFill
+- MatchedBlock
+- LastLRUStatus
+- LRUBits
+- BlockTags
+- SetData
+
+**Tag and valid comparison logic:** This combinational block checks whether an instruction is in the cache by comparing the tag and valid bits. If a match is found, the corresponding MatchedBlock bit is set, LastLRUStatus is updated with the blocks old LRU value, and its LRUBits is reset to 0 (indicating it was just accessed). If no match is found, a cache miss is flagged.
+
+**LRUBits update logic:** This logic runs on the positive clock edge and updates the LRU values when the set is active and a cache hit occurs.
+
+**Replacement logic:** Evaluated on the positive clock edge, this block replaces cache blocks on a miss. If a cache miss occurs, the set is active, and the replacement data is ready, it:
+- Replaces the Least Recently Used (LRU) block if the set is full.
+- Fills the next available block if any invalid entries exist, then updates the valid bit.
+
+**Output logic:** This combinational block determines the cache output. If the set is active and a cache hit occurs, it selects the desired instruction word from the matching block based on the block index bits.
 
 # Changelog:
 
 ## #1 Changed initial sizes of L1 and L2 caches (February 12th, 2025):
 The initial plan of using BRAM for the L1 caches didn't end up being ideal, as the BRAM is synchronous only using it would require reworking of the pipeline, or the introduction of stalls. Using LUTRAM instead allows for combinational reads, and more control over how memory is accessed by the processor itself. Because of this, the L1 caches must be 16KiB, rather than 32KiB, as there's not enough LUTRAM to accomadate 64 total KiB of storage. Although this isn't ideal, this does mean that L2 will have more BRAM to work with, meaning it can be made 256KiB, rather than 192KiB, which may offset the smaller L1 cache sizes.
+
+# Challenges:
+
+## #1 Determining insturction cache parameters, and policies:
+
+## #2 Maintaining reasonable level of complexity in Verilog modules
+
+## #3 Making the cache Verilog code parameterizable
+
+## #4 Making the LRU replacement policy within Verilog

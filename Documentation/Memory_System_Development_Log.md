@@ -170,8 +170,14 @@ This module has multiple always statements, each one handelling different portio
 **Output logic:** This combinational block determines the cache output. If the set is active and a cache hit occurs, it selects the desired instruction word from the matching block based on the block index bits.
 
 **Testing:** 
-
-
+I created a testbench in SystemVerilog in order to test the modules functionality. Tasks were used to perform repetitive assertions. I ensured that:
+- The set resets correctly.
+- On a miss, the CacheMiss signal is asserted, and Data outputs all X values.
+- The set correctly fills each block when empty.
+- The correct word within a block is accessed based on block indexing.
+- LRUBits update properly after accesses.
+- Only the Least Recently Used (LRU) block is replaced when the set is full.
+- A multi-cycle delay in receiving valid replacement data does not cause issues.
 
 # Changelog:
 

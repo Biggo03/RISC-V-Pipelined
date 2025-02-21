@@ -126,7 +126,7 @@ module InstrCacheSet #(parameter B = 64,
                 LRUBits[NextFill] <= 0;
                 NextFill <= NextFill + 1;
                 
-                //If new block being added, all other blocks in set must be incremented
+                //If new block being added, all other blocks in set must have their LRUBits incremented
                 for (i = 0; i < E; i = i + 1) begin
                     if (i < NextFill) begin
                         LRUBits[i] = LRUBits[i] + 1;

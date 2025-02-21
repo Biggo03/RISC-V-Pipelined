@@ -43,20 +43,18 @@ module InstrCacheSet #(parameter B = 64,
     //Stored data
     reg [(B*8)-1:0] SetData [E-1:0];
     
+    //For looping constructs
     integer i;
     
     //Reset logic
-    always @(posedge clk, posedge reset) begin
+    always @(posedge clk) begin
     
         if (reset) begin
             ValidBits <= 0;
             NextFill <= 0;
-            MatchedBlock <= 0;
             LastLRUStatus <= 0;
             for (i = 0; i < E; i = i + 1) begin
                 LRUBits[i] <= 0;
-                BlockTags[i] <= 0;
-                SetData[i] <= 0;
             end
         end
     end
@@ -74,19 +72,15 @@ module InstrCacheSet #(parameter B = 64,
                 if (ValidBits[i] == 1 && Tag == BlockTags[i]) begin
                     MatchedBlock[i] = 1;
                     LastLRUStatus = LRUBits[i];
-                    LRUBits[i] = 0;
                 end else begin
                     MatchedBlock[i] = 0;
                 end
             end
         
             //Declare a miss
-            if (MatchedBlock == 0) begin
-                CacheMiss = 1;
-                LastLRUStatus = 0;
-            end else begin
-                CacheMiss = 0;
-            end
+            if (MatchedBlock == 0) CacheMiss = 1;
+            else CacheMiss = 0;
+            
         end
     end
     
@@ -97,6 +91,8 @@ module InstrCacheSet #(parameter B = 64,
             for (i = 0; i < E; i = i + 1) begin
                 if (~MatchedBlock[i] && ValidBits[i] && LRUBits[i] < LastLRUStatus) begin
                     LRUBits[i] = LRUBits[i] + 1;
+                end else if (MatchedBlock[i]) begin
+                    LRUBits[i] = 0;
                 end
             end
         end
@@ -111,7 +107,6 @@ module InstrCacheSet #(parameter B = 64,
                 for (i = 0; i < E; i = i + 1) begin
                     if (LRUBits[i] == E-1) begin
                         SetData[i] <= RepBlock;
-                        ValidBits[i] <= 1;
                         BlockTags[i] <= Tag;
                         LRUBits[i] <= 0;
                     end else begin
@@ -144,7 +139,7 @@ module InstrCacheSet #(parameter B = 64,
   
         if (ActiveSet && ~CacheMiss) begin
             for (i = 0; i < E; i = i + 1) begin
-                if (MatchedBlock[i] == 1) Data = SetData[i][({Block[b-1:2], 2'b0}*8) +: 32];
+                if (MatchedBlock[i] == 1) Data = SetData[i][{Block[b-1:2], 5'b0} +: 32]; //Include 5'b0 for proper word addressing
             end
         end
     end

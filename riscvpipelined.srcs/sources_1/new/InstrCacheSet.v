@@ -22,7 +22,7 @@ module InstrCacheSet #(parameter B = 64,
                        input RepReady,
                        input [$clog2(B)-1:0] Block,
                        input [NumTagBits-1:0] Tag,
-                       input [(B*8)-1:0] ReplacementBlock,
+                       input [(B*8)-1:0] RepBlock,
                        output reg [31:0] Data,
                        output reg CacheMiss);
     
@@ -65,7 +65,7 @@ module InstrCacheSet #(parameter B = 64,
     always @(*) begin
     
         MatchedBlock = 0;
-        CacheMiss = 0;
+        CacheMiss = 1;
         LastLRUStatus = 0;
         
         if (ActiveSet) begin
@@ -110,7 +110,7 @@ module InstrCacheSet #(parameter B = 64,
             if (ValidBits == {E{1'b1}}) begin
                 for (i = 0; i < E; i = i + 1) begin
                     if (LRUBits[i] == E-1) begin
-                        SetData[i] <= ReplacementBlock;
+                        SetData[i] <= RepBlock;
                         ValidBits[i] <= 1;
                         BlockTags[i] <= Tag;
                         LRUBits[i] <= 0;
@@ -120,11 +120,19 @@ module InstrCacheSet #(parameter B = 64,
                 end
                             
             end else begin
-                SetData[NextFill] <= ReplacementBlock;
+                SetData[NextFill] <= RepBlock;
                 ValidBits[NextFill] <= 1;
                 BlockTags[NextFill] <= Tag;
                 LRUBits[NextFill] <= 0;
                 NextFill <= NextFill + 1;
+                
+                //If new block being added, all other blocks in set must be incremented
+                for (i = 0; i < E; i = i + 1) begin
+                    if (i < NextFill) begin
+                        LRUBits[i] = LRUBits[i] + 1;
+                    end
+                end
+                
             end
         end
     end
@@ -136,7 +144,7 @@ module InstrCacheSet #(parameter B = 64,
   
         if (ActiveSet && ~CacheMiss) begin
             for (i = 0; i < E; i = i + 1) begin
-                if (MatchedBlock[i] == 1) Data = SetData[i][(Block[b-1:2]*8) +: 32];
+                if (MatchedBlock[i] == 1) Data = SetData[i][({Block[b-1:2], 2'b0}*8) +: 32];
             end
         end
     end

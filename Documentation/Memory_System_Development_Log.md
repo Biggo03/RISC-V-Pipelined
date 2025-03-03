@@ -118,7 +118,7 @@ I began implementation of my cache system in Verilog, which allowed me to gain a
 
 The main issue I initially faced was the complexity of the cache itself. I initially tried to implement the cache in one module by itself, but the complexity of the cache control logic and the sets was too much to handle in one module. So I decided to start by creating a module for the cache sets. This module handles tag and valid bit comparison, reads, and evictions/writes. I plan on also creating a module for controlling the incoming and outgoing data from the cache, communicating with both the L2 cache, and the processor. These will then be combined in a top-level L1 instruction cache module. Going about the design in this way will increase modularity, and simplify the design process of each module.
 
-### Cache Set Module (February 16th 2025\- Present):
+### Cache Set Module (February 16th - February 20th, 2025):
 This is the natural starting point for the cache, as everything is built based on how the sets are organized. This module has the following parameters:
 - B: Block size (in bytes)
 - NumTagBits: Number of bits in tag
@@ -178,6 +178,26 @@ I created a testbench in SystemVerilog in order to test the modules functionalit
 - LRUBits update properly after accesses.
 - Only the Least Recently Used (LRU) block is replaced when the set is full.
 - A multi-cycle delay in receiving valid replacement data does not cause issues.
+
+### Cache Controller Module (March 2nd, 2025):
+With the instruction cache set modules behaviour defined and verified, the cache controller can now be made. As the instruction cache should be accessed on every cycle, it doesn't need to determine if a memory access is occuring. Even if there is a load stall from the processor, it will still be accessing the same PC address the following cycle. That said it will need to be able to do the following:
+
+- Determine the set associated with the current address.
+- Output the appropriate read data from the set of interest.
+- Output if the currently accessed set has had a cache miss.
+
+It can be seen that this will essentially act as a decoder. As such the Verilog coding was two simple assignment statements. This module has the following input signals:
+- Set: The current set being accessed.
+- MissArray: An array containing the output of all sets CacheMiss output signals
+
+This module has the following output signals:
+- ActiveArray: Sets the bit associated with the set being accessed high.
+- CacheMiss: The bit from MissArray associated with the set currently being accessed.
+
+**Testing:** This was tested using a simple testbench, checking every possible input set, set the correct bit in the ActiveArray, and that the correct CacheMiss value is passed to the DUT output.
+
+### L1 Instruction Cache Module (March 2nd, 2025 \- Present):
+This top level cache module is a staging ground for the two previously designed modules. It generates S cache sets, divides the address into its different components, creates signals for communication between the different modules, and assigns the proper address.
 
 # Changelog:
 

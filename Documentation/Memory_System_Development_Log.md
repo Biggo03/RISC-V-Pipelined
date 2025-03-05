@@ -167,7 +167,9 @@ This module has multiple always statements, each one handelling different portio
 - Replaces the Least Recently Used (LRU) block if the set is full.
 - Fills the next available block if any invalid entries exist, then updates the valid bit.
 
-**Output logic:** This combinational block determines the cache output. If the set is active and a cache hit occurs, it selects the desired instruction word from the matching block based on the block index bits.
+This logic needed to be changed in order to accomodate LUTRAM restrictions, but the functionality remains the same.
+
+**Output logic:** This combinational block determines the cache output. It will set the output to the appropriate word within the block that got a cache hit.
 
 **Testing:** 
 I created a testbench in SystemVerilog in order to test the modules functionality. Tasks were used to perform repetitive assertions. I ensured that:
@@ -231,3 +233,12 @@ To solve this, I introduced an intermediate signal that stored the blocks previo
 2. Increment only those blocks, moving them closer to the LRU position while keeping their relative order intact.
 
 This logic was implemented in a separate clocked process to ensure proper synchronization and prevent unintended latches. This approach ultimately provided a clean, efficient method for dynamically maintaining the LRU order in hardware.
+
+## #5 Effecient LUTRAM/BRAM Synthesis Inference for L1 Cache Set:
+Although my L1 cache set worked logically, it did not initially synthesize to LUTRAM properly, instead taking up an enormous amount of LUT's for logic, as well as a huge amount of registers. As such the design needed to be changed to be consistent with LUTRAM inference. This required changing the replacement policy process in order to only write to SetData on one line, using an intermediate signal for indexing. This also required changing the read behaviour, storing the block to be read from in another intermediate signal, which was then used to index SetData.
+
+The challenge in this wasn't the changes themselves, but rather finding what the issue stopping LUTRAM inference was, as the synthesis tool provided no direction as to what the issue could be. This lead to me consulting the documentation for coding examples, as well as making a seperate module and making changes to it, and seeing what could possibly stop LUTRAM from being inferred. This was a process that took quite a lot of trial and error, but eventually allowed me to find a way to ensure LUTRAM was inferred. 
+
+However even when LUTRAM was inferred, the synthesis tool did not place it effeciently at all, using approximately 10x as many LUTs as I calcualted would be neccesary for a given set. As of writing this entry this is still an issue, and I will be looking for ways around this. The main issue in this is that the FPGA expect high depth, low width RAM, but my set expects high width low depth RAM. As such I will likely need to look into different indexing methods to fix this issue. Considering 2D arrays, and a number of other coding strategies stop the inference of LUTRAM, this will be a difficult problem to solve. If there is a large amount of time sunk into fixing this problem with no solution in sight, I may even shift the focus of my technical project elsewhere.
+
+As of now I will be looking into changing the width of the words to 32-bits, and using a flattened 1D array in order to decrease the width, and increase the depth of the storage signal. Alongside this, I will look into a multi-cycle replacement strategy, as this would allow for the RAM to be written to in smaller chunks.

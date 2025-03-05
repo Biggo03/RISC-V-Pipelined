@@ -5,7 +5,7 @@
 // Create Date: 02/14/2025 12:28:20 PM
 // Module Name: L1InstrCache
 // Project Name: riscvpipelined
-// Description: L1 instruction cache, implementing a LRU replacement policy
+// Description: L1 instruction cache
 // 
 // Dependencies:
 // Additional Comments:
@@ -18,18 +18,19 @@ module L1InstrCache#(parameter S = 64,
                      parameter E = 4,
                      parameter B = 64) 
                     (input clk, reset,
+                     input RepReady,
                      input [31:0] Address,
-                     input [511:0] NewBlock,
+                     input [(B*8)-1:0] RepBlock,
                      output [31:0] RD,
                      output L1IMiss);
     
-    //Portions of address
+    //parameters for addressing
     localparam b = $clog2(B);
     localparam s = $clog2(S);
     localparam NumTagBits = 32 - s - b;
     
-    //For looping statements
-    integer i;
+    //For generating caches
+    genvar i;
     
     //Different parts of address
     wire [b-1:0] Block;
@@ -39,24 +40,37 @@ module L1InstrCache#(parameter S = 64,
     assign Set = Address[s+b-1:b]; 
     assign Tag = Address[31:s+b]; 
     
-    //Storage signals
-    reg [(B*8)-1:0] CacheMemory [S-1:0][E-1:0];
-    reg [E-1:0] ValidBits [S-1:0];
-    reg [NumTagBits-1:0] BlockTags [S-1:0][E-1:0];
+    //Arrays for set information
+    wire [S-1:0] ActiveArray, MissArray;
+    wire [31:0] DataArray [S-1:0];
     
-    //Buffer to store most recently evicted block
-    reg [(B*8)-1:0] ReplacementBuffer;
-    
-    
-    //Reset logic
-    always @(posedge clk) begin
-        if (reset) begin
-            for(i = 0; i < S; i = i + 1) begin
-                ValidBits[i] = 0;
-            end
+    //Generate Sets
+    generate 
+        for (i = 0; i < S; i = i + 1) begin
+            InstrCacheSet#(.B(B),
+                           .NumTagBits(NumTagBits),
+                           .E(E))
+                      Set (.clk(clk),
+                           .reset(reset),
+                           .ActiveSet(ActiveArray[i]),
+                           .RepReady(RepReady),
+                           .Block(Block),
+                           .Tag(Tag),
+                           .RepBlock(RepBlock),
+                           .Data(DataArray[i]),
+                           .CacheMiss(MissArray[i]));
         end
-    end
+    endgenerate
+    
+    //Cache Controller
+    InstrCacheController#(.S(S))
+              Controller (.Set(Set),
+                          .MissArray(MissArray),
+                          .ActiveArray(ActiveArray),
+                          .CacheMiss(L1IMiss));
     
     
+    //Assign output
+    assign RD = DataArray[Set];
 
 endmodule

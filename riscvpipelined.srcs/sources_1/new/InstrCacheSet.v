@@ -15,7 +15,7 @@
 
 
 module InstrCacheSet #(parameter B = 64,
-                       parameter NumTagBits = 26,
+                       parameter NumTagBits = 20,
                        parameter E = 4)
                       (input clk, reset,
                        input ActiveSet,
@@ -23,10 +23,11 @@ module InstrCacheSet #(parameter B = 64,
                        input [$clog2(B)-1:0] Block,
                        input [NumTagBits-1:0] Tag,
                        input [(B*8)-1:0] RepBlock,
-                       output reg [31:0] Data,
+                       output [31:0] Data,
                        output reg CacheMiss);
     
     localparam b = $clog2(B);
+    localparam words = B/4;
     
     //Stored address information
     reg [NumTagBits-1:0] BlockTags [E-1:0];
@@ -40,11 +41,23 @@ module InstrCacheSet #(parameter B = 64,
     //Signal to keep track of which unfilled set is to be added next
     reg [$clog2(E)-1:0] NextFill;
     
+    //Signal storing which set to is to be replaced
+    reg [$clog2(E)-1:0] RepSet;
+    
     //Stored data
-    reg [(B*8)-1:0] SetData [E-1:0];
+    //Each set has an array of 32-bit words
+    (* ram_style = "block" *) reg [(B*8)-1:0] SetData [E-1:0];
+
+    
+    //Block Offset calculation
+    wire [b+2:0] BlockOffset; //Allows blocks to be indexed by word
+    assign BlockOffset = {Block[b-1:2], 5'b0};
+    
+    reg [$clog2(E)-1:0] OutSet;
     
     //For looping constructs
     integer i;
+    
     
     //Reset logic
     always @(posedge clk) begin
@@ -52,7 +65,7 @@ module InstrCacheSet #(parameter B = 64,
         if (reset) begin
             ValidBits <= 0;
             NextFill <= 0;
-            LastLRUStatus <= 0;
+            LastLRUStatus = 0;
             for (i = 0; i < E; i = i + 1) begin
                 LRUBits[i] <= 0;
             end
@@ -90,9 +103,9 @@ module InstrCacheSet #(parameter B = 64,
         if (ActiveSet && ~CacheMiss) begin
             for (i = 0; i < E; i = i + 1) begin
                 if (~MatchedBlock[i] && ValidBits[i] && LRUBits[i] < LastLRUStatus) begin
-                    LRUBits[i] = LRUBits[i] + 1;
+                    LRUBits[i] <= LRUBits[i] + 1;
                 end else if (MatchedBlock[i]) begin
-                    LRUBits[i] = 0;
+                    LRUBits[i] <= 0;
                 end
             end
         end
@@ -105,43 +118,44 @@ module InstrCacheSet #(parameter B = 64,
             //Replace when sets full of valid data
             if (ValidBits == {E{1'b1}}) begin
                 for (i = 0; i < E; i = i + 1) begin
-                    if (LRUBits[i] == E-1) begin
-                        SetData[i] <= RepBlock;
-                        BlockTags[i] <= Tag;
-                        LRUBits[i] <= 0;
+                    if (LRUBits[i] == E-1) begin              
+                        RepSet = i;
+                        LRUBits[RepSet] <= 0;
                     end else begin
                         LRUBits[i] <= LRUBits[i] + 1;
                     end
                 end
-                            
             end else begin
-                SetData[NextFill] <= RepBlock;
-                ValidBits[NextFill] <= 1;
-                BlockTags[NextFill] <= Tag;
-                LRUBits[NextFill] <= 0;
-                NextFill <= NextFill + 1;
+                RepSet = NextFill;
+                LRUBits[RepSet] <= 0;
+                ValidBits[RepSet] <= 1;   
+                NextFill <= NextFill + 1; //Increment next set to fill
                 
                 //If new block being added, all other blocks in set must have their LRUBits incremented
                 for (i = 0; i < E; i = i + 1) begin
                     if (i < NextFill) begin
-                        LRUBits[i] = LRUBits[i] + 1;
+                        LRUBits[i] <= LRUBits[i] + 1;
                     end
                 end
-                
             end
+            
+            SetData[RepSet] <= RepBlock;
+            BlockTags[RepSet] <= Tag;
+            
         end
     end
     
     //Output logic
     always @(*) begin
-        
-        Data = 32'bx;
   
         if (ActiveSet && ~CacheMiss) begin
             for (i = 0; i < E; i = i + 1) begin
-                if (MatchedBlock[i] == 1) Data = SetData[i][{Block[b-1:2], 5'b0} +: 32]; //Include 5'b0 for proper word addressing
+                if (MatchedBlock[i]) OutSet = i;
             end
         end
+        
     end
+    
+    assign Data = SetData[OutSet] >> BlockOffset;
     
 endmodule

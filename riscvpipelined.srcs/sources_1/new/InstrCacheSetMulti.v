@@ -22,7 +22,7 @@ module InstrCacheSetMulti #(parameter B = 64,
                        input RepReady,
                        input [$clog2(B)-1:0] Block,
                        input [NumTagBits-1:0] Tag,
-                       input [(B*8)-1:0] RepBlock,
+                       input [31:0] RepWord,
                        output [31:0] Data,
                        output RepComplete,
                        output reg CacheMiss);
@@ -45,8 +45,6 @@ module InstrCacheSetMulti #(parameter B = 64,
     reg RepBegin;
     assign RepActive = CacheMiss && ActiveSet && RepReady;
     
-    wire [31:0] RepBlockArray [words-1:0];
-    
     //Stored data
     (* ram_style = "distributed" *) reg [31:0] SetData [(words*E)-1:0];
     
@@ -60,13 +58,6 @@ module InstrCacheSetMulti #(parameter B = 64,
     //For looping constructs
     integer i;
     genvar n;
-    
-    //Re-indexes RepBlock for easier indexing
-    generate
-        for (n = 0; n < words; n = n+1) begin
-            assign RepBlockArray[n] = RepBlock[n << 5 +: 32];
-        end
-    endgenerate
     
     //Tag and valid comparison logic
     always @(*) begin
@@ -166,7 +157,7 @@ module InstrCacheSetMulti #(parameter B = 64,
     //Replacement logic
     always @(posedge clk) begin
         if (RepActive) begin
-            SetData[(RemovedBlock*words) + RepCounter] <= RepBlockArray[RepCounter];
+            SetData[(RemovedBlock*words) + RepCounter] <= RepWord;
             //Replace tag and reset counter when replacement complete
             if (RepComplete) begin
                 RepCounter <= 0;

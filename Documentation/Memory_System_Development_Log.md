@@ -231,9 +231,10 @@ These changes were verified using an updaetd version of the single-cycle replace
 
 These changes were used as a starting point because they allowed for the basic functionality to be confirmed before complicating the designs with optimizations that could be made to decrease the number of cycles needed to complete a replacement, and area used.
 
-**Optimizations (March 15th, 2025 \- Present):**
+#### Optimizations (March 15th, 2025 \- Present):
 
-The first major optimization was decoupling the ReplacementBlock calculation from LRUBit updates, which removed an unnecessary 1-cycle delay in cache replacement. There were two initial issues caused by having the ReplacementBlock being calculated in the same process as the LRUBits:
+**Eliminating Unnecessary Delay in ReplacementBlock Calculation:**
+Initially the ReplacementBlock calculation was done at the same time as the LRUBit updates. Decoupling the ReplacementBlock calculation from LRUBit updates, removed an unnecessary 1-cycle delay in cache replacement. There were two initial issues caused by having the ReplacementBlock being calculated in the same process as the LRUBits:
 - Combinational signal assignment within a sequential process, which is poor design practice.
 - LRUBit updates were unnecessarily blocking replacement: the replacement logic waited for updated LRUBits, but it actually needed the previous LRUBit state.
 
@@ -243,7 +244,13 @@ The following changes were made:
 
 This change resulted in a 1-cycle reduction in replacement delay, and cleaner, more readable Verilog code.
 
+#### Delivering Block one word at a time:
+One of the initial changes made was to re-index the 512-bit replacement word so that it would be easier to access when replacing the block. However, delivering the whole 512-bit block in one go, and then indexing into it doesn't make sense for a number of reasons:
+- If the bandwidth was a major issue for the L1 cache, this will likely be an issue for the L2 cache as well.
+    - Delivering 512-bits at once was the main issue with the single-cycle replacement cache.
+- If the L1 cache is only replacing one word per cycle, there's no reason to input more than one word per cycle.
 
+The only change made was changing the input for the replacement block to be 32-bits, and rename it toe "RepWord". This saved a huge amount of area, and will make development of the L2 cache far easier in the future. The synthesized result went from using **287** LUTs with the large RepBlock input to using **159** LUTs with the smaller RepWord input. This represents a **44.6%** reduction in LUT usage, a huge improvement.
 
 # Changelog:
 

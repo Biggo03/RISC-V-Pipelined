@@ -14,14 +14,15 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module L1InstrCache#(parameter S = 64,
+module L1InstrCache#(parameter S = 32,
                      parameter E = 4,
                      parameter B = 64) 
                     (input clk, reset,
                      input RepReady,
                      input [31:0] Address,
-                     input [(B*8)-1:0] RepBlock,
+                     input [31:0] RepWord,
                      output [31:0] RD,
+                     output RepComplete,
                      output L1IMiss);
     
     //parameters for addressing
@@ -47,7 +48,7 @@ module L1InstrCache#(parameter S = 64,
     //Generate Sets
     generate 
         for (i = 0; i < S; i = i + 1) begin
-            InstrCacheSet#(.B(B),
+            InstrCacheSetMulti#(.B(B),
                            .NumTagBits(NumTagBits),
                            .E(E))
                       Set (.clk(clk),
@@ -56,8 +57,9 @@ module L1InstrCache#(parameter S = 64,
                            .RepReady(RepReady),
                            .Block(Block),
                            .Tag(Tag),
-                           .RepBlock(RepBlock),
+                           .RepWord(RepWord),
                            .Data(DataArray[i]),
+                           .RepComplete(RepComplete),
                            .CacheMiss(MissArray[i]));
         end
     endgenerate

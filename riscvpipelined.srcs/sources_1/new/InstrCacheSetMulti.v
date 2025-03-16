@@ -1,3 +1,19 @@
+//////////////////////////////////////////////////////////////////////////////////
+// Author: Viggo Wozniak
+//
+// Create Date: 03/10/2025 02:39:28 PM
+// Module Name: L1InstrCacheSetMulti
+// Project Name: riscvpipelined
+// Description: A parameterized cache set module, implementing a LRU replacement policy
+//              Takes multiple cycles to complete replacement
+// 
+// Dependencies:
+// Additional Comments: This module assumes the L2 cache can't provide data in the
+//                      same cycle as a miss
+//                      
+//
+//////////////////////////////////////////////////////////////////////////////////
+
 module InstrCacheSetMulti #(parameter B = 64,
                        parameter NumTagBits = 20,
                        parameter E = 4)
@@ -77,7 +93,7 @@ module InstrCacheSetMulti #(parameter B = 64,
         end
     end
     
-    //Determine block to replace
+    //Block to remove logic
     always @(posedge clk) begin
         if (CacheMiss && ActiveSet && ~RepBegin) begin
             if (ValidBits == {E{1'b1}}) begin
@@ -92,7 +108,7 @@ module InstrCacheSetMulti #(parameter B = 64,
         end
     end
     
-    //Replacement logic, and LRU updates (Block to replace, LRU updates)
+    //LRU and ValidBit updates
     always @(posedge clk) begin
         
         //Reset logic
@@ -112,7 +128,6 @@ module InstrCacheSetMulti #(parameter B = 64,
             if (ValidBits == {E{1'b1}}) begin
                 for (i = 0; i < E; i = i + 1) begin
                     if (LRUBits[i] == E-1) begin              
-                        //RemovedBlock = i;
                         LRUBits[RemovedBlock] <= 0;
                     end else begin
                         LRUBits[i] <= LRUBits[i] + 1;
@@ -121,7 +136,6 @@ module InstrCacheSetMulti #(parameter B = 64,
                 
             //Populate cache with data
             end else begin
-                //RemovedBlock = NextFill;
                 LRUBits[RemovedBlock] <= 0;
                 ValidBits[RemovedBlock] <= 1;   
                 NextFill <= NextFill + 1;
@@ -149,9 +163,9 @@ module InstrCacheSetMulti #(parameter B = 64,
     
     assign RepComplete = RepCounter == (words-1);
     
-    //Replacement logic (storage changes)
+    //Replacement logic
     always @(posedge clk) begin
-        if (RepActive && RepBegin) begin
+        if (RepActive) begin
             SetData[(RemovedBlock*words) + RepCounter] <= RepBlockArray[RepCounter];
             //Replace tag and reset counter when replacement complete
             if (RepComplete) begin

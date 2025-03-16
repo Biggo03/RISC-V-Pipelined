@@ -201,6 +201,50 @@ This module has the following output signals:
 ### L1 Instruction Cache Module (March 2nd, 2025 \- Present):
 This top level cache module is a staging ground for the two previously designed modules. It generates S cache sets, divides the address into its different components, creates signals for communication between the different modules, and assigns the proper address.
 
+### Multi-cycle Replacement Cache Set Module (March 10th, 2025 \- Present):
+Because of the synthesis issues in generating RAM for the single cycle replacement cache set, I decided to try to make another module that did replacement over multiple cycles. The synthesis issues were caused by a low depth, high width storage structure within the set. Although this allowed for single-cycle replacement, the RAM within the FPGA are very low width, but high depth. As this is the opposite of what my initial module implemented, the synthesis tool optimized for it very poorly, and the amount of hardware used to implement it was far too high. I will be discussing this modules development here, as it is more involved than previous modules.
+
+**Initial Development (March 10th, 2025 \- March 15th, 2025):**
+
+This module uses the single-cycle replacement cache as a base, and builds on top of it to allow for multi-cycle replacement writes to the cache set. New signals were needed for managing the multi-cycle replacement, and were as follows:
+- RepComplete: Set high the cycle **before** the data has completed replacement
+- RepCounter: Keeps track of the number of replacement cycles
+- RepBegin: Set high when a replacement is to begin
+- RepActive: Set high when RepReady, CacheMiss, and ActiveSet are high
+    - To indicate when all conditions needed to start/continue a replacement are met
+- RepBlockArray
+    - The RepBlock put into an array of 32-bit words
+
+The initial changes made include:
+- Generating an array containing the RepBlock data, split up into 32-bit chunks
+    - Done to simplify indexing into the RepBlock for replacements
+- Making SetData into an array of 32-bit words
+    - Has E*B/4 32-bit entries (B is in bytes, each word is 4-bytes)
+- Adding logic to handle a multi-cycle replacement
+    - Done by incrementing the index of SetData that is written to each time until all entries have been completed
+    - Tag is only set after the replacement is complete to stop premature detection of a cache hit
+- Putting all signals changing a given register into one process
+    - This was done in order to stop register duplication, but had a variety of other benifits
+    - More on this in **Challenges section #6**
+
+These changes were verified using an updaetd version of the single-cycle replacement set testbench. The main difference between these being that instead of waiting for a cycle for the replacement to take place, it waits for the RepComplete signal to be set high, then waits a cycle (as stated, RepComplete asserted cycle before replacement ready).
+
+These changes were used as a starting point because they allowed for the basic functionality to be confirmed before complicating the designs with optimizations that could be made to decrease the number of cycles needed to complete a replacement, and area used.
+
+**Optimizations (March 15th, 2025 \- Present):**
+
+The first major optimization was decoupling the ReplacementBlock calculation from LRUBit updates, which removed an unnecessary 1-cycle delay in cache replacement. There were two initial issues caused by having the ReplacementBlock being calculated in the same process as the LRUBits:
+- Combinational signal assignment within a sequential process, which is poor design practice.
+- LRUBit updates were unnecessarily blocking replacement: the replacement logic waited for updated LRUBits, but it actually needed the previous LRUBit state.
+
+The following changes were made:
+-  Separated ReplacementBlock calculation into its own process, ensuring that it uses only the previous LRUBit state.
+- Changed replacement conditions: previously, replacement waited for RepBegin, but now, replacement starts as soon as the replacement data arrives instead.
+
+This change resulted in a 1-cycle reduction in replacement delay, and cleaner, more readable Verilog code.
+
+
+
 # Changelog:
 
 ## #1 Changed initial sizes of L1 and L2 caches (February 12th, 2025):
@@ -235,10 +279,19 @@ To solve this, I introduced an intermediate signal that stored the blocks previo
 This logic was implemented in a separate clocked process to ensure proper synchronization and prevent unintended latches. This approach ultimately provided a clean, efficient method for dynamically maintaining the LRU order in hardware.
 
 ## #5 Effecient LUTRAM/BRAM Synthesis Inference for L1 Cache Set:
-Although my L1 cache set worked logically, it did not initially synthesize to LUTRAM properly, instead taking up an enormous amount of LUT's for logic, as well as a huge amount of registers. As such the design needed to be changed to be consistent with LUTRAM inference. This required changing the replacement policy process in order to only write to SetData on one line, using an intermediate signal for indexing. This also required changing the read behaviour, storing the block to be read from in another intermediate signal, which was then used to index SetData.
+Although my L1 cache set worked logically, it did not initially synthesize to LUTRAM properly. Instead, it consumed an enormous number of LUTs for logic, as well as a huge number of registers. To ensure LUTRAM inference, the design had to be modified. This required changing the replacement policy process to only write to SetData on a single line, using an intermediate signal for indexing. Additionally, I had to modify the read behavior, storing the block to be read in another intermediate signal before indexing SetData.
 
-The challenge in this wasn't the changes themselves, but rather finding what the issue stopping LUTRAM inference was, as the synthesis tool provided no direction as to what the issue could be. This lead to me consulting the documentation for coding examples, as well as making a seperate module and making changes to it, and seeing what could possibly stop LUTRAM from being inferred. This was a process that took quite a lot of trial and error, but eventually allowed me to find a way to ensure LUTRAM was inferred. 
+The challenge wasn't the changes themselves but figuring out why LUTRAM inference was failing in the first place. The synthesis tool provided no useful direction, forcing me to consult documentation, experiment with test modules, and go through a long trial-and-error process. Eventually, I identified a set of conditions that consistently allowed LUTRAM inference.
 
-However even when LUTRAM was inferred, the synthesis tool did not place it effeciently at all, using approximately 10x as many LUTs as I calcualted would be neccesary for a given set. As of writing this entry this is still an issue, and I will be looking for ways around this. The main issue in this is that the FPGA expect high depth, low width RAM, but my set expects high width low depth RAM. As such I will likely need to look into different indexing methods to fix this issue. Considering 2D arrays, and a number of other coding strategies stop the inference of LUTRAM, this will be a difficult problem to solve. If there is a large amount of time sunk into fixing this problem with no solution in sight, I may even shift the focus of my technical project elsewhere.
+However, even when LUTRAM was inferred, it was placed extremely inefficiently, consuming approximately 10x more LUTs than my calculations predicted. The main issue seems to be that FPGAs expect high-depth, low-width RAM, whereas my cache set requires high-width, low-depth RAM.
 
-As of now I will be looking into changing the width of the words to 32-bits, and using a flattened 1D array in order to decrease the width, and increase the depth of the storage signal. Alongside this, I will look into a multi-cycle replacement strategy, as this would allow for the RAM to be written to in smaller chunks.
+As of now I will be looking into changing the width of the words to 32-bits, and using a flattened 1D array in order to decrease the width, and increase the depth of the storage signal. Alongside this, I will look into a multi-cycle replacement strategy, as this would allow for the RAM to be written to in smaller chunks. If these approaches do not resolve the issue and the FPGA continues to infer RAM inefficiently, I may shift the focus of my technical project elsewhere.
+
+## #6 Verilog Coding for Clean Synthesis:
+One of the biggest things I learned while working on the multi-cycle replacement set is the importance of ensuring that each register is written to in only one process. While this isn't particularly critical for passing simulation, it is crucial for RTL elaboration and synthesis. Writing to a register in multiple always blocks can lead to:
+
+- Register duplication, which wastes resources.
+- Unnecessary logic complexity, potentially affecting timing and power.
+- Unexpected hardware behavior, since synthesis may infer multiple physical registers where only one was intended.
+
+This makes sense, since Verilog is meant to describe hardware, it should be structured to reflect how the hardware will actually be implemented. Working on this project has reinforced how important it is to think in terms of hardware, not just code, when designing logic.

@@ -204,7 +204,7 @@ This top level cache module is a staging ground for the two previously designed 
 ### Multi-cycle Replacement Cache Set Module (March 10th, 2025 \- Present):
 Because of the synthesis issues in generating RAM for the single cycle replacement cache set, I decided to try to make another module that did replacement over multiple cycles. The synthesis issues were caused by a low depth, high width storage structure within the set. Although this allowed for single-cycle replacement, the RAM within the FPGA are very low width, but high depth. As this is the opposite of what my initial module implemented, the synthesis tool optimized for it very poorly, and the amount of hardware used to implement it was far too high. I will be discussing this modules development here, as it is more involved than previous modules.
 
-**Initial Development (March 10th, 2025 \- March 15th, 2025):**
+#### Initial Development (March 10th, 2025 \- March 15th, 2025):
 
 This module uses the single-cycle replacement cache as a base, and builds on top of it to allow for multi-cycle replacement writes to the cache set. New signals were needed for managing the multi-cycle replacement, and were as follows:
 - RepComplete: Set high the cycle **before** the data has completed replacement
@@ -250,10 +250,39 @@ One of the initial changes made was to re-index the 512-bit replacement word so 
     - Delivering 512-bits at once was the main issue with the single-cycle replacement cache.
 - If the L1 cache is only replacing one word per cycle, there's no reason to input more than one word per cycle.
 
-The only change made was changing the input for the replacement block to be 32-bits, and rename it toe "RepWord". This saved a huge amount of area, and will make development of the L2 cache far easier in the future. The synthesized result went from using **287** LUTs with the large RepBlock input to using **159** LUTs with the smaller RepWord input. This represents a **44.6%** reduction in LUT usage, a huge improvement.
+The only change made was changing the input for the replacement block to be 32-bits, and rename it toe "RepWord". This saved a huge amount of area, and will make development of the L2 cache far easier in the future. Synthesizing for performance, the synthesized result went from using **287** LUTs with the large RepBlock input to using **159** LUTs with the smaller RepWord input. This represents a **44.6%** reduction in LUT usage, a huge improvement.
 
 #### Removing Latch:
 This wasn't so much of an optimization as it was a fix. The signal used to determine which word to output from the memory array inferred a latch due to an if statement without an else within a combinational process. This fix just meant adding a default value of 0 to an else statement.
+
+#### Replacing 64-bits per Cycle:
+In the initial design, the cache replaced 32 bits per cycle, as this was how block data was stored in the array. However, this resulted in a 16-cycle replacement, much longer than what may be neccesary. While multi-cycle replacement is necessary, replacing data in single-word (32-bit) chunks was an unnecessary bottleneck.
+
+To improve efficiency, the replacement width was increased to 64 bits (two words) per cycle, reducing the total replacement time from 16 cycles to 8 cycles, a 2x improvement in replacement speed. This optimization required the following changes:
+- Re-indexed the storage array to align with 64-bit words.
+- Modified block offset calculations, now ignoring the 3 least significant bits (LSBs) instead of 2, since each replacement is 64 bits instead of 32 bits.
+- Used the 3rd LSB of the block number to select the upper or lower 32-bit word when reading from cache.
+- Updated replacement logic to store 64 bits per cycle over 8 cycles instead of 16 cycles.
+
+This change halved the replacement delay, significantly improving data movement efficiency and reducing stall cycles. However, as expected, it also increased LUT usage, with the design now using 191 LUTs, a 20% increase compared to the 16-cycle replacement.
+
+This highlights the trade off of faster replacements at the cost of higher resource usage. However, the negatives of this tradeoff can be minimized through the next optimization done for this portion of the design, synthesizing for area.
+
+#### Synthesizing for Area:
+Synthesizing for performance is crucial for components that directly impact system bottlenecks. In this project, the CPU is the primary performance-critical component, operating with a clock period of 13.724 ns.
+
+When synthesized for performance, the multi-cycle replacement set has a slack of **7.003** ns, meaning it has an extra 7.003 ns available within a clock cycle to complete its computation. While integrating this module into the larger system may increase its combinational delay, it is unlikely to consume the entire 7.003 ns of slack.
+
+Given this timing margin, it makes sense to optimize for area instead. Synthesizing for performance results in a LUT usage of **191** per set, whereas synthesizing for area reduces this to **151** LUTs per set a **20%** decrease in LUT usage.
+
+Additionally, synthesizing for area still maintains a slack of **5.834** ns, ensuring that the module remains well within timing constraints and should integrate smoothly into the larger system.
+
+#### Optimizations Summary
+Focusing on reducing the number of cycles needed to replace a block within a set, and looking for ways to minimize area, while keeping in By focusing on reducing block replacement latency and minimizing area usage, while considering that this module's timing constraints are less critical than those of the CPU, the design was significantly optimized.
+- Block replacement time was reduced from 17 cycles to 8 cycles (2x improvement).
+- LUT usage per set was reduced from 287 to 151 LUTs (47% decrease).
+
+These optimizations ensure a faster, more efficient cache replacement process while keeping resource usage within practical limits for integration into the larger system.
 
 # Changelog:
 

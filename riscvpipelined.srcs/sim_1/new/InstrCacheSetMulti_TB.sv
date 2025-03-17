@@ -12,7 +12,7 @@ module InstrCacheSetMulti_TB();
     logic [NumTagBits-1:0] Tag;
     logic [NumTagBits-1:0] BlockTagsE [E-1:0];
     logic [(B*8)-1:0] RepBlock;
-    logic [31:0] RepWord;
+    logic [63:0] RepWord;
     logic [31:0] Data;
     logic CacheMiss;
     
@@ -76,14 +76,14 @@ module InstrCacheSetMulti_TB();
             RepReady = 1;
             cycles = 0;
             BlockTagsE[i] = Tag;
-            for (integer n = 0; n < words; n = n + 1) begin
-                RepWord = RepBlock[n*32 +: 32];
+            for (integer n = 0; n < words/2; n = n + 1) begin
+                RepWord = RepBlock[n*64 +: 64];
                 $display("Currently Replacing word: %d, value is: %h", n, RepWord);
                 cycles = cycles + 1;
                 #10;
             end
             $display("Number of cycles for replacement: %d", cycles);
-            wait(CacheMiss == 0);
+            //wait(CacheMiss == 0);
             
             assert(Data === RepBlock[31:0] && CacheMiss == 0) else $fatal("Incorrect Data output on miss\
                                                                    \nData:          %h\
@@ -154,8 +154,8 @@ module InstrCacheSetMulti_TB();
         end
         
         //Feed replacement words
-        for (int i = 0; i < words; i = i + 1) begin
-            RepWord = RepBlock[i*32 +: 32];
+        for (int i = 0; i < words/2; i = i + 1) begin
+            RepWord = RepBlock[i*64 +: 64];
             #10;
         end
         
@@ -170,9 +170,8 @@ module InstrCacheSetMulti_TB();
         RepReady = 0; Tag = BlockTagsE[1]; //Block 1's tag
         for (int i = 0; i < E; i = i + 1) begin
             if (BlockTagsE[i] == Tag) LRUBitsE[i] = 0;
-            else if (LRUBitsE[i] != E) LRUBitsE[i] = LRUBitsE[i] + 1;
+            else if (LRUBitsE[i] != E-1) LRUBitsE[i] = LRUBitsE[i] + 1;
         end
-        //LRUBitsE[0] = 2; LRUBitsE[1] = 0; LRUBitsE[2] = 3; LRUBitsE[3] = 1;
         #10;
         
         AssertLRUBits();

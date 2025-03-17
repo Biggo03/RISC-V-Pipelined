@@ -22,7 +22,7 @@ module InstrCacheSetMulti #(parameter B = 64,
                        input RepReady,
                        input [$clog2(B)-1:0] Block,
                        input [NumTagBits-1:0] Tag,
-                       input [31:0] RepWord,
+                       input [63:0] RepWord,
                        output [31:0] Data,
                        output reg CacheMiss);
     
@@ -46,11 +46,11 @@ module InstrCacheSetMulti #(parameter B = 64,
     assign RepActive = CacheMiss && ActiveSet && RepReady;
     
     //Stored data
-    (* ram_style = "distributed" *) reg [31:0] SetData [(words*E)-1:0];
+    (* ram_style = "distributed" *) reg [63:0] SetData [(words*E)/2-1:0];
     
     //Block Offset calculation
     wire [$clog2(words)-1:0] BlockOffset; //Allows blocks to be indexed by word
-    assign BlockOffset = Block[b-1:2];
+    assign BlockOffset = Block[b-1:3];
     
     //The set number currently being output
     reg [$clog2(E)-1:0] OutSet;
@@ -152,12 +152,12 @@ module InstrCacheSetMulti #(parameter B = 64,
         end
     end
     
-    assign RepComplete = RepCounter == (words-1);
+    assign RepComplete = RepCounter == (words/2)-1;
     
     //Replacement logic
     always @(posedge clk) begin
         if (RepActive) begin
-            SetData[(RemovedBlock*words) + RepCounter] <= RepWord;
+            SetData[(RemovedBlock*words/2) + RepCounter] <= RepWord;
             //Replace tag and reset counter when replacement complete
             if (RepComplete) begin
                 RepCounter <= 0;
@@ -182,6 +182,6 @@ module InstrCacheSetMulti #(parameter B = 64,
 
     end
     
-    assign Data = SetData[(OutSet*words) + BlockOffset];
+    assign Data = Block[2] ? SetData[(OutSet*words)/2 + BlockOffset][63:32] : SetData[(OutSet*words)/2 + BlockOffset][31:0];
     
 endmodule

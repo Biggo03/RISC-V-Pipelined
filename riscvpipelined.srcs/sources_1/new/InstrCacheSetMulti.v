@@ -24,7 +24,6 @@ module InstrCacheSetMulti #(parameter B = 64,
                        input [NumTagBits-1:0] Tag,
                        input [31:0] RepWord,
                        output [31:0] Data,
-                       output RepComplete,
                        output reg CacheMiss);
     
     localparam b = $clog2(B);
@@ -42,6 +41,7 @@ module InstrCacheSetMulti #(parameter B = 64,
     reg [$clog2(E)-1:0] RemovedBlock;
     reg [$clog2(words)-1:0] RepCounter; //Need extra bit so last rep cycle runs
     wire RepActive;
+    wire RepComplete;
     reg RepBegin;
     assign RepActive = CacheMiss && ActiveSet && RepReady;
     
@@ -172,9 +172,14 @@ module InstrCacheSetMulti #(parameter B = 64,
     
     //Output logic
     always @(*) begin
-        for (i = 0; i < E; i = i + 1) begin
-            if (MatchedBlock[i]) OutSet = i;
-        end 
+        if (MatchedBlock != 0) begin
+            for (i = 0; i < E; i = i + 1) begin
+                if (MatchedBlock[i]) OutSet = i;
+            end 
+        end else begin
+            OutSet = 0;
+        end
+
     end
     
     assign Data = SetData[(OutSet*words) + BlockOffset];

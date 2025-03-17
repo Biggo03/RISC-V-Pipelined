@@ -252,6 +252,9 @@ One of the initial changes made was to re-index the 512-bit replacement word so 
 
 The only change made was changing the input for the replacement block to be 32-bits, and rename it toe "RepWord". This saved a huge amount of area, and will make development of the L2 cache far easier in the future. The synthesized result went from using **287** LUTs with the large RepBlock input to using **159** LUTs with the smaller RepWord input. This represents a **44.6%** reduction in LUT usage, a huge improvement.
 
+#### Removing Latch:
+This wasn't so much of an optimization as it was a fix. The signal used to determine which word to output from the memory array inferred a latch due to an if statement without an else within a combinational process. This fix just meant adding a default value of 0 to an else statement.
+
 # Changelog:
 
 ## #1 Changed initial sizes of L1 and L2 caches (February 12th, 2025):

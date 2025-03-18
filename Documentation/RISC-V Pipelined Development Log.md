@@ -6,9 +6,9 @@ This development log will be structured into sections that cover each major aspe
 
 Within each section, there will be subsections dedicated to specific elements of the design addition. For instance, one subsection may detail the design of a new module, while another may explain a particular design choice. These subsections will represent the final state of the design and will not include any information preceding a change.
 
-Changes made to the design will be documented in a “Changelog” section, with subsections linking to relevant entries within the changelog.
+Changes made to the design will be documented in a "Changelog" section, with subsections linking to relevant entries within the changelog.
 
-Additionally, there will be a section titled “Challenges.” This section will contain entries discussing the challenges encountered during the processor's design process, with subsections again linking to pertinent entries.
+Additionally, there will be a section titled "Challenges." This section will contain entries discussing the challenges encountered during the processor's design process, with subsections again linking to pertinent entries.
 
 ## **Dates:**  
 I will include the date range for each section and subsection, along with any specific dates when changes were made. If a project day is not explicitly mentioned within a range, no work was done on that day.
@@ -783,7 +783,7 @@ It can be seen that there was an overall decrease in utilization, primarily in t
 ###  Timing:
 Optimizing syntehsis for performance, the design was able to acheive an **Fmax** of **73.757MHz** corrosponding to a minimum clock period of 13.558ns. This reflects a **0.368%** increase in clock speed compared to the previous pipelined processor fmax of **73.486MHz**. This increase is likely due to optimizations made by the synthesizer that weren't found previously.
 
-The logic delay of was again 2.527ns, having no change compared to the last implementation of the processor. This supports the idea that the improvement in clock speed was primarily due to optimizations made by the synthesizer.
+The logic delay of was again 2.527ns, having no change compared to the last implementation of the processor. This supports the idea that the improvement in clock speed was primarily due to optimizations in routing made by the synthesizer.
 
 ### Power:
 The total on chip power was measured at **0.1W**, a  **43%** decrease compared to the previous pipelined processor. Of this 0.1W, **10%** is related to the dynamic power, with the other **90%** being related to static power.
@@ -796,7 +796,7 @@ The dynamic power can further be broken down as follows:
 | Logic   | <0.001W (3%)      |
 | I/O     | <0.001W (0%)      |
 
-This overall decrease in power is far more than what could be expected, but it's likely to do with the decreased clock speed, lower utilization, and possibly other optimizations made by the synthesizer.
+This overall decrease in power is far more than what could be expected, but it's likely to do with lower utilization, and possibly other optimizations made by the synthesizer, such as shorter routing paths.
 
 ## Saved Cycles:
 This design change represents the most significant performance improvement, particularly for programs with a high number of branches. The exact efficiency of the branch predictor cannot be determined universally, as it depends on the characteristics of the executed program. To accurately assess the performance improvement, benchmark testing would be necessary. This may be done at a later date, as to do this at a proper scale a more sophisticated memory system would be useful, as this would allow for compiled C code to be run on the processor.

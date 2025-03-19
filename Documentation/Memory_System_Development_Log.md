@@ -310,12 +310,14 @@ This top level cache module is a staging ground for the two previously designed 
 The initial plan of using BRAM for the L1 caches didn't end up being ideal, as the BRAM is synchronous only using it would require reworking of the pipeline, or the introduction of stalls. Using LUTRAM instead allows for combinational reads, and more control over how memory is accessed by the processor itself. Because of this, the L1 caches must be 16KiB, rather than 32KiB, as there's not enough LUTRAM to accomadate 64 total KiB of storage. Although this isn't ideal, this does mean that L2 will have more BRAM to work with, meaning it can be made 256KiB, rather than 192KiB, which may offset the smaller L1 cache sizes.
 
 ## #2 Change to multi-cycle replacement for L1 instruction cache set (March 15th):
+Initially, the instruction cache set was designed for a single-cycle replacement; however, this approach consumed too much area. To address this, a multi-cycle replacement design was implemented, reducing area usage at the cost of increasing the number of cycles needed for data replacement.
 
+This change makes practical sense for two reasons. First, the area constraints of the FPGA made a single-cycle replacement impractical. Second, delivering 512 bits in a single cycle from the L2 cache would also likely require a significant amount of area and could face synthesis issues similar to those seen with the single-cycle replacement. By handling replacement over multiple cycles, the area usage is significantly reduced while ensuring better synthesis compatibility.
 
 # Challenges:
 
 ## #1 Determining instruction cache parameters and policies:
-Since my processor doesn't yet have a defined use case, selecting the instruction cache parameters and policies was challenging. While this wasn't a critical issue, since the design is fully parameterizable for different block sizes, set sizes, and associativity—I still wanted to choose an initial configuration that would provide a solid foundation for learning cache architecture and parameterized design.
+Since my processor doesn't yet have a defined use case, selecting the instruction cache parameters and policies was challenging. While this wasn't a critical issue, since the design is fully parameterizable for different block sizes, set sizes, and associativity-I still wanted to choose an initial configuration that would provide a solid foundation for learning cache architecture and parameterized design.
 
 I opted for a 4-way set-associative cache as a starting point, since it can be easily generalized to N-way associativity by adjusting parameters. Additionally, implementing a replacement policy was necessary, and I chose Least Recently Used (LRU) because it is typically more efficient in most cases and provided an interesting challenge for implementation.
 

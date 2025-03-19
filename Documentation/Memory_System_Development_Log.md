@@ -119,6 +119,10 @@ I began implementation of my cache system in Verilog, which allowed me to gain a
 The main issue I initially faced was the complexity of the cache itself. I initially tried to implement the cache in one module by itself, but the complexity of the cache control logic and the sets was too much to handle in one module. So I decided to start by creating a module for the cache sets. This module handles tag and valid bit comparison, reads, and evictions/writes. I plan on also creating a module for controlling the incoming and outgoing data from the cache, communicating with both the L2 cache, and the processor. These will then be combined in a top-level L1 instruction cache module. Going about the design in this way will increase modularity, and simplify the design process of each module.
 
 ### Cache Set Module (February 16th - February 20th, 2025):
+**Changes made March. 15th**
+
+Note that this module ended up being unusable, as the LUT utilization was far too high. See the multi-cycle replacement cache set module for the design that is actually used. This design and its testbench were used as a base for the multi-cycle set. The remainder of this section will remain unchanged.  
+
 This is the natural starting point for the cache, as everything is built based on how the sets are organized. This module has the following parameters:
 - B: Block size (in bytes)
 - NumTagBits: Number of bits in tag
@@ -198,15 +202,12 @@ This module has the following output signals:
 
 **Testing:** This was tested using a simple testbench, checking every possible input set, set the correct bit in the ActiveArray, and that the correct CacheMiss value is passed to the DUT output.
 
-### L1 Instruction Cache Module (March 2nd, 2025 \- Present):
-This top level cache module is a staging ground for the two previously designed modules. It generates S cache sets, divides the address into its different components, creates signals for communication between the different modules, and assigns the proper address.
-
-### Multi-cycle Replacement Cache Set Module (March 10th, 2025 \- Present):
+### Multi-cycle Replacement Cache Set Module (March 10th, 2025 \- March 17th, 2025):
 Because of the synthesis issues in generating RAM for the single cycle replacement cache set, I decided to try to make another module that did replacement over multiple cycles. The synthesis issues were caused by a low depth, high width storage structure within the set. Although this allowed for single-cycle replacement, the RAM within the FPGA are very low width, but high depth. As this is the opposite of what my initial module implemented, the synthesis tool optimized for it very poorly, and the amount of hardware used to implement it was far too high. I will be discussing this modules development here, as it is more involved than previous modules.
 
 #### Initial Development (March 10th, 2025 \- March 15th, 2025):
 
-This module uses the single-cycle replacement cache as a base, and builds on top of it to allow for multi-cycle replacement writes to the cache set. New signals were needed for managing the multi-cycle replacement, and were as follows:
+This module uses the single-cycle replacement cache set as a base, and builds on top of it to allow for multi-cycle replacement writes to the cache set. New signals were needed for managing the multi-cycle replacement, and were as follows:
 - RepComplete: Set high the cycle **before** the data has completed replacement
 - RepCounter: Keeps track of the number of replacement cycles
 - RepBegin: Set high when a replacement is to begin
@@ -231,9 +232,9 @@ These changes were verified using an updaetd version of the single-cycle replace
 
 These changes were used as a starting point because they allowed for the basic functionality to be confirmed before complicating the designs with optimizations that could be made to decrease the number of cycles needed to complete a replacement, and area used.
 
-#### Optimizations (March 15th, 2025 \- Present):
+#### Optimizations (March 15th, 2025 \- March, 17th, 2025):
 
-**Eliminating Unnecessary Delay in ReplacementBlock Calculation:**
+#### Eliminating Unnecessary Delay in ReplacementBlock Calculation:
 Initially the ReplacementBlock calculation was done at the same time as the LRUBit updates. Decoupling the ReplacementBlock calculation from LRUBit updates, removed an unnecessary 1-cycle delay in cache replacement. There were two initial issues caused by having the ReplacementBlock being calculated in the same process as the LRUBits:
 - Combinational signal assignment within a sequential process, which is poor design practice.
 - LRUBit updates were unnecessarily blocking replacement: the replacement logic waited for updated LRUBits, but it actually needed the previous LRUBit state.
@@ -277,17 +278,39 @@ Given this timing margin, it makes sense to optimize for area instead. Synthesiz
 
 Additionally, synthesizing for area still maintains a slack of **5.834** ns, ensuring that the module remains well within timing constraints and should integrate smoothly into the larger system.
 
-#### Optimizations Summary
-Focusing on reducing the number of cycles needed to replace a block within a set, and looking for ways to minimize area, while keeping in By focusing on reducing block replacement latency and minimizing area usage, while considering that this module's timing constraints are less critical than those of the CPU, the design was significantly optimized.
+#### Optimizations Summary:
+By focusing on reducing block replacement latency and minimizing area usage, while considering that this module's timing constraints are less critical than those of the CPU, the design was significantly optimized.
 - Block replacement time was reduced from 17 cycles to 8 cycles (2x improvement).
 - LUT usage per set was reduced from 287 to 151 LUTs (47% decrease).
 
 These optimizations ensure a faster, more efficient cache replacement process while keeping resource usage within practical limits for integration into the larger system.
 
+#### Testing (March 10th, 2025 \- March 17th):
+Testing for this module was done throughout development, with the testbench evolving alongside design optimizations. The multi-cycle replacement set was derived from the single-cycle version, but required modifications to accommodate staged data replacement. Below is a list of the key optimizations made, along with corresponding testbench adjustments:
+- Initial change to multi-cycle replacement
+    - Waited until the RepComplete signal was set high before checking if replacement worked correctly
+- Change to sending one word at a time to the set module rather than the full block
+    - Created a "RepWord" signal to store a 32-bit section of the replacement block
+    - Set this signal as the input to the DUT
+    - Updated RepWord to the appropriate 32-bit segment of RepBlock each clock cycle in a replacement
+- Replacing 64-bits per cycle
+    - Changed the RepWord signal to 64-bits
+    - Updated RepWord to the appropriate 64-bit segment of RepBlock each clock cycle in a replacement
+
+Additionally, portions of the testbench were updated to better support parameterized values:
+- LRU bits were assigned dynamically using for loops instead of hardcoding expected values
+- Block tags were stored in an array rather than being hardcoded, ensuring flexibility across different configurations
+
+### L1 Instruction Cache Module (March 2nd, 2025 \- March. 17th, 2025):
+This top level cache module is a staging ground for the two previously designed modules. It generates S cache sets, divides the address into its different components, creates signals for communication between the different modules, and assigns the proper address.
+
 # Changelog:
 
 ## #1 Changed initial sizes of L1 and L2 caches (February 12th, 2025):
 The initial plan of using BRAM for the L1 caches didn't end up being ideal, as the BRAM is synchronous only using it would require reworking of the pipeline, or the introduction of stalls. Using LUTRAM instead allows for combinational reads, and more control over how memory is accessed by the processor itself. Because of this, the L1 caches must be 16KiB, rather than 32KiB, as there's not enough LUTRAM to accomadate 64 total KiB of storage. Although this isn't ideal, this does mean that L2 will have more BRAM to work with, meaning it can be made 256KiB, rather than 192KiB, which may offset the smaller L1 cache sizes.
+
+## #2 Change to multi-cycle replacement for L1 instruction cache set (March 15th):
+
 
 # Challenges:
 

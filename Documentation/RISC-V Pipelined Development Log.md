@@ -757,6 +757,7 @@ One notable issue during testing was that the TargetMatch signal in the Execute 
 
 ## Performance Changes (Feb. 2nd):
 **(Changes on February 10th)**
+
 After implementing the changes from the branch predictor to the processor, every performance metric had changes. These changes will be reported and discussed in this section.
 
 ### Utilization:
@@ -781,7 +782,7 @@ Comparing utilization to previous pipelined processor:
 It can be seen that there was an overall decrease in utilization, primarily in the Lut's, and F7 Muxes. As more complexity was added to the system as a whole, these decreases are likely due to optimizations made for area by the synthesizer. As not every output of the processor is used, it may also optimize out certain signals entirely, again decreasing the utilization of the design. As such, this may not be the best representation of the utilization of the system if it was used in a real application.
 
 ###  Timing:
-Optimizing syntehsis for performance, the design was able to acheive an **Fmax** of **73.757MHz** corrosponding to a minimum clock period of 13.558ns. This reflects a **0.368%** increase in clock speed compared to the previous pipelined processor fmax of **73.486MHz**. This increase is likely due to optimizations made by the synthesizer that weren't found previously.
+Optimizing syntehsis for performance, the design was able to acheive an **Fmax** of **73.757MHz** corrosponding to a minimum clock period of **13.558ns**. This reflects a **0.368%** increase in clock speed compared to the previous pipelined processor fmax of **73.486MHz**. This increase is likely due to optimizations made by the synthesizer that weren't found previously.
 
 The logic delay of was again 2.527ns, having no change compared to the last implementation of the processor. This supports the idea that the improvement in clock speed was primarily due to optimizations in routing made by the synthesizer.
 

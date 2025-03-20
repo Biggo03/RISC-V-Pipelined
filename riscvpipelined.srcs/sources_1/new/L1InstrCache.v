@@ -5,10 +5,10 @@
 // Create Date: 02/14/2025 12:28:20 PM
 // Module Name: L1InstrCache
 // Project Name: riscvpipelined
-// Description: L1 instruction cache
+// Description: paramaterized L1 instruction cache, uses a multi-cycle LRU replacement policy
 // 
-// Dependencies:
-// Additional Comments:
+// Dependencies: InstrCacheSetMulti (InstrCacheSetMulti.v), InstrCacheController (InstrCacheController.v)
+// Additional Comments: Sets expect replacement data takes at least 1 cycle to reach it.
 //                      
 //
 //////////////////////////////////////////////////////////////////////////////////
@@ -20,9 +20,8 @@ module L1InstrCache#(parameter S = 32,
                     (input clk, reset,
                      input RepReady,
                      input [31:0] Address,
-                     input [31:0] RepWord,
+                     input [63:0] RepWord,
                      output [31:0] RD,
-                     output RepComplete,
                      output L1IMiss);
     
     //parameters for addressing
@@ -59,7 +58,6 @@ module L1InstrCache#(parameter S = 32,
                            .Tag(Tag),
                            .RepWord(RepWord),
                            .Data(DataArray[i]),
-                           .RepComplete(RepComplete),
                            .CacheMiss(MissArray[i]));
         end
     endgenerate

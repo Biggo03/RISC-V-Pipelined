@@ -302,7 +302,9 @@ Additionally, portions of the testbench were updated to better support parameter
 - Block tags were stored in an array rather than being hardcoded, ensuring flexibility across different configurations
 
 ### L1 Instruction Cache Module (March 2nd, 2025 \- March. 17th, 2025):
-This top level cache module is a staging ground for the two previously designed modules. It generates S cache sets, divides the address into its different components, creates signals for communication between the different modules, and assigns the proper address.
+This top level cache module is a staging ground for the two previously designed modules. It generates S cache sets, divides the address into its different components, creates signals for communication between the different modules, and assigns the proper address. Aside from this, it assigns the appropriate value to the output signal.
+
+**Testing:** The testing strategy for this module focused on verifying basic cache functionality—specifically, that block replacement and cache reads behave as expected. These tests ensure that cache sets are being correctly indexed and that the miss signal is accurately asserted at the top level. More advanced internal behaviors, such as LRU updates and tag comparisons, were thoroughly tested within the set module itself. As a result, this top-level verification effort intentionally avoids re-testing those same features to prioritize time and development efficiency.
 
 # Changelog:
 

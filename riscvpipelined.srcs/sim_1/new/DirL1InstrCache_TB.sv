@@ -15,42 +15,42 @@
 // 
 // Revision:
 // Revision 0.01 - File Created
-// Additional Comments:
-// 
+// Additional Comments:Already tested more complex functionality at set level, will leave at ensuring basic functions work
+//
 //////////////////////////////////////////////////////////////////////////////////
 
-
 module DirL1InstrCache_TB();
-
-localparam S = 32;
-localparam E = 4;
-localparam B = 64;
-localparam words = B/4;
-localparam RepCycles = words/2;
-
-localparam s = $clog2(S);
-localparam b = $clog2(B);
-localparam NumTagBits = 32-s-b;
-
-
-logic clk, reset;
-logic RepReady;
-logic [31:0] Address, RD;
-logic [63:0] RepWord;
-logic L1IMiss;
-
-//Signals to make addressing more intuitive
-logic [b-1:0] ByteAddr;
-logic [s-1:0] Set;
-assign Address[b-1:0] = ByteAddr;
-assign Address[s+b-1:b] = Set;
-
-//Store blocks
-logic [(B*8)-1:0] RepBlocks [S-1:0][E-1:0];
-
-//Stores tag of each block
-logic [NumTagBits-1:0] Tags [S-1:0][E-1:0];
-
+    
+    //Test cache parameters
+    localparam S = 32;
+    localparam E = 4;
+    localparam B = 64;
+    localparam words = B/4;
+    localparam RepCycles = words/2;
+    
+    localparam s = $clog2(S);
+    localparam b = $clog2(B);
+    localparam NumTagBits = 32-s-b;
+    
+    //DUT signals
+    logic clk, reset;
+    logic RepReady;
+    logic [31:0] Address, RD;
+    logic [63:0] RepWord;
+    logic L1IMiss;
+    
+    //Signals to make addressing more intuitive
+    logic [b-1:0] ByteAddr;
+    logic [s-1:0] SetNum;
+    assign Address[b-1:0] = ByteAddr;
+    assign Address[s+b-1:b] = SetNum;
+    
+    //Store blocks
+    logic [(B*8)-1:0] RepBlocks [S-1:0][E-1:0];
+    
+    //Stores tag of each block
+    logic [NumTagBits-1:0] Tags [S-1:0][E-1:0];
+    
     L1InstrCache#(.S(S), 
                 .E(E), 
                 .B(B))
@@ -70,8 +70,8 @@ logic [NumTagBits-1:0] Tags [S-1:0][E-1:0];
         reset = 1; clk = 0; #100; reset = 0;
         
         //Fill up cache and check initial reads
-        for (int i = 0; i < 32; i = i + 1) begin
-            Set = i;
+        for (int i = 0; i < S; i = i + 1) begin
+            SetNum = i;
             ByteAddr = 0;
             for (int n = 0; n < E; n = n + 1) begin
                 //Set and store unique tag for block
@@ -82,8 +82,13 @@ logic [NumTagBits-1:0] Tags [S-1:0][E-1:0];
                 
                 //Do replacement
                 for (int k = 0; k < RepCycles; k = k + 1) begin
-                    if (i == 0) RepWord = k;
-                    else RepWord = (i * 1111) * k**2 + i**2;
+                    if (i == 0) begin
+                        RepWord[31:0] = k;
+                        RepWord[63:32] = k**2;
+                    end else begin
+                        RepWord[31:0] = (i * 1111) * k**2 + i**2;
+                        RepWord[63:32] = (i * 2222) * k**2 + i**2;
+                    end 
                     
                     RepBlocks[i][n][k*64 +: 64] = RepWord;
                     #10;
@@ -93,10 +98,28 @@ logic [NumTagBits-1:0] Tags [S-1:0][E-1:0];
                 for (int k = 0; k < words; k = k + 1) begin
                     ByteAddr = k * 4;
                     #10;
-                    assert(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0) else $fatal("Read Error");
+                    assert(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0) else $fatal("Population Read Error");
                 end
-            end   
+            end
         end
+        
+        //Reread
+        for (int i = 0; i < S; i = i + 1) begin
+            SetNum = i;
+            Address[31:s+b] = Tags[i][0];
+            #10;
+            for (int n = 0; n < E; n = n + 1) begin
+                for (int k = 0; k < words; k = k + 1) begin
+                    ByteAddr = k * 4;
+                    #10;
+                    assert(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0) else $fatal("Population Read Error");
+                end
+            end
+            
+        end
+        
+        $display("Simulation Succesful!");
+        $stop;
     end
               
 

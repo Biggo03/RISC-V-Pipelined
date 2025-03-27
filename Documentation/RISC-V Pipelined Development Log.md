@@ -805,6 +805,37 @@ This design change represents the most significant performance improvement, part
 ### Remarks About Perfromance:
 It's important to note that these performance metrics should be taken with a grain of salt, and are much more likely to do with optimizations made by the synthesizer, rather than being directly related to the logic changes. Accurate real world utilization, power, and clock speed will be much easier to understand and measure once a memory system capable of running real world programs is implemented, which is the next step in the development of this processor.
 
+# Memory Hierarchy Integration (March 26th \- Present):
+This section covers the integration of memory system components into the pipelined processor's architecture. It is documented here rather than in the memory hierarchy development log because the changes required to accommodate these components affect the processor itself, not the memory elements. Entries in this section will likely be spaced out, as each memory hierarchy component will be designed, tested, and integrated into the processor one at a time before progressing to the next.
+
+## L1 Instruction Cache Integration (March 26th \- Present):
+
+### Required Changes Overview (March 26th):
+Before making changes, the necessary modifications to accommodate this new component must be identified. The main difference between the current implementation and the planned implementation is that the processor will now need to stall when there are cache misses from the L1 instruction cache. This means that the hazard control unit must be updated to stall the pipeline appropriately.
+
+The signal that will control this behavior is the L1Miss signal from the L1 instruction cache. This signal is asserted high when there is a cache miss, i.e., no block matches the requested address within the cache. This is the only control signal required, as it is combinationally generated and updates precisely when valid data populates the cache. Therefore, when this signal is high, the pipeline must be stalled at the appropriate registers. Otherwise, it can continue as normal.
+
+The registers that must be stalled and the reason they must be stalled/flushed are as follows:
+- PC Register: This register must be **stalled**. It stores the current address of interest, and if not stalled, the L1 cache could receive an invalid instruction address. This could lead to a range of issues, including incorrect instruction fetches or invalid replacements.
+- Decode Register: This register must be  **stalled.** While the L1 instruction cache is fetching data, it's output is garbage data, which must not be propagated through the pipeline. A stall rather than a flush is neccesary, as it will contain valid data at the time of a miss from the previously fetched instruction. This data must not be lost.
+
+A special consideration must be made due to the processor's branch prediction. Mispredictions are detected in the execution stage and are indicated by the MSB of the PCSrc signal. When a misprediction is detected, the current instruction address being sent to the instruction cache is no longer valid, as it belongs to the mispredicted path.
+
+In this case, the instruction fetch should be ignored entirely. Ideally, the instruction cache should:
+- Not replace any block
+- Not update LRU bits
+- Indicate a cache hit (Stop stalls caused by miss)
+
+To support this behavior, the instruction cache will be modified to accept a control signal indicating a misprediction, which will disable both replacement and LRU updates. Once implemented and tested, this mechanism will prevent unnecessary evictions and stalls, maintaining pipeline efficiency despite the new memory behavior.
+
+To summarize, in the case of a cache miss:
+- PC register is **stalled**
+- Decode register is **stalled**
+
+In the case of a branch misprediction:
+- The L1 cache has replacement, and LRU updates disabled.
+- L1 cache indicates a cache hit
+
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**

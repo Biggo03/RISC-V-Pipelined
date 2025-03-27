@@ -186,21 +186,26 @@ I created a testbench in SystemVerilog in order to test the modules functionalit
 - A multi-cycle delay in receiving valid replacement data does not cause issues.
 
 ### Cache Controller Module (March 2nd, 2025):
+**Changes made March 26th**
+
 With the instruction cache set modules behaviour defined and verified, the cache controller can now be made. As the instruction cache should be accessed on every cycle, it doesn't need to determine if a memory access is occuring. Even if there is a load stall from the processor, it will still be accessing the same PC address the following cycle. That said it will need to be able to do the following:
 
 - Determine the set associated with the current address.
 - Output the appropriate read data from the set of interest.
 - Output if the currently accessed set has had a cache miss.
+- Stall replacements
+- Force cache miss signal to indicate a hit
 
 It can be seen that this will essentially act as a decoder. As such the Verilog coding was two simple assignment statements. This module has the following input signals:
 - Set: The current set being accessed.
 - MissArray: An array containing the output of all sets CacheMiss output signals
+- Stall: Forces ActiveArray to 0, deactivating all sets, and forces CacheMiss to 0, indicating a hit
 
 This module has the following output signals:
 - ActiveArray: Sets the bit associated with the set being accessed high.
 - CacheMiss: The bit from MissArray associated with the set currently being accessed.
 
-**Testing:** This was tested using a simple testbench, checking every possible input set, set the correct bit in the ActiveArray, and that the correct CacheMiss value is passed to the DUT output.
+**Testing:** This was tested using a simple testbench, checking every possible input set, set the correct bit in the ActiveArray, and that the correct CacheMiss value is passed to the DUT output. When the stall signal is asserted, it ensures that the outputs are forced to the expected values.
 
 ### Multi-cycle Replacement Cache Set Module (March 10th, 2025 \- March 17th, 2025):
 Because of the synthesis issues in generating RAM for the single cycle replacement cache set, I decided to try to make another module that did replacement over multiple cycles. The synthesis issues were caused by a low depth, high width storage structure within the set. Although this allowed for single-cycle replacement, the RAM within the FPGA are very low width, but high depth. As this is the opposite of what my initial module implemented, the synthesis tool optimized for it very poorly, and the amount of hardware used to implement it was far too high. I will be discussing this modules development here, as it is more involved than previous modules.
@@ -301,10 +306,15 @@ Additionally, portions of the testbench were updated to better support parameter
 - LRU bits were assigned dynamically using for loops instead of hardcoding expected values
 - Block tags were stored in an array rather than being hardcoded, ensuring flexibility across different configurations
 
-### L1 Instruction Cache Module (March 2nd, 2025 \- March. 17th, 2025):
+### L1 Instruction Cache Module (March 2nd, 2025 \- March. 20th, 2025):
+**Changed made March. 26th**
+
 This top level cache module is a staging ground for the two previously designed modules. It generates S cache sets, divides the address into its different components, creates signals for communication between the different modules, and assigns the proper address. Aside from this, it assigns the appropriate value to the output signal.
 
-**Testing:** The testing strategy for this module focused on verifying basic cache functionality—specifically, that block replacement and cache reads behave as expected. These tests ensure that cache sets are being correctly indexed and that the miss signal is accurately asserted at the top level. More advanced internal behaviors, such as LRU updates and tag comparisons, were thoroughly tested within the set module itself. As a result, this top-level verification effort intentionally avoids re-testing those same features to prioritize time and development efficiency.
+**Testing:** The testing strategy for this module focused on verifying basic cache functionality-specifically, that block replacement and cache reads behave as expected. Additionally, the testbench ensured that the Stall signal forced a cache hit, and stopped replacement from occuring. These tests ensure that cache sets are being correctly indexed and that the miss signal is accurately asserted at the top level. More advanced internal behaviors, such as LRU updates and tag comparisons, were thoroughly tested within the set module itself. As a result, this top-level verification effort intentionally avoids re-testing those same features to prioritize time and development efficiency.
+
+### L1 Instruction Cache Integration into Pipelined Processor (March 26th \- Present):
+This is being mentioned here primarily to give more context to the timeline of the project. However, as this integration will primarily making changes to the pipelined processor, this will be covered in more detail in the RISC-V Pipelined Development Log.
 
 # Changelog:
 
@@ -315,6 +325,13 @@ The initial plan of using BRAM for the L1 caches didn't end up being ideal, as t
 Initially, the instruction cache set was designed for a single-cycle replacement; however, this approach consumed too much area. To address this, a multi-cycle replacement design was implemented, reducing area usage at the cost of increasing the number of cycles needed for data replacement.
 
 This change makes practical sense for two reasons. First, the area constraints of the FPGA made a single-cycle replacement impractical. Second, delivering 512 bits in a single cycle from the L2 cache would also likely require a significant amount of area and could face synthesis issues similar to those seen with the single-cycle replacement. By handling replacement over multiple cycles, the area usage is significantly reduced while ensuring better synthesis compatibility.
+
+## #3 Added stall signal to L1 instruction cache (March 26th):
+While working on the integration of the L1 instruction cache into the pipelined processor, it was determined that a stall signal would be neccesary. This signal stops all replacement and LRU bit updates in the cache, and forces a cache hit. This was needed because of the branch prediction functionality of the processor. On the same cycle a branch misprediction is detected, the address being sent to the L1 cache is invalid. Therefore, stopping replacements, or LRU updates due to this address becomes very important, as both reduce effeciency of the cache, and the system as a whole. A hit is forced in order to prevent other stall signals caused by a cache miss from interrupting the pipeline.
+
+The main change was made to the cache controller module, which controls which cache set is active at a given set, and which set miss signal is output from the top level L1-cache. A stall signal was added that forces the active set array to 0, deactivating all sets, and forces the miss output to 0.
+
+The L1InstrCache module was also changed, with the Stall input being added, and routed to the controller. The testbench was changed to verify the extra functionality.
 
 # Challenges:
 

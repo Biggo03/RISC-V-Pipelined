@@ -19,6 +19,7 @@ module L1InstrCache#(parameter S = 32,
                      parameter B = 64) 
                     (input clk, reset,
                      input RepReady,
+                     input Stall,
                      input [31:0] Address,
                      input [63:0] RepWord,
                      output [31:0] RD,
@@ -64,7 +65,8 @@ module L1InstrCache#(parameter S = 32,
     
     //Cache Controller
     InstrCacheController#(.S(S))
-              Controller (.Set(Set),
+              Controller (.Stall(Stall),
+                          .Set(Set),
                           .MissArray(MissArray),
                           .ActiveArray(ActiveArray),
                           .CacheMiss(L1IMiss));

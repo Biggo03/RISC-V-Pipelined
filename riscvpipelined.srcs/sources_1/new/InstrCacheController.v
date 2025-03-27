@@ -21,16 +21,14 @@
 
 
 module InstrCacheController#(parameter S = 64) 
-                            (input [$clog2(S)-1:0] Set,
+                            (input Stall,
+                             input [$clog2(S)-1:0] Set,
                              input [S-1:0] MissArray,
                              output [S-1:0] ActiveArray,
                              output CacheMiss);
-  
-    //Length of parts of address
-    localparam s = $clog2(S);
     
     //Decoding
-    assign ActiveArray = 1'b1 << Set;
-    assign CacheMiss = MissArray[Set];
+    assign ActiveArray = Stall ? 0 : 1'b1 << Set;
+    assign CacheMiss = Stall ? 0 : MissArray[Set];
   
 endmodule

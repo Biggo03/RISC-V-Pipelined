@@ -307,7 +307,7 @@ Additionally, portions of the testbench were updated to better support parameter
 - Block tags were stored in an array rather than being hardcoded, ensuring flexibility across different configurations
 
 ### L1 Instruction Cache Module (March 2nd, 2025 \- March. 20th, 2025):
-**Changed made March. 26th**
+**Changes made March. 26th**
 
 This top level cache module is a staging ground for the two previously designed modules. It generates S cache sets, divides the address into its different components, creates signals for communication between the different modules, and assigns the proper address. Aside from this, it assigns the appropriate value to the output signal.
 

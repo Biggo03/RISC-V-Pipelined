@@ -836,6 +836,17 @@ In the case of a branch misprediction:
 - The L1 cache has replacement, and LRU updates disabled.
 - L1 cache indicates a cache hit
 
+### Integration (March 26th \- Present):
+A number of changes must be made to support the integration of the L1 instruction cache, along with the addition of several new signals:
+- PCSrc must be made an output from the riscvpipelined module and connected as an input to the L1 instruction cache. This allows the cache to disable replacement and LRU updates on a branch misprediction.
+- The L1Miss signal from the L1 instruction cache must be connected as an input to the riscvpipelined module, and subsequently forwarded to the hazard control unit.
+- The hazard control unit must be updated to appropriately assert stall signals when L1Miss is high.
+
+These are the primary changes required for initial integration.
+
+For the time being, the RepReady and RepWord signals will be treated as top-level inputs in the design, as there is currently no L2 cache. This setup is temporary and intended to allow for proper testing. These inputs will eventually be connected to the L2 cache.
+
+
 # **Challenges**
 
 ## **#1 Reworking Branching Logic (September 27th):**

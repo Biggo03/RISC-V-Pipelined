@@ -818,6 +818,8 @@ The signal that will control this behavior is the L1Miss signal from the L1 inst
 The registers that must be stalled and the reason they must be stalled/flushed are as follows:
 - PC Register: This register must be **stalled**. It stores the current address of interest, and if not stalled, the L1 cache could receive an invalid instruction address. This could lead to a range of issues, including incorrect instruction fetches or invalid replacements.
 - Decode Register: This register must be  **stalled.** While the L1 instruction cache is fetching data, it's output is garbage data, which must not be propagated through the pipeline. A stall rather than a flush is neccesary, as it will contain valid data at the time of a miss from the previously fetched instruction. This data must not be lost.
+- Execute Register: This register must be **stalled.** This is so that while the L1 instruction cache is fetching the new instructions, the instruction currently in the decode register won't be executed multiple times. If this register is not stalled, then it's possible that the data within the registers, or data memory be corrupted.
+- Memory and Writeback Registers: These registers can remain **untouched.** This is because data is not manipulated in either of these stages. Data from the execution stage (which remains unchanged becasue it is stalled) is simply written to either memory, or the register file. All these changes must be reflected in subsequent instructions regardless, so writing them to memory or the register file is not an issue.
 
 A special consideration must be made due to the processor's branch prediction. Mispredictions are detected in the execution stage and are indicated by the MSB of the PCSrc signal. When a misprediction is detected, the current instruction address being sent to the instruction cache is no longer valid, as it belongs to the mispredicted path.
 
@@ -836,7 +838,7 @@ In the case of a branch misprediction:
 - The L1 cache has replacement, and LRU updates disabled.
 - L1 cache indicates a cache hit
 
-### Integration (March 26th \- Present):
+### Initial Integration (March 26th \- March 27th):
 A number of changes must be made to support the integration of the L1 instruction cache, along with the addition of several new signals:
 - PCSrc must be made an output from the riscvpipelined module and connected as an input to the L1 instruction cache. This allows the cache to disable replacement and LRU updates on a branch misprediction.
 - The L1Miss signal from the L1 instruction cache must be connected as an input to the riscvpipelined module, and subsequently forwarded to the hazard control unit.
@@ -845,6 +847,51 @@ A number of changes must be made to support the integration of the L1 instructio
 These are the primary changes required for initial integration.
 
 For the time being, the RepReady and RepWord signals will be treated as top-level inputs in the design, as there is currently no L2 cache. This setup is temporary and intended to allow for proper testing. These inputs will eventually be connected to the L2 cache.
+
+### Solving Synthesis Issues (March 27th \- Present):
+I'm going into solving synthesis issues before fully testing the system, as changes to allow for reasonable synthesis will effect the system, and it will be better to test the system functionality once the synthesis is known to be relatively good, and changes won't greatly affect synthesis results.
+
+The initial changes made to prevent unneccesary cache evictions on branch mispredictions caused the critical path to increase substantially, leading to a slack of 5.703ns, which significantly affects performance, as clock speed would be greatly reduced. The critical path is caused by the PCSrc signal causing the L1 instruction cache to stall.
+
+The first possible solution is as follows:
+- Delay replacements, but not reads when a branching instruction is in the execution stage
+  - If the prediction is correct, and the data is in the cache, proceed as normal
+  - If the prediction is correct, and the data is not in the cache, the replacement takes one extra cycle to complete
+  - If the prediction is incorrect, and the data is in the cache, registers are flushed like usual
+  - If the prediction is incorrect, and the data is not in the cache, registers are flushed like usual BUT, as no replacements have occured, the cache has not evicted useful data.
+- Update LRU bits on a cache hit when branch is being evaluated.
+  - If prediction is correct, LRU bits remain accurate
+  - If prediction is incorrect, LRU bits loose some accuracy.
+  - This tradeoff is worth while, because of the additonal area and complexity that would be required in order to ensure complete LRU bit accurcy. The loss of accuracy in occasionally updating LRU bits based on the wrong path is acceptable in order to save area and complexity.
+- Use a registered PCSrc signal to unblock PC register stalls (will be explained further in this section)
+
+This adds an extra cycle when there is a correct branch prediction AND an L1 cache miss, however this will stop unused instructions from populating the cache, ideally reducing conflict misses within the cache.
+
+This solution can be implemented using 2 FSM's that control the replacement and LRU update behaviour of the cache.
+- FSM 1: Replace Control
+  - Inputs:
+    - BranchOpE[0]: Determines if a branch is in the execution stage
+    - L1Miss: Indicates a cache miss
+    - DelayApplied: Signal from FSM 2 that indicates a single-cycle delay has been applied to replacements
+  - Outputs:
+    - CacheActive: Allows the cache to carry out replacements
+- FSM 2: Delay gaurd
+  - Inputs: 
+    - CacheActive: Allows the cache to carry out replacements
+    - PCSrcReg: A registered PCSrc signal, used to determine if branch was mispredicted
+    - L1Miss: Indicates a cache miss
+  Outputs:
+    - DelayApplied: Indicates that the appropriate delay has occured
+
+These two FSM's will work together to ensure that there is a single-cycle delay to replacements in the case of a branch prediction. This solves the big issue of evicting important cache blocks for unused cache blocks. The state diagrams of these state machines can be found in the RISC-V Pipelined Schematic. I will summarize why these state machines will allow for proper cache operation, and stop unwanted replacements.
+
+| Data in Cache | Branch Result | Reasoning |
+|---------------|---------------|-----------|
+| Yes           | Correct       |           |
+| Yes           | Misprediction |           |
+| No            | Correct       |           |
+| No            | Misprediction |           |
+
 
 
 # **Challenges**

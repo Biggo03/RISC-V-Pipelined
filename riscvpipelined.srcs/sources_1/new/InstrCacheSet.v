@@ -46,7 +46,7 @@ module InstrCacheSet #(parameter B = 64,
     
     //Stored data
     //Each set has an array of 32-bit words
-    (* ram_style = "block" *) reg [(B*8)-1:0] SetData [E-1:0];
+    (* ram_style = "distributed" *) reg [(B*8)-1:0] SetData [E-1:0];
 
     
     //Block Offset calculation
@@ -147,13 +147,10 @@ module InstrCacheSet #(parameter B = 64,
     
     //Output logic
     always @(*) begin
-  
-        if (ActiveSet && ~CacheMiss) begin
-            for (i = 0; i < E; i = i + 1) begin
-                if (MatchedBlock[i]) OutSet = i;
-            end
-        end
-        
+    
+        for (i = 0; i < E; i = i + 1) begin
+            if (MatchedBlock[i]) OutSet = i;
+        end 
     end
     
     assign Data = SetData[OutSet] >> BlockOffset;

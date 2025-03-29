@@ -16,6 +16,7 @@
 
 module BranchProcessingUnit(input clk, reset,
                             input N, Z, C, V,
+                            input FlushE,
                             input [2:0] funct3E,
                             input [1:0] BranchOpE,
                             input [6:5] InstrF,
@@ -23,7 +24,7 @@ module BranchProcessingUnit(input clk, reset,
                             input [31:0] PCTargetE,
                             input TargetMatchE,
                             input PCSrcPredE,
-                            output [1:0] PCSrc,
+                            output [1:0] PCSrc, PCSrcReg,
                             output [31:0] PredPCTargetF,
                             output PCSrcPredF);
 
@@ -55,6 +56,11 @@ module BranchProcessingUnit(input clk, reset,
                           .TargetMatchE(TargetMatchE),
                           .PCSrcResE(PCSrcResE),
                           .PCSrc(PCSrc));
-
+    
+    flop SrcReg(.clk(clk),
+                .en(1'b1),
+                .reset(reset | FlushE),
+                .D(PCSrc),
+                .Q(PCSrcReg));
 
 endmodule

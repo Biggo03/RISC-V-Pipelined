@@ -19,7 +19,7 @@ module InstrCacheSetMulti #(parameter B = 64,
                        parameter E = 4)
                       (input clk, reset,
                        input ActiveSet,
-                       input RepReady,
+                       input RepEnable,
                        input [$clog2(B)-1:0] Block,
                        input [NumTagBits-1:0] Tag,
                        input [63:0] RepWord,
@@ -43,7 +43,7 @@ module InstrCacheSetMulti #(parameter B = 64,
     wire RepActive;
     wire RepComplete;
     reg RepBegin;
-    assign RepActive = CacheMiss && ActiveSet && RepReady;
+    assign RepActive = CacheMiss && ActiveSet && RepEnable;
     
     //Stored data
     (* ram_style = "distributed" *) reg [63:0] SetData [(words*E)/2-1:0];

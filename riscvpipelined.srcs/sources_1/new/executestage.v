@@ -22,7 +22,7 @@ module executestage(//Input Data Signals
                     input [31:0] ResultW, ForwardDataM,
                     input [31:0] PCD, PCPlus4D,
                     input [31:0] ImmExtD,
-                    input [31:0] PredPCTargetD,          /////////////
+                    input [31:0] PredPCTargetD,
                     input [2:0] funct3D,
                     input [4:0] RdD, Rs1D, Rs2D,
                     //Input Control Signals
@@ -32,12 +32,12 @@ module executestage(//Input Data Signals
                     input  RegWriteD, MemWriteD,
                     input PCBaseSrcD, ALUSrcD,
                     input [1:0] ForwardAE, ForwardBE,
-                    input FlushE, PCSrcPredD,            //////////////
+                    input FlushE, StallE, PCSrcPredD,            
                     //Output Data Signals
                     output [31:0] ALUResultE, WriteDataE,
                     output [31:0] PCTargetE, PCPlus4E,
                     output [31:0] ImmExtE,
-                    output [31:0] PCE,             ////////// Only need 10 LSB's
+                    output [31:0] PCE,             
                     output [4:0] Rs1E, Rs2E, RdE,
                     output [2:0] funct3E,
                     output N, Z, C, V,
@@ -61,7 +61,7 @@ module executestage(//Input Data Signals
     assign EReset = (reset | FlushE);
     
     flop #(.WIDTH (REG_WIDTH)) ExecuteReg(.clk (clk),
-                                          .en (1'b1),
+                                          .en (~StallE),
                                           .reset (EReset),
                                           .D (EInputs),
                                           .Q (EOutputs));

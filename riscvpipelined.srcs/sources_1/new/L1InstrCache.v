@@ -16,12 +16,13 @@
 
 module L1InstrCache#(parameter S = 32,
                      parameter E = 4,
-                     parameter B = 64) 
+                     parameter B = 64)
                     (input clk, reset,
                      input RepReady,
-                     input Stall,
                      input [31:0] Address,
                      input [63:0] RepWord,
+                     input [1:0] PCSrcReg,
+                     input [1:0] BranchOpE,
                      output [31:0] RD,
                      output L1IMiss);
     
@@ -45,6 +46,13 @@ module L1InstrCache#(parameter S = 32,
     wire [S-1:0] ActiveArray, MissArray;
     wire [31:0] DataArray [S-1:0];
     
+    //Determines if replacements allowed
+    wire CacheRepActive;
+    wire RepEnable;
+    
+    assign RepEnable = CacheRepActive & RepReady;
+    
+    
     //Generate Sets
     generate 
         for (i = 0; i < S; i = i + 1) begin
@@ -54,7 +62,7 @@ module L1InstrCache#(parameter S = 32,
                       Set (.clk(clk),
                            .reset(reset),
                            .ActiveSet(ActiveArray[i]),
-                           .RepReady(RepReady),
+                           .RepEnable(RepEnable),
                            .Block(Block),
                            .Tag(Tag),
                            .RepWord(RepWord),
@@ -65,11 +73,15 @@ module L1InstrCache#(parameter S = 32,
     
     //Cache Controller
     InstrCacheController#(.S(S))
-              Controller (.Stall(Stall),
+              Controller (.clk(clk),
+                          .reset(reset),
                           .Set(Set),
                           .MissArray(MissArray),
+                          .PCSrcReg(PCSrcReg),
+                          .BranchOpE(BranchOpE),
                           .ActiveArray(ActiveArray),
-                          .CacheMiss(L1IMiss));
+                          .CacheMiss(L1IMiss),
+                          .CacheRepActive(CacheRepActive));
     
     
     //Assign output

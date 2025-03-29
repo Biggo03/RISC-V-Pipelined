@@ -15,6 +15,10 @@
 
 
 module top(input clk, reset,
+           //Temp L1 instruction cache inputs
+           input RepReady,
+           input [63:0] RepWord,
+           //
            output [31:0] WriteDataM,
            output [31:0] DataAdr,
            output MemWriteM);
@@ -22,18 +26,39 @@ module top(input clk, reset,
     (* keep = "true" *) wire [31:0] PCF, InstrF, ReadDataM;
     (* keep = "true" *) wire [1:0] WidthSrcMOUT;
     
+    //Cache Related Signals
+    (* keep = "true" *) wire InstrMissF;
+    (* keep = "true" *) wire CacheRepActive;
+    (* keep = "true" *) wire [1:0] PCSrcReg;
+    (* keep = "true" *) wire [1:0] BranchOpE;
+    
+    
     riscvpipelined rvpipelined(.clk (clk),
                                .reset (reset),
                                .InstrF (InstrF),
                                .ReadDataM (ReadDataM),
+                               .InstrMissF(InstrMissF),
+                               .CacheRepActive(CacheRepActive),
                                .PCF (PCF),
                                .ALUResultM (DataAdr),
                                .WriteDataM (WriteDataM),
                                .WidthSrcMOUT (WidthSrcMOUT),
+                               .BranchOpE(BranchOpE),
+                               .PCSrcReg(PCSrcReg),
                                .MemWriteM (MemWriteM));
 
-    instrmem imem(.A (PCF),
-                  .RD (InstrF));
+    L1InstrCache#(.S(32),
+                  .E(4),
+                  .B(64))
+      InstrCache (.clk(clk),
+                  .reset(reset),
+                  .RepReady(RepReady),
+                  .Address(PCF),
+                  .RepWord(RepWord),
+                  .PCSrcReg(PCSrcReg),
+                  .BranchOpE(BranchOpE),
+                  .RD(InstrF),
+                  .L1IMiss(InstrMissF));
     
     datamem dmem(.clk (clk),
                  .WE (MemWriteM),

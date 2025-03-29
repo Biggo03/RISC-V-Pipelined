@@ -27,7 +27,7 @@ module BranchingBuffer(input clk, reset,
                        output [31:0] PredPCTargetF);
 
 
-    (* ram_style = "block" *) reg [31:0] BufferEntry [1023:0];
+    (* ram_style = "distributed" *) reg [31:0] BufferEntry [1023:0];
     wire [3:0] LPOutputs [1023:0];
     
     //Local predictor inputs
@@ -53,8 +53,7 @@ module BranchingBuffer(input clk, reset,
     endgenerate
     
     //Execute stage and reset logic
-    //Posedge on reset so clock gating doesn't affect reset behaviour
-    always @(posedge clk, posedge reset) begin
+    always @(posedge clk) begin
         if (reset) begin
             LocalReset <= {4096{1'b1}};
         end else if (~TargetMatch && BranchOpEb0) begin

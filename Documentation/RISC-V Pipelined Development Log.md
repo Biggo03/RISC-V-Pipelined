@@ -919,12 +919,12 @@ CacheActive will stay high in all other cycles, as it's also gated on BranchOpE[
   - CacheActive goes low: BranchOpE[0] = 1, Delay Applied = 0, InstrMissF = 1, PCSrcReg[1] = x
   - Delay Guard is in **ReadyToDelay**. Will transition to DelayComplete
   - Decode Register flushed
-  - Must ensure Execution register stalled not flushed (could change FlushE to: PCSrc[1] & CacheActive)
+  - Must ensure Execution register stalled not flushed (will change FlushE as described in next cycle)
 - Cycle 2:
   - CacheActive stays low: BranchOpE[0] = 1, DelayApplied = 1, InstrMissF = 1, PCSrcReg = 1
   - DelayGuard is in **DelayComplete**. Will transition to ReadyToDelay (PCSrcReg[1] = 1)
   - PCSrcReg[1] = 1 must unstall the PC register (Change StallF to (LoadStall | InstrMissF) & ~PCSrcReg[1])
-  - PCSrcReg[1] = 1 must allow flush of Execution register (Change FlushE to: PCSrc[1] & (CacheActive | PCSrcReg[1]))
+  - PCSrcReg[1] = 1 must allow flush of Execution register (Change FlushE to: (PCSrc[1] & (CacheActive | PCSrcReg[1]) | LoadStall))
     - Note that FlushE must also clear PCSrcReg. Reason is in cycle 3 CacheActive must be able to go high
 - Cycle 3:
   - CacheActive goes high: BranchOpE[0] = 0 and PCSrcReg[1] = 0 due to pipeline flush
@@ -939,7 +939,7 @@ I will now go over the changes made to the StallF and FlushE to ensure that the 
   - PCSrcReg[1] will only go high in the second cycle of a cache miss branch misprediction
   - This is because all other mispredictions lead to a flush of the PCSrcReg register as well
   - Therefore this should not affect the pipeline in any other circumstance than when it is intended
-- FlushE: PCSrc[1] -> PCSrc[1] & (CacheActive | PCSrcReg[1])
+- FlushE: PCSrc[1] | LoadStall -> (PCSrc[1] & (CacheActive | PCSrcReg[1])) | LoadStall
   - Want to allow flushes when CacheActive to allow for normal branch misprediction behaviour on cache hits
   - When cache miss and branch misprediction, need flush to be delayed to second cycle. In this case that will be when PCSrcReg[1] goes high.
   - PCSrcReg[1] will only go high in second cycle of a cache miss branch misprediction, and in all other misprediction cases, the CacheActive signal will be high. therefore there should be no unintended effects.

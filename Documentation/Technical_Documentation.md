@@ -304,20 +304,20 @@ The hazard unit deals with hazards that arise from complications created by pipe
 ### Signal Value Description Table
 The following table outlines what each signal value represents, and it's governing equation:
 
-| Signal Name | Equation                                       | Output | Description |
-|-------------|------------------------------------------------|--------|-------------|
-|ForwardAE    |((Rs1E == RdM) & RegWriteM) & (Rs1E != 0)       | 10     |Forward result from **memory** stage to **execute** stage|
-|ForwardAE    |((Rs1E == RdW) & RegWriteW) & (Rs1E != 0)       | 01     |Forward result from **writeback** stage to **execute** stage|
-|ForwardAE    |All other inputs                                | 00     |No forwarding occurs|
-|ForwardBE    |((Rs2E == RdM) & RegWriteM) & (Rs2E != 0)       | 10     |Forward result from **memory** stage to **execute** stage|
-|ForwardBE    |((Rs2E == RdW) & RegWriteW) & (Rs2E != 0)       | 01     |Forward result from **writeback** stage to **execute** stage|
-|ForwardBE    |All other inputs                                | 00     |No forwarding occurs|
-|LoadStall    |ResultSrcE[2] & ((Rs1D == RdE) \| (Rs2D == RdE))| 1      |A stall due to a load should occur|
-|StallF       |(LoadStall \| InstrMissF) & ~PCSrcReg[1]        | 1      |**Fetch** stages pipeline register will be stalled|
-|StallD       |LoadStall \| InstrMissF                         | 1      |**Decode** stages pipeline register will be stalled|
-|StallE       |InstrMissF                                      | 1      |**Execute** stages pipeline register will be stalled|
-|FlushE       |PCSrc[1] & (CacheActive \| PCSrcReg[1])         | 1      |**Execute** stages pipeline register will be flushed|
-|FlushD       |PCSrc[1]                                        | 1      |**Decode** stages pipeline register will be flushed|
+| Signal Name | Equation                                             | Output | Description |
+|-------------|------------------------------------------------------|--------|-------------|
+|ForwardAE    |((Rs1E == RdM) & RegWriteM) & (Rs1E != 0)             | 10     |Forward result from **memory** stage to **execute** stage|
+|ForwardAE    |((Rs1E == RdW) & RegWriteW) & (Rs1E != 0)             | 01     |Forward result from **writeback** stage to **execute** stage|
+|ForwardAE    |All other inputs                                      | 00     |No forwarding occurs|
+|ForwardBE    |((Rs2E == RdM) & RegWriteM) & (Rs2E != 0)             | 10     |Forward result from **memory** stage to **execute** stage|
+|ForwardBE    |((Rs2E == RdW) & RegWriteW) & (Rs2E != 0)             | 01     |Forward result from **writeback** stage to **execute** stage|
+|ForwardBE    |All other inputs                                      | 00     |No forwarding occurs|
+|LoadStall    |ResultSrcE[2] & ((Rs1D == RdE) \| (Rs2D == RdE))      | 1      |A stall due to a load should occur|
+|StallF       |(LoadStall \| InstrMissF) & ~PCSrcReg[1]              | 1      |**Fetch** stages pipeline register will be stalled|
+|StallD       |LoadStall \| InstrMissF                               | 1      |**Decode** stages pipeline register will be stalled|
+|StallE       |InstrMissF                                            | 1      |**Execute** stages pipeline register will be stalled|
+|FlushE       |(PCSrc[1] & (CacheActive \| PCSrcReg[1])) \| LoadStall| 1      |**Execute** stages pipeline register will be flushed|
+|FlushD       |PCSrc[1]                                              | 1      |**Decode** stages pipeline register will be flushed|
 
 ## Testing and Validation
 The design includes testbenches for individual components, as well as a top-level testbench for overall validation. The following details the testing setup:

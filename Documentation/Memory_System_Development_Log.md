@@ -314,7 +314,9 @@ This top level cache module is a staging ground for the two previously designed 
 **Testing:** The testing strategy for this module focused on verifying basic cache functionality-specifically, that block replacement and cache reads behave as expected. Additionally, the testbench ensured that the Stall signal forced a cache hit, and stopped replacement from occuring. These tests ensure that cache sets are being correctly indexed and that the miss signal is accurately asserted at the top level. More advanced internal behaviors, such as LRU updates and tag comparisons, were thoroughly tested within the set module itself. As a result, this top-level verification effort intentionally avoids re-testing those same features to prioritize time and development efficiency.
 
 ### L1 Instruction Cache Integration into Pipelined Processor (March 26th \- Present):
-This is being mentioned here primarily to give more context to the timeline of the project. However, as this integration will primarily making changes to the pipelined processor, this will be covered in more detail in the RISC-V Pipelined Development Log.
+This is being mentioned here primarily to give more context to the timeline of the project. However, this integration will primarily making changes to the pipelined processor. That being said, there are still some changes that needed to be made to the modules here due to the integration into the pipelined processor.
+
+
 
 # Changelog:
 

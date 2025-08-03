@@ -558,7 +558,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="Controller-Datapath" id="EFmqviuocUZ3t7M0fFVM">
-    <mxGraphModel dx="2390" dy="1300" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="4681" pageHeight="3300" math="0" shadow="0">
+    <mxGraphModel dx="1912" dy="1040" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="4681" pageHeight="3300" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -2326,13 +2326,19 @@
           <mxGeometry x="70" y="455" width="80" height="30" as="geometry" />
         </mxCell>
         <mxCell id="CPRhAXZld-EibP1wWqL3-3" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;Signals to add to BPU&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;strokeWidth=1;" vertex="1" parent="1">
-          <mxGeometry x="60" y="385" width="260" height="40" as="geometry" />
+          <mxGeometry x="20" y="385" width="260" height="40" as="geometry" />
         </mxCell>
         <mxCell id="CPRhAXZld-EibP1wWqL3-4" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;Signals to add to HCU&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="1420" y="1673" width="260" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="CPRhAXZld-EibP1wWqL3-5" value="StallE" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="1422.5" y="1713" width="50" height="30" as="geometry" />
+        <mxCell id="CPRhAXZld-EibP1wWqL3-5" value="StallE&lt;div&gt;InstrMissF&lt;/div&gt;&lt;div&gt;PCSrcReg&lt;/div&gt;&lt;div&gt;InstrCacheRepActive&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="1713" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="FpLCLkfxGMNBXyCFdCkI-1" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;Signals to add to I-Cache&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="5" y="603" width="290" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="FpLCLkfxGMNBXyCFdCkI-2" value="clk&lt;div&gt;reset&lt;/div&gt;&lt;div&gt;RepReady&lt;/div&gt;&lt;div&gt;Address&lt;/div&gt;&lt;div&gt;RepWord&lt;/div&gt;&lt;div&gt;PCSrcReg&lt;/div&gt;&lt;div&gt;BranchOpE&lt;/div&gt;&lt;div&gt;RD&lt;/div&gt;&lt;div&gt;InstrMissF&lt;/div&gt;&lt;div&gt;InstrCacheRepActive&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="60" y="634.55" width="140" height="160" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
@@ -3119,8 +3125,8 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="DaUj2QLBsSb6YCEe29rX-8" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;(~CacheActive)&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="245" y="150" width="130" height="30" as="geometry" />
+        <mxCell id="DaUj2QLBsSb6YCEe29rX-8" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;(~CacheRepActive)&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="230" y="150" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="DaUj2QLBsSb6YCEe29rX-9" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;~InstrMissF | PCSrcReg[1]&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="205" y="398" width="210" height="30" as="geometry" />

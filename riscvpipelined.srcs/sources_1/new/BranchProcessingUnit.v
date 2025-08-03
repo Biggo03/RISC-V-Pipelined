@@ -16,7 +16,7 @@
 
 module BranchProcessingUnit(input clk, reset,
                             input N, Z, C, V,
-                            input FlushE,
+                            input StallE, FlushE,
                             input [2:0] funct3E,
                             input [1:0] BranchOpE,
                             input [6:5] InstrF,
@@ -40,6 +40,7 @@ module BranchProcessingUnit(input clk, reset,
     
     BranchPredictor BP(.clk(clk),
                        .reset(reset),
+                       .StallE(StallE),
                        .PCF(PCF),
                        .PCE(PCE),
                        .PCTargetE(PCTargetE),

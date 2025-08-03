@@ -26,6 +26,7 @@ module memorystage(input clk, reset,
                    //Input Control Signals
                    input [2:0] WidthSrcE, ResultSrcE,
                    input MemWriteE, RegWriteE,
+                   input StallM,
                    //Output Data Signals
                    output [31:0] ReducedDataM, ALUResultM, WriteDataM,
                    output [31:0] PCTargetM, PCPlus4M,
@@ -49,7 +50,7 @@ module memorystage(input clk, reset,
                       WidthSrcE, ResultSrcE, MemWriteE, RegWriteE};
     
     flop #(.WIDTH (REG_WIDTH)) MemoryReg(.clk (clk),
-                                         .en (1'b1),
+                                         .en (~StallM),
                                          .reset (reset),
                                          .D (MInputs),
                                          .Q (MOutputs));

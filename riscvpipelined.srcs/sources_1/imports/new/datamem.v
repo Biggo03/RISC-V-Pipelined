@@ -26,7 +26,7 @@ module datamem #(parameter WIDTH = 32)
              input [WIDTH-1:0] A, WD,
              output [WIDTH-1:0] RD);
                
-    (* keep = "true" *) reg [31:0] RAM[255:0];
+    (* ram_style = "block" *) reg [31:0] RAM[255:0];
     reg [31:0] TempRD;
 
     always @(posedge clk) begin

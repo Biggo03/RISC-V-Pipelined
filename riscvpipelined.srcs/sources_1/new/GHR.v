@@ -14,6 +14,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module GHR(input clk, reset,
+           input StallE,
            input BranchOpEb0,
            input PCSrcResE,
            output reg [1:0] LocalSrc);
@@ -44,7 +45,7 @@ end
 //Next state logic
 always @(*) begin
     
-    if (BranchOpEb0) begin
+    if (BranchOpEb0 & ~StallE) begin
 
         case (PresentState)
             

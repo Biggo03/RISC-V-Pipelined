@@ -13,7 +13,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module hazardcontrol(input InstrMissF,                   //Fetch stage input
+module hazardcontrol(input InstrMissF,                  //Fetch stage input
                      input [4:0] Rs1D, Rs2D,            //Decode stage inputs
                      input [4:0] Rs1E, Rs2E, RdE,       //Execute stage inputs
                      input ResultSrcEb2, PCSrcb1,    
@@ -22,8 +22,9 @@ module hazardcontrol(input InstrMissF,                   //Fetch stage input
                      input [4:0] RdW,                   //Write stage inputs
                      input RegWriteW,
                      input [1:0] PCSrcReg,               //Branch pred/cache inputs
-                     input CacheRepActive,
-                     output StallF, StallD, StallE,      // Stall outputs
+                     input InstrCacheRepActive,
+                     output StallF, StallD,              // Stall outputs
+                     output StallE, StallM, StallW,      
                      output FlushD, FlushE,              //Flush outputs
                      output [1:0] ForwardAE, ForwardBE); //Forward outputs
     
@@ -64,9 +65,11 @@ module hazardcontrol(input InstrMissF,                   //Fetch stage input
     assign StallF = (LoadStall | InstrMissF) & ~PCSrcReg[1];
     assign StallD = LoadStall | InstrMissF;
     assign StallE = InstrMissF;
+    assign StallM = InstrMissF;
+    assign StallW = InstrMissF;
     
     //Flushes
-    assign FlushE = (PCSrcb1 & (CacheRepActive | PCSrcReg[1])) | LoadStall;
+    assign FlushE = (PCSrcb1 & (InstrCacheRepActive | PCSrcReg[1])) | LoadStall;
     assign FlushD = PCSrcb1;
     
     

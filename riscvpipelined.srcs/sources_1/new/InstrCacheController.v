@@ -37,12 +37,13 @@ module InstrCacheController#(parameter S = 64)
     assign CacheMiss = MissArray[Set];
     
     //Signal determining if replacement active
-    assign CacheRepActive = ~(BranchOpE[0] & CacheMiss & (~DelayApplied)) & ~PCSrcReg[1]; //Must route proper signals
+    assign CacheRepActive = ~(BranchOpE[0] & CacheMiss & (~DelayApplied)) & ~PCSrcReg[1];
     
     //Replacement state machine logic
+    //DelayApplied = 0 indicates in ReadyToDelay state
     always @(posedge clk) begin
         if (reset) begin
-            DelayApplied <= 0;
+            DelayApplied <= 0; 
         end else if (~DelayApplied & ~CacheRepActive) begin
             DelayApplied <= 1'b1;
         end else if (DelayApplied & (~CacheMiss | PCSrcReg[1])) begin

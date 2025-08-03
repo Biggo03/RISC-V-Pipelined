@@ -815,11 +815,11 @@ Before making changes, the necessary modifications to accommodate this new compo
 
 The signal that will control this behavior is the L1Miss signal from the L1 instruction cache. This signal is asserted high when there is a cache miss, i.e., no block matches the requested address within the cache. This is the only control signal required, as it is combinationally generated and updates precisely when valid data populates the cache. Therefore, when this signal is high, the pipeline must be stalled at the appropriate registers. Otherwise, it can continue as normal.
 
-The registers that must be stalled and the reason they must be stalled/flushed are as follows:
-- PC Register: This register must be **stalled**. It stores the current address of interest, and if not stalled, the L1 cache could receive an invalid instruction address. This could lead to a range of issues, including incorrect instruction fetches or invalid replacements.
-- Decode Register: This register must be  **stalled.** While the L1 instruction cache is fetching data, it's output is garbage data, which must not be propagated through the pipeline. A stall rather than a flush is neccesary, as it will contain valid data at the time of a miss from the previously fetched instruction. This data must not be lost.
-- Execute Register: This register must be **stalled.** This is so that while the L1 instruction cache is fetching the new instructions, the instruction currently in the decode register won't be executed multiple times. If this register is not stalled, then it's possible that the data within the registers, or data memory be corrupted.
-- Memory and Writeback Registers: These registers can remain **untouched.** This is because data is not manipulated in either of these stages. Data from the execution stage (which remains unchanged becasue it is stalled) is simply written to either memory, or the register file. All these changes must be reflected in subsequent instructions regardless, so writing them to memory or the register file is not an issue.
+All register must be stalled. The reasoning for this is as follows:
+- PC Register: The PC must be **stalled**. It holds the address of the next instruction to fetch. If it continues updating during a miss, the L1 instruction cache may receive invalid addresses, potentially causing incorrect instruction fetches or even erroneous block replacements. Stalling ensures that instruction fetch is halted at the correct location until valid data becomes available.
+- Decode Register: The decode stage must be **stalled** during an instruction cache miss. While the cache is fetching new data, its input is invalid or undefined, and propagating this through the pipeline could lead to incorrect control signals or operand selection. A stall, rather than a flush, is essential, as the decode register typically holds a valid instruction from before the miss, which must be retained and re-executed once the miss is resolved.
+- Execution Register: The execution register must be **stalled**. This is necessary because the branch predictor (or branch resolution logic) often uses data from this stage to compute the correct program counter. If the register were not stalled, this critical information could be lost or overwritten mid-replacement, leading to incorrect program flow and misprediction recovery behavior.
+- Memory and Writeback Registers: These registers must be **stalled** to prevent data corruption caused by operand forwarding. This is especially important due to the stalling of the execution stage. For example, if the instruction add x1, x1, x1 is stalled in the execution stage for several cycles, and M and W are not stalled, the result of the add would continue propagating forward and be forwarded back to E, causing exponential growth in the computed value. Stalling M and W ensures that forwarded values remain stable and correct throughout the stall.
 
 A special consideration must be made due to the processor's branch prediction. Mispredictions are detected in the execution stage and are indicated by the MSB of the PCSrc signal. When a misprediction is detected, the current instruction address being sent to the instruction cache is no longer valid, as it belongs to the mispredicted path.
 
@@ -831,8 +831,7 @@ In this case, the instruction fetch should be ignored entirely. Ideally, the ins
 To support this behavior, the instruction cache will be modified to accept a control signal indicating a misprediction, which will disable both replacement and LRU updates. Once implemented and tested, this mechanism will prevent unnecessary evictions and stalls, maintaining pipeline efficiency despite the new memory behavior.
 
 To summarize, in the case of a cache miss:
-- PC register is **stalled**
-- Decode register is **stalled**
+- All pipeline registers are stalled
 
 In the case of a branch misprediction:
 - The L1 cache has replacement, and LRU updates disabled.
@@ -851,7 +850,7 @@ For the time being, the RepReady and RepWord signals will be treated as top-leve
 ### Solving Synthesis Issues (March 27th \- March 28th):
 I'm going into solving synthesis issues before fully testing the system, as changes to allow for reasonable synthesis will effect the system, and it will be better to test the system functionality once the synthesis is known to be relatively good, and changes won't greatly affect synthesis results.
 
-The initial changes made to prevent unneccesary cache evictions on branch mispredictions caused the critical path to increase substantially, leading to a slack of 5.703ns, which significantly affects performance, as clock speed would be greatly reduced. The critical path is caused by the PCSrc signal causing the L1 instruction cache to stall.
+The initial changes made to prevent unneccesary cache evictions on branch mispredictions caused the critical path to increase substantially, leading to a slack of **5.703ns**, which significantly affects performance, as clock speed would be greatly reduced. The critical path is caused by the PCSrc signal causing the L1 instruction cache to stall.
 
 The first possible solution is as follows:
 - Delay replacements, but not reads when a branching instruction is in the execution stage
@@ -867,93 +866,170 @@ The first possible solution is as follows:
   - This signal will be called PCSrcReg
   - Use will be explained further in this section
 
-This adds an extra cycle when there is a correct branch prediction AND an L1 cache miss. This will also result in two extra cycle to handle branch mispredictions that also have a cache miss. However this will stop unused instructions from populating the cache, ideally reducing conflict misses within the cache.
+This adds an extra cycle when there is a correct branch prediction AND an L1 cache miss. This will also result in two extra cycles to handle branch mispredictions that also have a cache miss. However this will stop unused instructions from populating the cache, ideally reducing conflict misses within the cache, and ultimately saving cycles.
 
 To achieve this, an FSM along with a combinationally set signal will be used to control cache replacements. the combinational signal is:
 
-**CacheActive = ~(BranchOpeE[0] & InstrMissF & (~DelayApplied)) & ~PCSrcReg[1]**
+**CacheRepActive = ~(BranchOpeE[0] & InstrMissF & (~DelayApplied)) & ~PCSrcReg[1]**
+
+**Accompanying Truth Table**
+
+| PcSrcReg[1] | BranchOpE[0] | InstrMissF | DelayApplied | CacheRepActive |
+|-------------|--------------|------------|--------------|----------------|
+| 1           | x            | x          | x            | 0              |
+| x           | 1            | 1          | 0            | 0              |
+| 0           | 0            | x          | x            | 1              |
+| 0           | x            | 0          | x            | 1              |
+| 0           | x            | x          | 1            | 1              |
 
 The FSM is described as follows, and a state diagram can be found in the RISC-V Pipelined Schematic.
 
-**FSM: Delay gaurd**
+**FSM: Delay guard**
 - Inputs: 
-  - CacheActive: Allows the cache to carry out replacements
+  - CacheRepActive: Allows the cache to carry out replacements
   - PCSrcReg: A registered PCSrc signal, used to determine if branch was mispredicted
   - L1Miss: Indicates a cache miss
 - Outputs:
   - DelayApplied: Indicates that the appropriate delay has occured
 - States:
-  - ReadyToDelay: DelayApplied is deactivated meaning either a branching operation isn't being evaluated, or that the appropriate number of delay cycles have not passed
-    - Transitions when: ~CacheActive
-  - DelayComplete: DelayApplied is active, meaning on a branching operation, the appropriate delay has been applied
+  - ReadyToDelay: DelayApplied is deactivated meaning either a branching operation **is not** being evaluated, or that the appropriate number of delay cycles have not passed
+    - Transitions when: ~CacheRepActive
+  - DelayComplete: DelayApplied is active, meaning on a branching operation, the appropriate delay has been applied 
     - Transitions when: ~InstrMissF | PCSrcReg[1]
 
 I will summarize why these two logical additions will allow for the intended operation.
 
 **Cache Hit, Correct Prediction**
 - Cycle 1:
-  - CacheActive remains high: PCSrcReg[1] = 0, as can assume prior instruction wasn't mispredicted branch, InstrMissF = 0 as hit
+  - Assume no branch misprediction on prior cycle -> PCSrcReg[1] = 0
+  - Cache Hit -> InstrMissF = 0
+  - CacheRepActive = ~(x & 0 & 1) & ~0 = (1 & 1) = 1
+    - Therefore CacheRepActive remains **High**
   - Delay Guard remains in **ReadyToDelay**
 - Resumes as normal operation
 
 **Cache Hit, Incorrect Prediction**
 - Cycle 1:
-  - CacheActive remains high: PCSrcReg[1] = 0, as can assume prior instruction wasn't mispredicted branch, InstrMissF = 0 as hit
+  - Assume no branch misprediction on prior cycle => PCSrcReg[1] = 0
+  - Cache Hit -> InstrMissF = 0
+  - CacheRepActive = ~(x & 0 & 1) & ~0 = (1 & 1) = 1
+    - Therefore CacheRepActive remains **High**
   - Delay Guard remains in **ReadyToDelay**
-- LRUBits are incorrectly updated, but the misprediction flush removes invalid instruction from pipeline
+- LRUBits are incorrectly updated,
+- Misprediction flush removes invalid instruction from pipeline
 - After this resumes as normal
 
 **Cache Miss, Correct Prediction**
 - Cycle 1:
-  - CacheActive goes low: BranchOpE[0] = 1, DelayApplied = 0 InstrMissF = 1, PCSrcReg[1] = x
-  - Delay Gaurd is in **ReadyToDelay**. Will transition to **DelayComplete** next cycle
+  - Assume no branch misprediction on prior cycle => PCSrcReg[1] = 0
+    - Note in this case it doesn't end up mattering
+  - Assume Branch is taken -> BranchOpE[0] = 1
+    - We assume a branch here because we are not concerened with non-branching instructions
+  - Cache miss -> InstrMissF = 1
+  - Can assume FSM is not in the **DelayComplete** state -> DelayApplied = 0
+    - Only enters this state in very specific conditions
+  - CacheRepActive = ~(1 & 1 & 1) & ~0 = (0 & 1) = 0
+    - CacheRepActive goes **Low**
+  - Delay Guard is in **ReadyToDelay**. Will transition to **DelayComplete** next cycle
 - Cycle 2:
-  - CacheActive goes high: DelayApplied = 1, correct branch therefore PCSrcReg[1] = 0
+  - In **DelayComplete** state -> DelayApplied = 1
+  - Correct prediction -> PCSrcReg[1] = 0
+  - CacheRepActive = ~(x & x & 0) & ~0 = (1 & 1) = 1
+    - CacheRepActive goes **High**
   - Delay Guard is in **DelayComplete**. Will Transition to **ReadytoDelay** when replacement complete
-  - Replacement is reactivated, will fetch required instruction from next level in memory hierarchy
+    - This is due to the condition (DelayApplied & **~CacheMiss** | PcSrcReg[1])
+      - Prediction was correct, so PCSrcReg[1] = 0
+      - In the DelayComplete state, so DelayApplied = 1
+      - Therefore effectively waiting for CacheMiss to go low, which only occurs when replacement is complete
 
-CacheActive will stay high in all other cycles, as it's also gated on BranchOpE[0] and InstrMissF. So will only deactivate on misses, and when there's a branch in the execution stage. 
+CacheRepActive will stay high in all other cycles, as it's also gated on BranchOpE[0] and InstrMissF. So will only deactivate on misses, **AND** when there's a branch in the execution stage. 
 
-**Cache Miss, Incorrect Prediction**
-- Cycle 1:
-  - CacheActive goes low: BranchOpE[0] = 1, Delay Applied = 0, InstrMissF = 1, PCSrcReg[1] = x
+**Cache Miss, Incorrect Prediction** 
+- Cycle 1: 
+  - Assume no branch misprediction on prior cycle => PCSrcReg[1] = 0
+    - Note in this case it doesn't end up mattering
+  - Branch in execution stage (misprediction) -> BranchOpE[0] = 1
+  - Can assume FSM is not in the **DelayComplete** state -> DelayApplied = 0
+    - Only enters this state in very specific conditions
+  - Cache miss -> InstrMissF = 1
+  - CacheRepActive = ~(1 & 1 & 1) & ~0 = (0 & 1) = 0
+    - CacheRepActive goes **Low**
   - Delay Guard is in **ReadyToDelay**. Will transition to DelayComplete
   - Decode Register flushed
   - Must ensure Execution register stalled not flushed (will change FlushE as described in next cycle)
 - Cycle 2:
-  - CacheActive stays low: BranchOpE[0] = 1, DelayApplied = 1, InstrMissF = 1, PCSrcReg = 1
-  - DelayGuard is in **DelayComplete**. Will transition to ReadyToDelay (PCSrcReg[1] = 1)
+  - Incorrect branch prediction -> PCSrcReg[1] = 1
+  - Last cycle was a cache miss -> BranchOpE[0] = 1
+    - StallE = InstrMissF therefore execution reg stalled
+  - Know FSM is in ReadyToDelay -> DelayApplied = 1
+  - Still a cache miss -> InstrMissF = 1
+  - CacheRepActive = ~(1 & 1 & 0) & 0 = 1 & 0 = 0
+    - CacheRepActive Stays **Low**
+  - DelayGuard is in **DelayComplete**. Will transition to ReadyToDelay
+    - This is due to the condition (DelayApplied & (~CacheMiss | PCSrcReg[1]))
+    - DelayApplied = 1, PCSrcReg[1] = 1, therfore condition to retutn to ReadyToDelay is met
   - PCSrcReg[1] = 1 must unstall the PC register (Change StallF to (LoadStall | InstrMissF) & ~PCSrcReg[1])
-  - PCSrcReg[1] = 1 must allow flush of Execution register (Change FlushE to: (PCSrc[1] & (CacheActive | PCSrcReg[1]) | LoadStall))
-    - Note that FlushE must also clear PCSrcReg. Reason is in cycle 3 CacheActive must be able to go high
+    - Want the PC register to be loaded with correct address next cycle
+    - Execution register was stalled (StallE=InstrMissF), so correct address will populate PC on rising edge of cycle 3
+  - PCSrcReg[1] = 1 must allow flush of Execution register (Change FlushE to: (PCSrc[1] & (CacheRepActive | PCSrcReg[1]) | LoadStall))
+    - Want Execution register to be flushed to put BranchOpE[0] to 0 to allow CacheRepActive to go high next cycle
+    - Note that FlushE must also clear PCSrcReg. Reason is in cycle 3 CacheRepActive must be able to go high
 - Cycle 3:
-  - CacheActive goes high: BranchOpE[0] = 0 and PCSrcReg[1] = 0 due to pipeline flush
-  - New DelayGaurd remains in **ReadyToDelay**
-  - Valid instruction stored in PC register given to cache, can resume as normal
+  - PCSrcReg[1] flushed -> PCSrcReg[1] = 0
+  - Execution Reg flushed -> BranchOpE[0] = 0
+  - Next instruction unknown if hit or miss -> InstrMissF = x
+  - In ReadyToDelay -> DelayApplied = 0
+  - CacheRepActive = ~(0 & x & 1) & 1 = 1 & 1 = 1
+    - CacheRepActive goes **High**
+  - DelayGaurd now in **ReadyToDelay**
+  - Valid instruction stored in PC register given to cache
+    - Means pipeline is in normal operation this cycle
 
 **Changes to stall / flush signal implications**
 
-I will now go over the changes made to the StallF and FlushE to ensure that the changes made here won't have unintended cnosequences in the pipelines behaviour.
+I will now go over the changes made to the StallF and FlushE to ensure that the changes made here won't have unintended consequences in the pipelines behaviour.
 
 - StallF: (LoadStall | InstrMissF) -> (LoadStall | InstrMissF) & ~PCSrcReg[1]
   - PCSrcReg[1] will only go high in the second cycle of a cache miss branch misprediction
   - This is because all other mispredictions lead to a flush of the PCSrcReg register as well
   - Therefore this should not affect the pipeline in any other circumstance than when it is intended
-- FlushE: PCSrc[1] | LoadStall -> (PCSrc[1] & (CacheActive | PCSrcReg[1])) | LoadStall
-  - Want to allow flushes when CacheActive to allow for normal branch misprediction behaviour on cache hits
+- FlushE: PCSrc[1] | LoadStall -> (PCSrc[1] & (CacheRepActive | PCSrcReg[1])) | LoadStall
+  - Want to allow flushes when CacheRepActive to allow for normal branch misprediction behaviour on cache hits
   - When cache miss and branch misprediction, need flush to be delayed to second cycle. In this case that will be when PCSrcReg[1] goes high.
-  - PCSrcReg[1] will only go high in second cycle of a cache miss branch misprediction, and in all other misprediction cases, the CacheActive signal will be high. therefore there should be no unintended effects.
+  - PCSrcReg[1] will only go high in second cycle of a cache miss branch misprediction, and in all other misprediction cases, the CacheRepActive signal will be high. therefore there should be no unintended effects.
 
 ### Implementing Fixes to Synthesis Issues (March 28th \- Present):
 There are a number of changes that need to be made:
 - PCSrc must be registered
-  - This will be done within the branch processing unit, as this is where the PCSrc signal is calculated (**Done**)
-  - This register must also have FlushE routed to it for flushing (**Done**)
-- The Hazard control unit must be updated to reflect new stall and flush signal equations
-  - This will require both InstrMissF, and PCSrcReg[1] being routed to the module
+  - This will be done within the branch processing unit, as this is where the PCSrc signal is calculated
+  - This register must also have FlushE routed to it for flushing
+- The Hazard control unit must be updated to reflect new stall and flush signal equations 
+  - This will require InstrMissF, PCSrcReg[1], and CacheRepActive to be routed to the module
 - The L1 instruction cache must be updated to allow for the proper replacement delays
-  - Requires the creation of the Delay Guard FSM, and creation of appropriate control signals
+  - Requires the creation of the Delay Guard FSM, and creation of appropriate control signals 
   - This will be done in the CacheController module
+
+With the changes made, the slack violation was reduced from 5.703ns to 0.105ns. This is a massive improvement from before, however it still degrades the performance of the processor slightly. Inspecting the critical path shows that this is caused by the calculation of the FlushE signal, and the fact is uses PCSrc. The increase in complexity of the FlushE signal likely leads to the slight increase in delay, as PCSrc was used in the calculation of this signal before. 
+
+Solutions to this performance degradation will be investigated, however first the correctness of the current design will be confirmed. This will start with re-testing of the modules that had changes made. These include:
+- L1InstrCache
+- InstrCacheController
+- HazardControlUnit
+
+Other modified modules were impacted primarily at the structural level, and their correctness will be verified during full system-level testing. Re-testing of the instruction cache modules will be documented in the Memory System Development Log.
+
+### Further Changes for Correctness and Return to Design(August. 2nd):
+Returning to this project after about 4 months away meant that I needed to re-evaluate the design, especially these recent additons. After going through the state I left the design in, my evaluation was that the changes made for fixing synthesis issues were msotly valid, but there were still some issues that were not addressed, or incompletely addressed. The state machine + combinational logic solution for dealing with the interaction of branch mispredictions, and cache misses seems correct. This will of course be truly determined when tested, but looking over the logic I believe it will hold. The main issue comes with two things I overlooked: **GHR updates**, and **Forwarding causing data corruption**.
+
+**Forwarding causing data corruption** was addressed in the "Required Changes" section above, but in short, the memory and writeback registers must be stalled during a cache miss so that forwarded values don't corrupt the execution stage data.
+
+**GHR updates** will be covered here. Essentially, because a branch may be present in the execution stage during a cache miss, the GHR will change states multiple times based on one branch. This is because it's inputs are stalled, but the state machine is always active. So lets say a taken branch is in the execution stage, and there was just a cache miss. The GHR will change state based on the taken branch every cycle the pipeline is stalled (at least 8-cycles). It could be argued that this means the GHR actually decreases branching performance, as it would not be reflective of the global history, which is not good. 
+
+The good thing is that the fix is very simple. The state machine will be enabled by ~StallE, so when the execution stage is stalled, the GHR will remain in it's current state.
+
+These changes have been implemented in the HDL, and the result has been resynthesized to get a baseline of how these changes might affect performance. As the design hasn't been verified yet, the results here are just to see where things are at with the initial integration of the L1 I-cache. That said, it lead to clock period of about 14.3ns, which is about 0.8ns worse than when the processor had an idealized instruction memory. To me, this is an acceptable decrease in performance considering the huge increase in design complexity.
+
+### Testing the Instruction Cache (August. 2nd \- present)
 
 # **Challenges**
 

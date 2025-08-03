@@ -33,7 +33,8 @@ module datapath(input clk, reset,
                 //Input Hazard Control Signals
                 input [1:0] ForwardAE, ForwardBE,
                 input FlushD, FlushE,
-                input StallD, StallF, StallE,
+                input StallD, StallF,
+                input StallE, StallM, StallW,
                 //Output Signals (Memory)
                 output [31:0] ALUResultM, WriteDataM,
                 output [31:0] PCF,

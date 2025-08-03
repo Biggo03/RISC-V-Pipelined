@@ -25,6 +25,7 @@ module writebackstage(input clk, reset,
                       //Input Control Signals
                       input [2:0] ResultSrcM,
                       input RegWriteM,
+                      input StallW,
                       //Output Data Signals
                       output [31:0] ResultW,
                       output [4:0] RdW,
@@ -42,7 +43,7 @@ module writebackstage(input clk, reset,
     assign WInputs = {ALUResultM, ReducedDataM, PCTargetM, PCPlus4M, ImmExtM, RdM, ResultSrcM, RegWriteM};
     
     flop #(.WIDTH (REG_WIDTH)) WritebackReg(.clk (clk),
-                                            .en (1'b1),
+                                            .en (~StallW),
                                             .reset (reset),
                                             .D (WInputs),
                                             .Q (WOutputs));

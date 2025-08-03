@@ -23,14 +23,14 @@ module top(input clk, reset,
            output [31:0] DataAdr,
            output MemWriteM);
     
-    (* keep = "true" *) wire [31:0] PCF, InstrF, ReadDataM;
-    (* keep = "true" *) wire [1:0] WidthSrcMOUT;
+    wire [31:0] PCF, InstrF, ReadDataM;
+    wire [1:0] WidthSrcMOUT;
     
     //Cache Related Signals
-    (* keep = "true" *) wire InstrMissF;
-    (* keep = "true" *) wire CacheRepActive;
-    (* keep = "true" *) wire [1:0] PCSrcReg;
-    (* keep = "true" *) wire [1:0] BranchOpE;
+    wire InstrMissF;
+    wire InstrCacheRepActive;
+    wire [1:0] PCSrcReg;
+    wire [1:0] BranchOpE;
     
     
     riscvpipelined rvpipelined(.clk (clk),
@@ -38,7 +38,7 @@ module top(input clk, reset,
                                .InstrF (InstrF),
                                .ReadDataM (ReadDataM),
                                .InstrMissF(InstrMissF),
-                               .CacheRepActive(CacheRepActive),
+                               .InstrCacheRepActive(InstrCacheRepActive),
                                .PCF (PCF),
                                .ALUResultM (DataAdr),
                                .WriteDataM (WriteDataM),
@@ -58,7 +58,8 @@ module top(input clk, reset,
                   .PCSrcReg(PCSrcReg),
                   .BranchOpE(BranchOpE),
                   .RD(InstrF),
-                  .L1IMiss(InstrMissF));
+                  .L1IMiss(InstrMissF),
+                  .CacheRepActive(InstrCacheRepActive));
     
     datamem dmem(.clk (clk),
                  .WE (MemWriteM),

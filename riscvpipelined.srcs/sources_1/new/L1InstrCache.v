@@ -24,7 +24,8 @@ module L1InstrCache#(parameter S = 32,
                      input [1:0] PCSrcReg,
                      input [1:0] BranchOpE,
                      output [31:0] RD,
-                     output L1IMiss);
+                     output L1IMiss,
+                     output CacheRepActive);
     
     //parameters for addressing
     localparam b = $clog2(B);
@@ -47,7 +48,6 @@ module L1InstrCache#(parameter S = 32,
     wire [31:0] DataArray [S-1:0];
     
     //Determines if replacements allowed
-    wire CacheRepActive;
     wire RepEnable;
     
     assign RepEnable = CacheRepActive & RepReady;

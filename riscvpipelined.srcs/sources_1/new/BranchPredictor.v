@@ -15,6 +15,7 @@
 
 
 module BranchPredictor(input clk, reset,
+                       input StallE,
                        input [9:0] PCF, PCE,
                        input [31:0] PCTargetE,
                        input PCSrcResE,
@@ -27,6 +28,7 @@ module BranchPredictor(input clk, reset,
     
     GHR GHR(.clk(clk),
             .reset(reset),
+            .StallE(StallE),
             .BranchOpEb0(BranchOpEb0),
             .PCSrcResE(PCSrcResE),
             .LocalSrc(LocalSrc));

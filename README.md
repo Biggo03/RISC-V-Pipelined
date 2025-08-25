@@ -1,5 +1,5 @@
 # RISC-V Pipelined
-A pipelined implementation of a RISC-V microprocessor in Verilog.
+A pipelined implementation of a RISC-V microprocessor in Verilog
 
 ## Introduction
 This project implements a pipelined RISC-V microprocessor using Verilog, building on the single-cycle design from my previous project, which can be found here: [Single-Cycle-Processor](https://github.com/Biggo03/RISC-V-Single-Cycle). The processor aims to achieve approximately 1 instruction per cycle (IPC), although inefficiencies due to hazards may affect overall performance. It implements the RV32I instruction set architecture (ISA). This compact yet powerful architecture is widely used in both academia and industry for building RISC processors.

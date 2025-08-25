@@ -27,17 +27,29 @@ module InstrCacheController_TB();
     logic CacheMiss;
     logic Stall;
     
-    InstrCacheController DUT(.Stall(Stall),
+    logic clk, reset;
+    logic [1:0] PCSrcReg, BranchOpE;
+    logic CacheRepActive;
+    
+    InstrCacheController DUT(.clk(clk),
+                             .reset(reset),
                              .Set(Set),
                              .MissArray(MissArray),
+                             .PCSrcReg(PCSrcReg),
+                             .BranchOpE(BranchOpE),
                              .ActiveArray(ActiveArray),
-                             .CacheMiss(CacheMiss));
+                             .CacheMiss(CacheMiss),
+                             .CacheRepActive(CacheRepActive));
+    
+    always begin
+        clk = ~clk; #5;
+    end
     
     initial begin
     
-        MissArray = 64'h0123456789ABCDEF;
-        Stall = 0;
+        MissArray = 64'h0123456789ABCDEF; clk = 0; reset = 1;
     
+        //Combinational output test
         for (int i = 0; i < 63; i = i + 1) begin
         
             Set = i;
@@ -47,15 +59,67 @@ module InstrCacheController_TB();
             
         end
         
-        Stall = 1;
-        for (int i = 0; i < 63; i = i + 1) begin
-            Set = i;
-            #5;
-            assert(ActiveArray[i] === 1'b0) else $fatal("Stall Failed (ActiveArray)");
-            assert(CacheMiss === 0) else $fatal("Stall Failed (CacheMiss)");
-        end
-    
+        //FSM test
+        reset = 0; BranchOpE[1] = 0; PCSrcReg[0] = 0;
+        
+        //Normal operation hit
+        BranchOpE[0] = 0; CacheMiss = 0; PCSrcReg[1] = 0;
+        #10;
+        assert(DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal("Normal operation hit fail");
+        
+        //Normal operation miss
+        CacheMiss = 1;
+        #10;
+        assert(DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal("Normal operation miss fail");
+        
+        //Correct branch hit
+        CacheMiss = 0; BranchOpE[0] = 1;
+        #10;
+        assert(DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal("Correct branch hit step 1 failed");
+        
+        BranchOpE[0] = 0;
+        #10;
+        
+        //Correct branch miss
+        MissArray = {64{1'b1}} ; BranchOpE[0] = 1;
+        #5;
+        //CacheRepActive goes low
+        assert(CacheRepActive === 0 && DUT.DelayApplied === 0) else $fatal("Correct branch miss CacheRepActive error");
+        #6;
+        BranchOpE[0] = 0;
+        //CacheRepActive goes high based on DelayApplied
+        assert(DUT.DelayApplied === 1 && CacheRepActive === 1) else $fatal("Correct branch miss state transition failed");
+        #9;
+        
+        //Misprediction hit
+        MissArray = 0; BranchOpE[0] = 1;
+        #10;
+        assert(DUT.DelayApplied === 0 && CacheRepActive === 1) else $fatal("Misprediction hit error");
+        #10;
+        
+        //Misprediction miss;
+        MissArray = {64{1'b1}}; BranchOpE[0] = 1;
+        #5;
+        assert(CacheRepActive === 0 && DUT.DelayApplied === 0) else $fatal("Misprediction miss CacheRepActive error");
+        #5;
+        
+        //At clk edge, indicate a miss
+        PCSrcReg[1] = 1;
+        #1;
+        
+        assert(CacheRepActive === 0 && DUT.DelayApplied === 1) else $fatal("Misprediction miss state transition error");
+        
+        #9;
+        BranchOpE[0] = 0; 
+        
+        //Allow PCSrcReg to update appropriately (after clock edge, not before)
+        #1;
+        PCSrcReg[1] = 0;
+        #1;
+        assert(CacheRepActive === 1 && DUT.DelayApplied === 0) else $fatal("Misprediction miss state transition error (2)");
+        
         $display("Simulation Succesful!");
+        $stop;
         
     end
     

@@ -19,7 +19,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-
+`include "InstrMacros.vh"
 
 module maindecoder(input [6:0] op,
                    output [2:0] ImmSrc, ResultSrc,
@@ -33,21 +33,21 @@ module maindecoder(input [6:0] op,
     
     assign {RegWrite, ImmSrc, ALUSrc, MemWrite,
             ResultSrc, BranchOp, ALUOp, WidthOp, PCBaseSrc} = controls;
-                   
+    
     always @(*) begin
     
         case(op)
         //RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_BranchOp_ALUOp_WidthOp_PCBaseSrc
             
-            7'b0110011: controls = 15'b1_xxx_0_0_000_00_10_0_x; //R-Type Instructions
-            7'b0010011: controls = 15'b1_000_1_0_000_00_10_0_x; //I-Type ALU Instructions
-            7'b0000011: controls = 15'b1_000_1_0_100_00_00_1_x; //I-Type Load Instructions
-            7'b0100011: controls = 15'b0_001_1_1_0xx_00_00_1_x; //S-Type Instructions
-            7'b1100011: controls = 15'b0_010_0_0_0xx_11_01_x_0; //B-Type Instructions
-            7'b1101111: controls = 15'b1_011_x_0_010_01_xx_0_0; //jal
-            7'b1100111: controls = 15'b1_000_x_0_010_01_xx_0_1; //jalr
-            7'b0110111: controls = 15'b1_100_x_0_011_00_xx_0_x; //lui
-            7'b0010111: controls = 15'b1_100_x_0_001_00_xx_0_0; //auipc
+            `R_TYPE_OP: controls = {`WRITE_REG, `DONT_CARE_EXT, `ALU_SRC_WD, `NO_WRITE_MEM, `RESULT_ALU, `NON_BRANCH, `ALU_OP_PROCESS, `WIDTH_CONST, `PC_BASE_DONT_CARE};
+            `I_TYPE_ALU_OP: controls = {`WRITE_REG, `I_EXT, `ALU_SRC_IMM, `NO_WRITE_MEM, `RESULT_ALU, `NON_BRANCH, `ALU_OP_PROCESS, `WIDTH_CONST, `PC_BASE_DONT_CARE}; //I-Type ALU Instructions
+            `I_TYPE_LOAD_OP: controls = {`WRITE_REG, `I_EXT, `ALU_SRC_IMM, `NO_WRITE_MEM, `RESULT_MEM_DATA, `NON_BRANCH, `ALU_OP_ADD, `WIDTH_PROCESS, `PC_BASE_DONT_CARE}; //I-Type Load Instructions
+            `S_TYPE_OP: controls = {`NO_WRITE_REG, `S_EXT, `ALU_SRC_IMM, `WRITE_MEM, `RESULT_NA, `NON_BRANCH, `ALU_OP_ADD, `WIDTH_PROCESS, `PC_BASE_DONT_CARE}; //S-Type Instructions
+            `B_TYPE_OP: controls = {`NO_WRITE_REG, `B_EXT, `ALU_SRC_WD, `NO_WRITE_MEM, `RESULT_NA, `BRANCH, `ALU_OP_SUB, `WIDTH_DONT_CARE, `PC_BASE_PC}; //B-Type Instructions
+            `JAL_OP: controls = {`WRITE_REG, `J_EXT, `ALU_SRC_DONT_CARE, `NO_WRITE_MEM, `RESULT_PCPLUS4, `JUMP, `ALU_OP_DONT_CARE, `WIDTH_CONST, `PC_BASE_PC}; //jal
+            `JALR_OP: controls = {`WRITE_REG, `I_EXT, `ALU_SRC_DONT_CARE, `NO_WRITE_MEM, `RESULT_PCPLUS4, `JUMP, `ALU_OP_DONT_CARE, `WIDTH_CONST, `PC_BASE_SRCA}; //jalr
+            `LUI_OP: controls = {`WRITE_REG, `U_EXT, `ALU_SRC_DONT_CARE, `NO_WRITE_MEM, `RESULT_IM_EXT, `NON_BRANCH, `ALU_OP_DONT_CARE, `WIDTH_CONST, `PC_BASE_DONT_CARE}; //lui
+            `AUIPC_OP: controls = {`WRITE_REG, `U_EXT, `ALU_SRC_DONT_CARE, `NO_WRITE_MEM, `RESULT_PCTARGET, `NON_BRANCH, `ALU_OP_DONT_CARE, `WIDTH_CONST, `PC_BASE_PC}; //auipc
             default: controls = 15'b0; //Unknown opcode
             
         endcase

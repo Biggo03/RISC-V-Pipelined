@@ -91,7 +91,7 @@ module maindecoder_TB();
         
         //B-type Instructions
         op = 7'b1100011;
-        SetExpected(1'b0, 3'b010, 1'b0, 1'b0, 3'b0xx, 2'b10, 2'b01, 1'bx, 1'b0);
+        SetExpected(1'b0, 3'b010, 1'b0, 1'b0, 3'b0xx, 2'b11, 2'b01, 1'bx, 1'b0);
         #10;
         CheckOutput();
         
@@ -121,7 +121,7 @@ module maindecoder_TB();
         
         //Unused opcode
         op = 7'b0;
-        SetExpected(1'bx, 3'bx, 1'bx, 1'bx, 3'bx, 2'bx, 2'bx, 1'bx, 1'bx);
+        SetExpected(1'b0, 3'b0, 1'b0, 1'b0, 3'b0, 2'b0, 2'b0, 1'b0, 1'b0);
         #10;
         CheckOutput();
         

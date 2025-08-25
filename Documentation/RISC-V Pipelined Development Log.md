@@ -915,7 +915,7 @@ I will summarize why these two logical additions will allow for the intended ope
   - CacheRepActive = ~(x & 0 & 1) & ~0 = (1 & 1) = 1
     - Therefore CacheRepActive remains **High**
   - Delay Guard remains in **ReadyToDelay**
-- LRUBits are incorrectly updated,
+- LRUBits are incorrectly updated
 - Misprediction flush removes invalid instruction from pipeline
 - After this resumes as normal
 
@@ -1030,6 +1030,7 @@ The good thing is that the fix is very simple. The state machine will be enabled
 These changes have been implemented in the HDL, and the result has been resynthesized to get a baseline of how these changes might affect performance. As the design hasn't been verified yet, the results here are just to see where things are at with the initial integration of the L1 I-cache. That said, it lead to clock period of about 14.3ns, which is about 0.8ns worse than when the processor had an idealized instruction memory. To me, this is an acceptable decrease in performance considering the huge increase in design complexity.
 
 ### Testing the Instruction Cache (August. 2nd \- present)
+Testing the whole implementation will be a challenge, as the instruction cache is initially empty, and needs to be filled up with data.
 
 # **Challenges**
 

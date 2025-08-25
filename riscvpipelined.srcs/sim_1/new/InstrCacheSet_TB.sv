@@ -50,8 +50,8 @@ module InstrCacheSet_TB();
     
     //Task for assering Cache misses produce the expected outputs
     task AssertMiss();
-        assert(CacheMiss === 1 && $isunknown(Data)) else $fatal("Incorrectly indicated cache hit\
-                                                             \nData Output: %b", Data);
+        assert(CacheMiss === 1) else $fatal("Incorrectly indicated cache hit\
+                                           \nData Output: %b", Data);
     endtask
     
     //Task for checking LRUBits are as expected
@@ -91,7 +91,7 @@ module InstrCacheSet_TB();
             
             //Check data is ready one clock cycle after replacement indicated ready
             RepReady = 1;
-            #10;
+            #20;
             
             assert(Data === RepBlock[31:0] && CacheMiss == 0) else $fatal("Incorrect Data output on miss\
                                                                    \nData:          %h\

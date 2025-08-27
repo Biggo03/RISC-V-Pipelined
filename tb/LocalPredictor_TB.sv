@@ -38,6 +38,9 @@ module LocalPredictor_TB();
     
     
     initial begin
+
+        dump_setup;
+
         clk = 0; reset = 1; PCSrcResE = 0; Enable = 0; PCSrcPredExp = WU;
         
         #10;

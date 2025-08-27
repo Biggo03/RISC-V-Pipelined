@@ -32,6 +32,8 @@ module imem_TB();
     instrmem DUT(A, RD);
     
     initial begin
+
+        dump_setup;
         
         //Read file containing expected contents
         $readmemh("riscvprogram.txt", RAM);

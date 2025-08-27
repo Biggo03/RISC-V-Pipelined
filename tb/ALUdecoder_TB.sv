@@ -48,6 +48,9 @@ module ALUdecoder_TB();
     endtask
         
     initial begin
+
+        dump_setup;
+
         //S-type and I-type load instructions
         //Not dependant on any values other than ALUOp
         ALUOp = 2'b00; #10;

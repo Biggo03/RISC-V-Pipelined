@@ -64,6 +64,8 @@ module maindecoder_TB();
     //RegWriteExp, WidthOpExp, ALUSrcExp, PCBaseSrcExp, MemWriteExp, ALUOpExp, BranchOpExp, ImmSrcExp, ResultSrcExp
    
     initial begin
+
+        dump_setup;
         
         //R-Type Instructions
         op = 7'b0110011; 

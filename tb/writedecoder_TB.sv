@@ -30,6 +30,8 @@ module writedecoder_TB();
     
     
     initial begin
+
+        dump_setup;
     
         for (int i = 0; i < 32; i++) begin
             A = i; 

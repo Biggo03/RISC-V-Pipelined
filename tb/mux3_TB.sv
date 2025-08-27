@@ -29,6 +29,8 @@ module mux3_TB();
     mux3 DUT(d0, d1, d2, s, y);
     
     initial begin
+
+        dump_setup;
         
         d0 = 1; d1 = 2; d2 = 4;
         

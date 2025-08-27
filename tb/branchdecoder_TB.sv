@@ -49,6 +49,8 @@ module branchdecoder_TB();
 
     initial begin
         
+        dump_setup;
+
         //Non-branching instructions
         BranchOp = 2'b00; PCSrcExp = 1'b0; #10;
         AssertCorrect();

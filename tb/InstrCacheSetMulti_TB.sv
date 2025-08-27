@@ -53,6 +53,8 @@ module InstrCacheSetMulti_TB();
     end
     
     initial begin
+
+        dump_setup;
         
         //Initialization
         reset = 1; clk = 0; ActiveSet = 0; RepReady = 0; Block = 0; Tag = 0;

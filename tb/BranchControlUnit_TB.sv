@@ -46,6 +46,8 @@ module BranchControlUnit_TB();
 
     initial begin
         
+        dump_setup;
+
         Op = 0; PCSrcPredF = 0; PCSrcPredE = 0; 
         BranchOpEb0 = 0; TargetMatchE = 0; PCSrcResE = 0; PCSrc = 0;
         

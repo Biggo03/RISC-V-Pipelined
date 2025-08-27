@@ -46,6 +46,8 @@ module InstrCacheController_TB();
     end
     
     initial begin
+
+        dump_setup;
     
         MissArray = 64'h0123456789ABCDEF; clk = 0; reset = 1;
     

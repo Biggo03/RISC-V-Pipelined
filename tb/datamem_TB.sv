@@ -41,6 +41,8 @@ module datamem_TB();
     end
     
     initial begin
+
+        dump_setup;
         
         //Initialize input signals 
         clk = 0; WE = 1; WidthSrc = 2'b00;

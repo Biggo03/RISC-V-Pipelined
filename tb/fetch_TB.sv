@@ -35,6 +35,8 @@ module fetch_TB();
     
     
     initial begin
+
+        dump_setup;
         
         //Initialize the system
         clk = 0; reset = 1; PCSrcE = 0; StallF = 0; PCTargetE = 0;

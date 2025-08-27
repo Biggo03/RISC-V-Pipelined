@@ -33,6 +33,8 @@ module reduce_TB();
     reduce DUT(BaseResult, WidthSrc, Result);
     
     initial begin
+
+        dump_setup;
         
         read = 0;
         

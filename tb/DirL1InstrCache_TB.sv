@@ -73,6 +73,9 @@ module DirL1InstrCache_TB();
     end
     
     initial begin
+
+        dump_setup;
+
         reset = 1; clk = 0; BranchOpE = 0; PCSrcReg = 0; #100; reset = 0; 
         
         //Fill up cache and check initial reads

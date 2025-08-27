@@ -28,6 +28,9 @@ module flop_TB();
     flop DUT(clk, en, reset, D, Q);
     
     initial begin
+
+        dump_setup;
+
         //Initialize clock
         clk = 0;
         

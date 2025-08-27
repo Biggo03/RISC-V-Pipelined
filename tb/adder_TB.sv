@@ -1,24 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 09/08/2024 02:20:55 PM
-// Design Name: 
-// Module Name: adder_TB
-// Project Name: 
-// Target Devices: Testbench for the adder module
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module adder_TB();
 
@@ -27,6 +7,8 @@ module adder_TB();
     adder DUT(a, b, y);
     
     initial begin
+
+        dump_setup;
         
         //Adding small numbers
         a = 4; b = 3; #10;

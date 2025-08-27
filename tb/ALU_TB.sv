@@ -35,6 +35,8 @@ module ALU_TB();
     ALU DUT(ALUControl, A, B, ALUResult, N, Z, C, V);
     
     initial begin
+
+        dump_setup;
     
         //Open file
         file = $fopen("ALU_test_vectors.txt", "r");

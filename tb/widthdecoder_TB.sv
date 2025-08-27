@@ -36,6 +36,8 @@ module widthdecoder_TB();
     widthdecoder DUT(funct3, WidthOp, WidthSrc);
     
     initial begin
+
+        dump_setup;
         
         //Instructions where funct3 determines WidthSrc
         WidthOp = 0;

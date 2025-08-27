@@ -34,6 +34,8 @@ module extend_TB();
     
     initial begin
         
+        dump_setup;
+
         read = 0;
         
         file = $fopen("ext_unit_test_vectors.txt", "r");

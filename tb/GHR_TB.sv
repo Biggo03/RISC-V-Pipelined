@@ -38,6 +38,8 @@ always begin
 end
 
 initial begin
+
+    dump_setup;
     
     //Initialize System
     clk = 0; reset = 1; BranchOpEb0 = 0; PCSrcResE = 0; LocalSrcExp = UT;

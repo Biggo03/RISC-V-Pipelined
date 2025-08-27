@@ -27,6 +27,9 @@
     top DUT(clk, reset, WriteData, DataAdr, MemWrite);
     
     initial begin
+
+        dump_setup;
+
         MemWrite = 0;
         clk = 0; reset = 1; #20; reset = 0;
     end

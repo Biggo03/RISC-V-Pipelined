@@ -30,6 +30,8 @@ module mux4_TB();
     mux4 DUT(d0, d1, d2, d3, s, y);
     
     initial begin
+
+        dump_setup;
         
         d0 = 1; d1 = 2; d2 = 4; d3 = 8;
         

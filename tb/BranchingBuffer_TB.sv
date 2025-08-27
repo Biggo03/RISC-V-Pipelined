@@ -48,6 +48,8 @@ module BranchingBuffer_TB();
     end
     
     initial begin
+
+        dump_setup;
         
         //Initialize
         clk = 0; reset = 1; PCTargetE = 0; PCF = 0; PCE = 0; LocalSrc = 0;

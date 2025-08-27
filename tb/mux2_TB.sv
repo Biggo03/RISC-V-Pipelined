@@ -30,6 +30,8 @@ module mux2_TB();
 
     initial begin
         
+        dump_setup;
+
         //Set initial values of inputs
         d0 = 4; d1 = 1;
         

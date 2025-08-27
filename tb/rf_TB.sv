@@ -39,6 +39,8 @@ module rf_TB();
     end
     
     initial begin
+
+        dump_setup;
         
         //initialize clock registers, and set WE3
         clk = 0; WE3 = 0; reset = 1; #10; reset = 0;

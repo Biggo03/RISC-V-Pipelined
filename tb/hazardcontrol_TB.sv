@@ -96,6 +96,8 @@ module hazardcontrol_TB();
     endtask
     
     initial begin
+
+        dump_setup;
         
         //Test all register combinations for ForwrdAE and ForwardBE
         for (int i = 0; i < 64; i++) begin

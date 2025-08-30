@@ -61,7 +61,7 @@
 `define ALU_AND 4'b0010
 `define ALU_OR 4'b0011
 `define ALU_XOR 4'b0100
-`define ALU_SLT 4'b0101l
+`define ALU_SLT 4'b0101
 `define ALU_SLTU 4'b0110
 `define ALU_SLL 4'b0111
 `define ALU_ADD 4'b1000
@@ -76,7 +76,7 @@
 `define WIDTH_32 3'b000
 `define WIDTH_16S 3'b010
 `define WIDTH_16U 3'b110
-`define WDITH_8S 3'b001
+`define WIDTH_8S 3'b001
 `define WIDTH_8U 3'b101
 
 //PCBaseSRC //UPDATE

@@ -35,6 +35,7 @@
 *.pl
 
 # Other
+*.un*
 *.xsa
 *.webtalk
 *.sysdef

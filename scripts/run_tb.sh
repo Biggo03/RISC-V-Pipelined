@@ -24,14 +24,14 @@ INCLUDES="${PROJ_ROOT}/includes/*.vh"
 RTL="${PROJ_ROOT}/rtl/*v"
 TB_UTILS="${PROJ_ROOT}/tb_utils/*v"
 
-echo $RTL
-echo $TB_UTILS
-
 # List all files to compile
 IVERILOG_FILES="$TESTBENCH $INCLUDES $RTL $TB_UTILS"
 
 echo "[+] Compiling..."
-iverilog -g2012 -D DUMP_PATH="\"${VCD_FILE}\"" -I "${PROJ_ROOT}/includes" -o "$VVP_FILE" $IVERILOG_FILES || exit 1
+iverilog -g2012 -D DUMP_PATH="\"${VCD_FILE}\"" \
+                -I "${PROJ_ROOT}/includes" \
+                -o "$VVP_FILE" $IVERILOG_FILES \
+                || exit 1
 
 echo "[+] Running simulation..."
 vvp "$VVP_FILE" || exit 1

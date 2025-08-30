@@ -53,7 +53,7 @@ module data_mem_tb();
             A = (i * 4); WD = i; RDWExp[i] = i; #10;
             
             assert (RD === RDWExp[i]) 
-            else $fatal("Error: WidthSrc: %b.\nAddress: %d\nExpected value: %b\nActual value:   %b", 
+            else $fatal(1, "Error: WidthSrc: %b.\nAddress: %d\nExpected value: %b\nActual value:   %b", 
                         WidthSrc, A, RDWExp[i], RD);
             
         end
@@ -80,7 +80,7 @@ module data_mem_tb();
             A = (i * 2); #20;
             
             assert (RD[15:0] === RDHWExp[i]) 
-            else $fatal("Error: WidthSrc: %b.\nAddress: %d\nExpected value: %b\nActual value:   %b", 
+            else $fatal(1, "Error: WidthSrc: %b.\nAddress: %d\nExpected value: %b\nActual value:   %b", 
                      WidthSrc, A, RDHWExp[i], RD[15:0]);
             
         end
@@ -105,14 +105,14 @@ module data_mem_tb();
             A = i; #20;
             
             assert(RD[7:0] === RDByteExp[i])
-            else $fatal("Error: WidthSrc: %b.\nAddress: %d\
-                         \nExpected byte: %b\nActual byte:   %b",
+            else $fatal(1, "Error: WidthSrc: %b.\nAddress: %d\nExpected byte: %b\nActual byte:   %b",
                          WidthSrc, A, RDByteExp[i], RD[7:0]);
         
          
         end
         
-        $display("Simulation Succesful!");
+        $display("TEST PASSED");
+        $finish;
         
     end
     

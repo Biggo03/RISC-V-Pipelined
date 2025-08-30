@@ -40,10 +40,7 @@ module branch_resolution_unit_tb();
     task AssertCorrect();
         
         assert (PCSrc === PCSrcExp) else
-        $fatal("Error: BranchOp: %b, funct3: %b\n\
-                N: %b, Z: %b, C: %b, V: %b\n\
-                Expected Output: %b\n\
-                Actual Output:   %b", BranchOp, funct3, N, Z, C, V, PCSrcExp, PCSrc);
+        $fatal(1, "Error: BranchOp: %b, funct3: %b\nN: %b, Z: %b, C: %b, V: %b\nExpected Output: %b\nActual Output:   %b", BranchOp, funct3, N, Z, C, V, PCSrcExp, PCSrc);
     
     endtask
 
@@ -97,7 +94,8 @@ module branch_resolution_unit_tb();
         
         end
         
-        $display("Simulation Success!");
+        $display("TEST PASSED");
+        $finish;
              
     end
 

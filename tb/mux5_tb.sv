@@ -63,6 +63,9 @@ module mux5_tb();
          
         s = 3'b111; #10;
         assert (y == d4) else $display("Error (select invalid, output change)");
+
+        $display("TEST PASSED");
+        $finish;
         
     end
 

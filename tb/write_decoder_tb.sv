@@ -23,15 +23,17 @@
 module write_decoder_tb();
 
     logic [4:0] A;
+    logic WE;
     logic [31:0] en;
     int enExpected;
     
-    write_decoder DUT(A, en);
+    write_decoder DUT(A, WE, en);
     
     
     initial begin
 
         dump_setup;
+        WE = 1;
     
         for (int i = 0; i < 32; i++) begin
             A = i; 
@@ -39,12 +41,13 @@ module write_decoder_tb();
             
             #10;
             
-            assert (enExpected == en) else $fatal("Error");
+            assert (enExpected == en) else $fatal(1, "Error");
             
         end
         
-        $display("Simulation Succesful!");
-    
+        $display("TEST PASSED");
+        $finish;
+
     end
 
 endmodule

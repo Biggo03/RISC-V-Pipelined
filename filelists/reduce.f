@@ -1,0 +1,1 @@
+./rtl/reduce.sv

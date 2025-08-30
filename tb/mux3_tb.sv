@@ -36,24 +36,25 @@ module mux3_tb();
         
         //Ensure data propagates properly for each select signal
         s = 2'b00; #10;
-        assert (y === d0) else $fatal("Error (s = 0)");
+        assert (y === d0) else $fatal(1, "Error (s = 0)");
 
         s = 2'b01; #10;    
-        assert (y === d1) else $fatal("Error (s = 1)");
+        assert (y === d1) else $fatal(1, "Error (s = 1)");
         
         s = 2'b10; #10;    
-        assert (y === d2) else $fatal("Error (s = 2)");
+        assert (y === d2) else $fatal(1, "Error (s = 2)");
         
         //Ensure changing data results in the proper change in output
         d2 = 16; #10;
-        assert (y === d2) else $fatal("Error: Input change");
+        assert (y === d2) else $fatal(1, "Error: Input change");
         
         
         //Ensure value doesn't change when s goes to invalid value
         s = 2'b11; #10;
-        assert (y === d2) else $fatal("Error: Invalid s lead to change");
+        assert (y === d2) else $fatal(1, "Error: Invalid s lead to change");
         
-        $display("Simulation Successful!");
+        $display("TEST PASSED");
+        $finish;
 
     end
 

@@ -49,7 +49,7 @@ module local_predictor_tb();
     
         #10;
     
-        assert(PCSrcPred === 0) else $fatal("Initialization Failed");
+        assert(PCSrcPred === 0) else $fatal(1, "Initialization Failed");
         
         #5;
         
@@ -63,7 +63,7 @@ module local_predictor_tb();
             
             #10;
             
-            assert(PCSrcPred === PCSrcPredExp[1]) else $fatal("State change error");
+            assert(PCSrcPred === PCSrcPredExp[1]) else $fatal(1, "State change error");
             
             //Change expected after assertion, as transition occurs on next clock edge
             if (PCSrcResE == 1 && PCSrcPredExp < 3) PCSrcPredExp = PCSrcPredExp + 1;
@@ -80,18 +80,18 @@ module local_predictor_tb();
                     
             #10;
         
-            assert (PCSrcPred === PCSrcPredExp) else $fatal("Enable Error");
+            assert (PCSrcPred === PCSrcPredExp) else $fatal(1, "Enable Error");
         end
         
         Enable = 1; reset = 1;
         
         #50;
         
-        assert (PCSrcPred === 0) else $fatal("Taken Reset failed");
+        assert (PCSrcPred === 0) else $fatal(1, "Taken Reset failed");
         
         
-        $display("Simulation Succesful!");
-        $stop;
+        $display("TEST PASSED");
+        $finish;
         
     end
     

@@ -31,7 +31,7 @@ localparam TT = 2'b11;
 logic clk, reset, BranchOpEb0, PCSrcResE;
 logic [1:0] LocalSrc, LocalSrcExp;
 
-ghr DUT(clk, reset, BranchOpEb0, PCSrcResE, LocalSrc);
+ghr DUT(clk, reset, stallE, BranchOpEb0, PCSrcResE, LocalSrc);
 
 always begin
     clk = ~clk; #5;
@@ -50,7 +50,7 @@ initial begin
     
     #10;
     
-    assert(LocalSrc === UT) else $fatal("Initialization Failed");
+    assert(LocalSrc === UT) else $fatal(1, "Initialization Failed");
     
     BranchOpEb0 = 1;
     
@@ -70,7 +70,7 @@ initial begin
         
         #10;
         
-        assert (LocalSrc === LocalSrcExp) else $fatal("State change error when LocalSrc in %b", LocalSrc);
+        assert (LocalSrc === LocalSrcExp) else $fatal(1, "State change error when LocalSrc in %b", LocalSrc);
         
     end
     
@@ -84,12 +84,12 @@ initial begin
         
         #10;
         
-        assert (LocalSrc === LocalSrcExp) else $fatal("Enable Error");
+        assert (LocalSrc === LocalSrcExp) else $fatal(1, "Enable Error");
         
     end
     
-    $display("Simulation Succesful!");
-    $stop;
+    $display("TEST PASSED");
+    $finish;
 
 end
 

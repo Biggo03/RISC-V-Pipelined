@@ -50,16 +50,13 @@ module instr_cache_set_tb();
     
     //Task for assering Cache misses produce the expected outputs
     task AssertMiss();
-        assert(CacheMiss === 1) else $fatal("Incorrectly indicated cache hit\
-                                           \nData Output: %b", Data);
+        assert(CacheMiss === 1) else $fatal(1, "Incorrectly indicated cache hit\nData Output: %b", Data);
     endtask
     
     //Task for checking LRUBits are as expected
     task AssertLRUBits();
         for (integer i = 0; i < E; i = i + 1) begin
-            assert(DUT.LRUBits[i] === LRUBitsE[i]) else $fatal("Unexpected LRU ordering. Incorrect LRU index: %d\
-                                                               \nActual: %d\
-                                                               \nExpected: %d", i, DUT.LRUBits[i], LRUBitsE[i]);
+            assert(DUT.LRUBits[i] === LRUBitsE[i]) else $fatal(1, "Unexpected LRU ordering. Incorrect LRU index: %d\nActual: %d\nExpected: %d", i, DUT.LRUBits[i], LRUBitsE[i]);
         end
             
     endtask
@@ -95,9 +92,7 @@ module instr_cache_set_tb();
             RepReady = 1;
             #20;
             
-            assert(Data === RepBlock[31:0] && CacheMiss == 0) else $fatal("Incorrect Data output on miss\
-                                                                   \nData:          %h\
-                                                                   \nExpected Data: %h", Data, RepBlock[31:0]);
+            assert(Data === RepBlock[31:0] && CacheMiss == 0) else $fatal(1, "Incorrect Data output on miss\nData:          %h\nExpected Data: %h", Data, RepBlock[31:0]);
             
             //Update tag
             Tag =  Tag + 100;
@@ -117,9 +112,7 @@ module instr_cache_set_tb();
         for (integer i = 0; i < E; i = i + 1) begin
             Block = Block + 4;
             #10;
-            assert(Data === RepBlock[(Block*8) +: 32] && CacheMiss === 0) else $fatal("Incorrectly reading data on hit\
-                                                                           \nData:          %h\
-                                                                           \nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
+            assert(Data === RepBlock[(Block*8) +: 32] && CacheMiss === 0) else $fatal(1, "Incorrectly reading data on hit\nData:          %h\nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
             Tag = Tag - 100;
         end
         
@@ -154,9 +147,7 @@ module instr_cache_set_tb();
         //Ensure remains stable even when data takes > 1 clock cycle to arrive
         #100;
         AssertLRUBits();
-        assert(Data === RepBlock[(Block*8) +: 32] && CacheMiss === 0) else $fatal("Incorrectly reading data on hit\
-                                                                           \nData:          %h\
-                                                                           \nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
+        assert(Data === RepBlock[(Block*8) +: 32] && CacheMiss === 0) else $fatal(1, "Incorrectly reading data on hit\nData:          %h\nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
                                                                            
         //Check that LRUBits update properly when a stored tag is accessed
         RepReady = 0; Tag = 600; //Block 1's tag
@@ -166,7 +157,7 @@ module instr_cache_set_tb();
         AssertLRUBits();
         
         $display("Simulation completed succesfully!");
-        $stop;
+        $finish;
         
         
     end

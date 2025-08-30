@@ -5,7 +5,7 @@ SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 PROJ_ROOT="$(realpath "$SCRIPT_DIR/..")"
 
 #User inputs
-TESTBENCH="$(realpath "$1")"
+TESTBENCH="${PROJ_ROOT}/tb/$1"
 SIM_NAME=$2
 OUTPUT_DIR="$(realpath "$3")"
 
@@ -22,7 +22,7 @@ VCD_FILE="${OUTPUT_DIR}/${SIM_NAME}.vcd"
 #Other file paths for readability
 INCLUDES="${PROJ_ROOT}/includes/*.vh"
 RTL="${PROJ_ROOT}/rtl/*v"
-TB_UTILS="${PROJ_ROOT}/tb_utils/*v"
+TB_UTILS="${PROJ_ROOT}/tb/common/*v"
 
 # List all files to compile
 IVERILOG_FILES="$TESTBENCH $INCLUDES $RTL $TB_UTILS"

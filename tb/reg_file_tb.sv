@@ -50,7 +50,7 @@ module reg_file_tb();
         for (int i = 0; i < 32; i++) begin
             A1 = i; A2 = i; #10;
             
-            assert (RD1 == 0 & RD2 == 0) else $fatal("Error: Initialization failed");
+            assert (RD1 == 0 & RD2 == 0) else $fatal(1, "Error: Initialization failed");
             
         end
         
@@ -65,7 +65,7 @@ module reg_file_tb();
                 for (int i = 0; i < 32; i++) begin
                     A1 = i; A2 = i; A3 = i; WD3 = i; #10;
             
-                    assert (RD1 == i & RD2 == i) else $fatal("Error: Writing error");
+                    assert (RD1 == i & RD2 == i) else $fatal(1, "Error: Writing error");
             
                 end
                 
@@ -86,9 +86,10 @@ module reg_file_tb();
         
         //Ensure writing to 0 register not possible
         WE3 = 1; A1 = 0; A2 = 0; A3 = 0; WD3 = 1; #10;
-        assert (RD1 == 0 & RD2 == 0) else $fatal("Error: Zero register updated");
+        assert (RD1 == 0 & RD2 == 0) else $fatal(1, "Error: Zero register updated");
         
-        $display("Simulation Succesful!");
+        $display("TEST PASSED");
+        $finish;
         
     end
     

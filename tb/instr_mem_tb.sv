@@ -41,11 +41,12 @@ module instr_mem_tb();
         for (int i = 0; i < 64; i++) begin
             A = (i * 4); #10;
             
-            assert (RD === RAM[i]) else $fatal("Error");
+            assert (RD === RAM[i]) else $fatal(1, "Error");
             
         end
         
-        $display("Simulation Succesful!");
+        $display("TEST PASSED");
+        $finish;
         
     end
     

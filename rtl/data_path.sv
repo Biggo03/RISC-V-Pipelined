@@ -12,25 +12,6 @@
 //
 //  Notes:        N/A
 //==============================================================//
-//////////////////////////////////////////////////////////////////////////////////
-// Author: Viggo Wozniak
-//
-// Create Date: 10/03/2024 04:31:46 PM
-// Module Name: datapath
-// Project Name: riscvpipelined
-// Description: All logic contained within the datapath
-// 
-// Dependencies: fetchstage (fetchstage.v), decodestage (decodestage.v), executestage (executestage.v),
-//               memorystage (memorystage.v), writebackstage (writebackstage.v) rf (rf.v),
-//               all dependancies associated with these modules are also neccesary.
-//
-// Additional Comments: 
-//            Input sources: Control unit, hazard control unit, instruction memory, data memory
-//            Output destinations: Control unit, hazard control unit, instruction memory, data memory             
-//                      
-//
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module data_path (
     // Clock & Reset
@@ -103,7 +84,6 @@ module data_path (
     output logic        RegWriteW
 );
 
-
     // ----- Fetch stage -----
     logic [31:0] PCPlus4F;
 
@@ -139,9 +119,7 @@ module data_path (
     // ----- Register file -----
     logic [31:0] RD1D;
     logic [31:0] RD2D;
-        
     
-    //Pipeline Stages
     fetch_stage u_fetch_stage (
         // Clock & Reset
         .clk            (clk),
@@ -255,7 +233,6 @@ module data_path (
     //Need whole ResultSrcE signal internally, only need MSB externally
     assign ResultSrcEb2 = ResultSrcE[2];
     
-    
     memory_stage u_memory_stage (
         // Clock & Reset
         .clk           (clk),
@@ -318,7 +295,6 @@ module data_path (
         .RegWriteW    (RegWriteW)
     );
 
-        //Register File
     reg_file u_reg_file (
         // Clock & Reset
         .clk   (clk),

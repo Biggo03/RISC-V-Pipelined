@@ -49,21 +49,25 @@ module reduce_tb();
             if (read == 3) begin
                 #1;
                 assert (Result == ResultExpected) else begin
-                    $fatal("Error: WidthSrc = %b, BaseResult = %b\nExpected output: %b\nActual output:   %b", 
+                    $fatal(1, "Error: WidthSrc = %b, BaseResult = %b\nExpected output: %b\nActual output:   %b", 
                        WidthSrc, BaseResult, ResultExpected, Result);
                 end
                 
             end else begin
-                $fatal("Incorrect number of elements read");
+                $fatal(1, "Incorrect number of elements read");
             end
             
         end
-        
-        $display("Simulation Succesful!");
-        
+      
+  
+        $display("TEST PASSED");
         $fclose(file);
         
-    end;
+        $finish;
+
+
+        
+    end
 
 
 endmodule

@@ -41,23 +41,23 @@ module flop_tb();
         en = 1; #10;
         
         //Ensure Q changes with D accordingly
-        assert (Q == 1) else $display("Propogation Error");
+        assert (Q == 1) else $fatal(1, "Propogation Error");
         
         D = 2; #10;
-        assert (Q == 2) else $display("Propogation Error");
+        assert (Q == 2) else $fatal(1, "Propogation Error");
         
         //Ensure Q does not change when register not enabled
         en = 0; #10;
         
         D = 4; #10;
-        assert (Q == 2) else $display("Enable Error");
+        assert (Q == 2) else $fatal(1, "Enable Error");
         
-        //Ensure Reset works properly (asynchronous)
-        reset = 1; #5; 
-        assert (Q == 0) else $display("Reset Error");
+        //Ensure Reset works properly (synchronous)
+        reset = 1; #10; 
+        assert (Q == 0) else $fatal(1, "Reset Error");
         
-        
-        $display("Simulation Complete");
+        $display("TEST PASSED");
+        $finish;
     end
     
     

@@ -12,27 +12,6 @@
 //
 //  Notes:        Supports addition, subtraction, AND, OR, XOR, SLT, SLTU, logical shift left, logical shift right, and arithmetic shift right
 //==============================================================//
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 08/27/2024 05:31:28 PM
-// Design Name: 
-// Module Name: ALU
-// Project Name: riscvsingle
-// Target Devices: 
-// Tool Versions: 
-// Description: Take control signal ALUControl, and does the corrosponding operation.
-//              C and V flags are only updated on addition or subtraction. N and Z flags always updated.
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments: This module supports: addition, subtraction, AND, OR, XOR, SLT, SLTU, Logical shift left, Logical shift right, and Arithmetic shift right
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module alu #(
     parameter int WIDTH = 32

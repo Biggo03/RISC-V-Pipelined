@@ -48,19 +48,20 @@ module alu_tb();
             if (read == 8) begin
                 #5;
                 assert (ALUResult == ALUResultExpected & NExpected == N & ZExpected == Z & CExpected == C & VExpected == V) else begin
-                    $fatal("Error: ALUControl = %b\nA = %b\nB = %b\nExpected Result: %b\nActual Result:   %b\nExpect Flags: N = %b Z = %b C = %b V = %b\nActual Flags: N = %b Z = %b C = %b V = %b", 
+                    $fatal(1, "Error: ALUControl = %b\nA = %b\nB = %b\nExpected Result: %b\nActual Result:   %b\nExpect Flags: N = %b Z = %b C = %b V = %b\nActual Flags: N = %b Z = %b C = %b V = %b", 
                            ALUControl, A, B, ALUResultExpected, ALUResult, NExpected, ZExpected, CExpected, VExpected, N, Z, C, V);
                 end
             
             end else begin
                 
-                $fatal("Incorrect number of arguments read");
+                $fatal(1, "Incorrect number of arguments read");
 
             end
             
         end
         
-        $display("Simulation Succesful!");
+        $display("TEST PASSED");
+        $finish;
         
     end
     

@@ -34,17 +34,15 @@ module main_decoder_tb();
 
     //Repetitive assertions warrant a task
     task CheckOutput();
-    
+        string msg;
     
         assert(RegWrite === RegWriteExp & WidthOp === WidthOpExp & ALUSrc === ALUSrcExp &
                PCBaseSrc === PCBaseSrcExp & MemWrite === MemWriteExp &
                ALUOp === ALUOpExp & BranchOp === BranchOpExp & 
                ImmSrc === ImmSrcExp & ResultSrc === ResultSrcExp)
-               else $fatal("Error: Incorrect output for operation %b\n\
-                            Expected: RegWrite: %b,ImmSrc: %b, ALUSrc: %b, MemWrite: %b, ResultSrc: %b, BranchOp: %b, ALUOp: %b, WidthOp: %b, PCBaseSrc: %b\n\
-                            Actual:   RegWrite: %b,ImmSrc: %b, ALUSrc: %b, MemWrite: %b, ResultSrc: %b, BranchOp: %b, ALUOp: %b, WidthOp: %b, PCBaseSrc: %b",
-                            op, RegWriteExp, ImmSrcExp, ALUSrcExp, MemWriteExp, ResultSrcExp, BranchOpExp, ALUOpExp, WidthOpExp, PCBaseSrcExp,
-                            RegWrite, ImmSrc, ALUSrc, MemWrite, ResultSrc, BranchOp, ALUOp, WidthOp, PCBaseSrc);
+               else $fatal(1, "Error: Incorrect output for operation %b\nExpected: RegWrite: %b,ImmSrc: %b, ALUSrc: %b, MemWrite: %b, ResultSrc: %b, BranchOp: %b, ALUOp: %b, WidthOp: %b, PCBaseSrc: %b\nActual:   RegWrite: %b,ImmSrc: %b, ALUSrc: %b, MemWrite: %b, ResultSrc: %b, BranchOp: %b, ALUOp: %b, WidthOp: %b, PCBaseSrc: %b", 
+               op, RegWriteExp, ImmSrcExp, ALUSrcExp, MemWriteExp, ResultSrcExp, BranchOpExp, ALUOpExp, WidthOpExp, PCBaseSrcExp,
+               RegWrite, ImmSrc, ALUSrc, MemWrite, ResultSrc, BranchOp, ALUOp, WidthOp, PCBaseSrc);
     endtask
     
     //Inputs ordered to match main decoder truth table
@@ -127,7 +125,8 @@ module main_decoder_tb();
         #10;
         CheckOutput();
         
-        $display("Simulation Succesful!");
+        $display("TEST PASSED");
+        $finish;
         
     end
 

@@ -49,21 +49,21 @@ module imm_extend_tb();
             if (read == 3) begin
                 #1;
                 assert (ImmExt == ImmExtExpected) else begin
-                    $fatal("Error: ImmSrc = %b, instr = %b\nExpected output: %b\nActual output:   %b", 
+                    $fatal(1, "Error: ImmSrc = %b, instr = %b\nExpected output: %b\nActual output:   %b", 
                        ImmSrc, instr, ImmExtExpected,ImmExt);
                 end
                 
             end else begin
-                $fatal("Incorrect number of elements read");
+                $fatal(1, "Incorrect number of elements read");
             end
             
         end
         
-        $display("Simulation Succesful!");
-        
+        $display("TEST PASSED");
         $fclose(file);
+        $finish;
         
-    end;
+    end
 
 
 endmodule

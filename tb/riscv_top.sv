@@ -42,11 +42,11 @@
         
         if (MemWrite & DataAdr > 90 & DataAdr < 120) begin
             if (DataAdr === 100 & WriteData === 25) begin
-                $display("Success!");
-                $stop;
+                $display("TEST PASSED");
+                $finish;
             end else if (DataAdr !== 96) begin
             $display("Failed.");
-            $stop;
+            $finish;
             
             end
         end

@@ -62,10 +62,7 @@ module hazard_unit_tb();
     //Asserts correct outputs when checking functionality of ForwardAE
     task AssertForwardA();
         
-        assert (ForwardExpectedA === ForwardAE) else $fatal("Error: ForwardingAE doesn't match expected\
-                                                              \nRs1E: %b, RdM: %b, RdW: %b, RegWriteM: %b RegWriteW: %b\
-                                                              \nExpected Output: %b\
-                                                              \nActual Output:   %b",
+        assert (ForwardExpectedA === ForwardAE) else $fatal(1, "Error: ForwardingAE doesn't match expected\nRs1E: %b, RdM: %b, RdW: %b, RegWriteM: %b RegWriteW: %b\nExpected Output: %b\nActual Output:   %b",
                                                               Rs1E, RdM, RdW, RegWriteM, RegWriteW, ForwardExpectedA, ForwardAE);
     
     endtask
@@ -73,10 +70,7 @@ module hazard_unit_tb();
     //Asserts correct outputs when checking functionality of ForwardBE
     task AssertForwardB();
         
-        assert (ForwardExpectedB === ForwardAE) else $fatal("Error: ForwardingAE doesn't match expected\
-                                                              \nRs1E: %b, RdM: %b, RdW: %b, RegWriteM: %b RegWriteW: %b\
-                                                              \nExpected Output: %b\
-                                                              \nActual Output:   %b",
+        assert (ForwardExpectedB === ForwardAE) else $fatal(1, "Error: ForwardingAE doesn't match expected\nRs1E: %b, RdM: %b, RdW: %b, RegWriteM: %b RegWriteW: %b\nExpected Output: %b\nActual Output:   %b",
                                                               Rs1E, RdM, RdW, RegWriteM, RegWriteW, ForwardExpectedB, ForwardBE);
     
     endtask
@@ -85,10 +79,7 @@ module hazard_unit_tb();
     task AssertStallFlush();
         
         assert (StallF === StallFExpected & StallD === StallDExpected & FlushE === FlushEExpected & FlushD === FlushDExpected) else
-        $fatal("Error: Stall or flush incorrect.\
-        \nResultSrcE[2]: %b, Rs1D: %b, Rs2D: %b, RdE: %b\
-        \nStallFExpected: %b, StallDExpected: %b, FlushEExpected: %b, FlushDExpected: %b\
-        \nStallF:         %b, StallD:         %b, FlushE:         %b, FlushD:         %b",
+        $fatal(1, "Error: Stall or flush incorrect.\nResultSrcE[2]: %b, Rs1D: %b, Rs2D: %b, RdE: %b\nStallFExpected: %b, StallDExpected: %b, FlushEExpected: %b, FlushDExpected: %b\nStallF:         %b, StallD:         %b, FlushE:         %b, FlushD:         %b",
         ResultSrcEb2, Rs1D, Rs2D, RdE, StallFExpected, StallDExpected, FlushEExpected, FlushDExpected,
         StallF, StallD, FlushE, FlushD);
         
@@ -191,8 +182,8 @@ module hazard_unit_tb();
             
         end
         
-        $display("Simulation Succesful!");
-        $stop;
+        $display("TEST PASSED");
+        $finish;
         
     end
     

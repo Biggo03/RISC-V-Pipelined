@@ -1,0 +1,177 @@
+# TEST_GROUPS define logical sets of tests
+# - 'default' includes all tests except 'integration'
+# - Each category in TESTS corresponds to a module group
+# - Tags are used for runtime behavior or logic classification
+# - Valid tags: unit, subsystem, system, sequential, fast, slow
+
+TEST_GROUPS:
+  
+  default:
+    modules: [building_blocks, branching, memory, control]
+
+  integration:
+    modules: [integration]
+
+  building_blocks:
+    modules: [building_blocks]
+
+  branching:
+    modules: [branching]
+
+  memory:
+    modules: [memory]
+
+  control:
+    modules: [control]
+
+#Contains each possible test
+TESTS:
+# Tagging Rules
+# - Every test must have a scope tag: [unit], [subsystem], or [system]
+# - Only unit tests may be tagged as [sequential]
+# - [fast] and [slow] refer to simulation runtime, not design type
+
+  integration:
+
+    riscv_top:
+      tb: riscv_top.sv
+      filelist: riscv_top.f
+      tags: [system, slow]
+
+  control:
+
+    main_decoder:
+      tb: main_decoder_tb.sv
+      filelist: main_decoder.f
+      tags: [unit, fast]
+
+    alu_decoder:
+      tb: alu_decoder_tb.sv
+      filelist: alu_decoder.f
+      tags: [unit, fast]
+    
+    width_decoder:
+      tb: width_decoder_tb.sv
+      filelist: width_decoder.f
+      tags: [unit, fast]
+    
+    write_decoder:
+      tb: write_decoder_tb.sv
+      filelist: write_decoder.f
+      tags: [unit, fast]
+    
+    hazard_unit:
+      tb: hazard_unit_tb.sv
+      filelist: hazard_unit.f
+      tags: [unit, fast]
+
+  branching:
+
+    branching_buffer:
+      tb: branching_buffer_tb.sv
+      filelist: branching_buffer.f
+      tags: [subsystem, fast]
+
+    branch_resolution_unit:
+      tb: branch_resolution_unit_tb.sv
+      filelist: branch_resolution_unit.f
+      tags: [unit, fast]
+    
+    ghr:
+      tb: ghr_tb.sv
+      filelist: ghr.f
+      tags: [unit, sequential, fast]
+    
+    local_predictor:
+      tb: local_predictor_tb.sv
+      filelist: local_predictor.f
+      tags: [unit, sequential, fast]
+    
+    branch_control_unit:
+      tb: branch_control_unit_tb.sv
+      filelist: branch_control_unit.f
+      tags: [unit, fast]
+
+  memory:
+
+    icache_l1:
+      tb: icache_l1_dir_tb.sv
+      filelist: icache_l1.f
+      tags: [subsystem, fast]
+
+    instr_mem:
+      tb: instr_mem_tb.sv
+      filelist: instr_mem.f
+      tags: [unit, fast]
+    
+    data_mem:
+      tb: data_mem_tb.sv
+      filelist: data_mem.f
+      tags: [unit, fast]
+
+    instr_cache_ctlr:
+      tb: instr_cache_ctlr_tb.sv
+      filelist: instr_cache_ctlr.f
+      tags: [unit, sequential, fast]
+    
+    instr_cache_set_multi_tb:
+      tb: instr_cache_set_multi_tb.sv
+      filelist: instr_cache_set_multi.f
+      tags: [unit, sequential, fast]
+    
+    instr_cache_set_tb:
+      tb: instr_cache_set_tb.sv
+      filelist: instr_cache_set.f
+      tags: [unit, sequential, fast]
+
+  building_blocks:
+
+    alu:
+      tb: alu_tb.sv
+      filelist: alu.f
+      tags: [unit, fast] 
+
+    adder:
+      tb: adder_tb.sv
+      filelist: adder.f
+      tags: [unit, fast]
+
+    flop:
+      tb: flop_tb.sv
+      filelist: flop.f
+      tags: [unit, sequential, fast]
+
+    reduce:
+      tb: reduce_tb.sv
+      filelist: reduce.f
+      tags: [unit, fast]
+    
+    imm_extend:
+      tb: imm_extend_tb.sv
+      filelist: imm_extend.f
+      tags: [unit, fast]
+    
+    reg_file:
+      tb: reg_file_tb.sv
+      filelist: reg_file.f
+      tags: [unit, sequential, fast]
+    
+    mux2:
+      tb: mux2_tb.sv
+      filelist: mux.f
+      tags: [unit, fast]
+    
+    mux3:
+      tb: mux3_tb.sv
+      filelist: mux.f
+      tags: [unit, fast]
+
+    mux4:
+      tb: mux4_tb.sv
+      filelist: mux.f
+      tags: [unit, fast]
+
+    mux5:
+      tb: mux5_tb.sv
+      filelist: mux.f
+      tags: [unit, fast]

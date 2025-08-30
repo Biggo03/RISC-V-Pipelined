@@ -46,27 +46,37 @@ module width_decoder_tb();
         //Ensure output is as expected for all values of funct3
         for (int i = 0; i < 8; i++) begin
             funct3 = i; #10;
-            assert (WidthSrc === WidthSrcExp) else $fatal("Error: WidthOp = 0 produces unexpected output");
+            assert (WidthSrc === WidthSrcExp) else $fatal(1, "Error: WidthOp = 0 produces unexpected output");
         end 
         
         //Instructions where funct3 determines WidthSrc
         WidthOp = 1;
         
         //Populate arrays for checking valid functions of funct3
-        funct3Val = '{3'b010, 3'b001, 3'b000, 3'b101, 3'b100, 3'b111};
-        funct3Output = '{3'b000, 3'b010, 3'b001, 3'b110, 3'b101, 3'bxxx};
+        funct3Val[0] = 3'b010;
+        funct3Val[1] = 3'b001;
+        funct3Val[2] = 3'b000;
+        funct3Val[3] = 3'b101;
+        funct3Val[4] = 3'b100;
+        funct3Val[5] = 3'b111;
+
+        funct3Output[0] = 3'b00;
+        funct3Output[0] = 3'b010;
+        funct3Output[0] = 3'b001;
+        funct3Output[0] = 3'b110;
+        funct3Output[0] = 3'b101;
+        funct3Output[0] = 3'bxxx;
         
         //loop through values of funct3
         for (int i = 0; i < 6; i++) begin
             funct3 = funct3Val[i]; WidthSrcExp = funct3Output[i]; #10;
             
-            assert (WidthSrc === WidthSrcExp) else $fatal("Error: Unexpected output. funct3: %b\n\
-                                                           Expected output: %b\n\
-                                                           Actual output:   %b", funct3, WidthSrcExp, WidthSrc);
+            assert (WidthSrc === WidthSrcExp) else $fatal(1, "Error: Unexpected output. funct3: %b\nExpected output: %b\nActual output:   %b", funct3, WidthSrcExp, WidthSrc);
         end
         
         
-        $display("Simulation Succesful!");
+        $display("TEST PASSED");
+        $finish;
     
     end
     

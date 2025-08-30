@@ -1,0 +1,1 @@
+./rtl/write_decoder.sv

@@ -74,18 +74,18 @@ module branching_buffer_tb();
         for (int i = 0; i < 1024; i = i + 1) begin
             PCF = i;
             #10;
-            assert(PredPCTargetF === i) else $fatal("Incorrect target address");
+            assert(PredPCTargetF === i) else $fatal(1, "Incorrect target address");
         end
         
         //Check to see if branch updates work correctly (should be in WT)
         PCE = 0; PCF = 0; LocalSrc = 0; BranchOpEb0 = 1; PCSrcResE = 1;
         #11;
-        assert (PCSrcPredF === 1) else $fatal("Local predictor transition failed (first)");
+        assert (PCSrcPredF === 1) else $fatal(1, "Local predictor transition failed (first)");
         
         //Put back into WU
         PCSrcResE = 0;
         #10;
-        assert (PCSrcPredF === 0) else $fatal("Local predictor transition failed (second)");
+        assert (PCSrcPredF === 0) else $fatal(1, "Local predictor transition failed (second)");
         
         //Put 1st index into strongly taken state
         PCSrcResE = 1;
@@ -98,34 +98,34 @@ module branching_buffer_tb();
         //Trigger reset of first indexed local predictor
         PCE = 0; TargetMatch = 0; PCTargetE = 1000; PCSrcResE = 0;
         #10;
-        assert (PCSrcPredF === 0 && PredPCTargetF == 1000) else $fatal("Local reset failed (first)");
+        assert (PCSrcPredF === 0 && PredPCTargetF == 1000) else $fatal(1, "Local reset failed (first)");
         
         //Ensure no other predictors changes
         PCF = 1;
         #10;
-        assert (PCSrcPredF === 1) else $fatal("Local reset failed (second)");
+        assert (PCSrcPredF === 1) else $fatal(1, "Local reset failed (second)");
         
         //Ensure taking correct local predictor based on LocalSrc
         PCE = 100; PCTargetE = 1001; LocalSrc = 1; TargetMatch = 0; PCSrcResE = 1;
         #10;
-        assert (PCSrcPredF === 0 && PredPCTargetF == 1) else $fatal("LocalSrc indexed incorrectly");
+        assert (PCSrcPredF === 0 && PredPCTargetF == 1) else $fatal(1, "LocalSrc indexed incorrectly");
         
         //Test to see if replacement for PCE100 worked correctly, and if local predictor updated properly
         TargetMatch = 1; PCF = 100;
         #20;
-        assert (PCSrcPredF === 1 && PredPCTargetF === 1001) else $fatal("Incorrect local branch update on change (first)");
+        assert (PCSrcPredF === 1 && PredPCTargetF === 1001) else $fatal(1, "Incorrect local branch update on change (first)");
         
         //Ensure other local predictors not changed
         LocalSrc = 0; PCSrcResE = 0;
         #10;
-        assert (PCSrcPredF === 0 && PredPCTargetF === 1001) else $fatal("Incorrect local branch update on change (second)");
+        assert (PCSrcPredF === 0 && PredPCTargetF === 1001) else $fatal(1, "Incorrect local branch update on change (second)");
         
         PCSrcResE = 1;
         #20; //Wait two cycles for local predictor to be in weakly taken
-        assert (PCSrcPredF === 1 && PredPCTargetF === 1001) else $fatal("Incorrect local branch update on change (second)");
+        assert (PCSrcPredF === 1 && PredPCTargetF === 1001) else $fatal(1, "Incorrect local branch update on change (second)");
         
-        $display("Simulation Succesful!");
-        $stop;
+        $display("TEST PASSED");
+        $finish;
         
     end
 

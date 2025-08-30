@@ -29,7 +29,7 @@ module branch_control_unit_tb();
     
     logic [2:0] test;
     
-    branch_control_unit DUT(.Op(Op),
+    branch_control_unit DUT(.OpF(Op),
                           .PCSrcPredF(PCSrcPredF),
                           .PCSrcPredE(PCSrcPredE),
                           .BranchOpEb0(BranchOpEb0),
@@ -39,9 +39,7 @@ module branch_control_unit_tb();
     
     task RollbackAssertion(input logic [1:0] val);
                 #10;
-                assert (PCSrc === val) else $fatal("Rollback Error\
-                                                  \nInputs: TargetMatchE: %b BranchOpEb0: %b, PCSrcPredE: %b, PCSrcResE: %b\
-                                                  \nOutput: PCSrc: %b",TargetMatchE,BranchOpEb0 , PCSrcPredE, PCSrcResE, PCSrc);
+                assert (PCSrc === val) else $fatal(1, "Rollback Error\nInputs: TargetMatchE: %b BranchOpEb0: %b, PCSrcPredE: %b, PCSrcResE: %b\nOutput: PCSrc: %b",TargetMatchE,BranchOpEb0 , PCSrcPredE, PCSrcResE, PCSrc);
     endtask
 
     initial begin
@@ -49,7 +47,7 @@ module branch_control_unit_tb();
         dump_setup;
 
         Op = 0; PCSrcPredF = 0; PCSrcPredE = 0; 
-        BranchOpEb0 = 0; TargetMatchE = 0; PCSrcResE = 0; PCSrc = 0;
+        BranchOpEb0 = 0; TargetMatchE = 0; PCSrcResE = 0;
         
         //When BranchOpEb0 = 0, should only get output from prediction logic
         //Will use this to ensure first stage outputs are as expected.
@@ -58,18 +56,18 @@ module branch_control_unit_tb();
             Op = i;
             PCSrcPredF = ~PCSrcPredF; //Change PCSrsPredF to ensure no effect
             #10;
-            assert (PCSrc === 2'b00) else $fatal("Non-branching prediction error");
+            assert (PCSrc === 2'b00) else $fatal(1, "Non-branching prediction error");
             
         end
         
         //Check taken and untaken predictions
         Op = 2'b11; PCSrcPredF = 1;
         #10;
-        assert (PCSrc == 2'b01) else $fatal("Branch taken prediction error");
+        assert (PCSrc == 2'b01) else $fatal(1, "Branch taken prediction error");
         
         PCSrcPredF = 0;
         #10;
-        assert (PCSrc == 2'b00) else $fatal("Branch untaken prediction error");
+        assert (PCSrc == 2'b00) else $fatal(1, "Branch untaken prediction error");
         
         //Check each output for rollback logic
         TargetMatchE = 1; BranchOpEb0 = 1; PCSrcPredE = 1; PCSrcResE = 1;
@@ -111,8 +109,8 @@ module branch_control_unit_tb();
             
         end
         
-        $display("Simulation Succesful!");
-        $stop;
+        $display("TEST PASSED");
+        $finish;
         
     end
 

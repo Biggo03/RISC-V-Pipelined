@@ -34,6 +34,9 @@
 *.o
 *.pl
 
+# directories
+filelists/
+
 # Other
 *.un*
 *.xsa

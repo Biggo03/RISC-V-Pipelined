@@ -7,30 +7,6 @@ import os
 import logging
 from pathlib import Path
 
-def get_module_paths(rtl_dir, module_path, module_paths=[]):
-    """
-    Parses file for the instantiaion of modules.
-    Requires module instance names to start with "u_"
-
-    Args:
-        rtl_dir: Location of all RTL files
-        module_path: Path to the module currently being parsed
-        module_paths: running list of paths to included modules
-    """
-    with open(module_path, "r") as f:
-        for line in f:
-            if (" u_" in line or " DUT(" in line):
-                module = line.split()[0]
-                sub_module_path = rtl_dir.joinpath(f"{module}.sv")
-                module_paths.append(sub_module_path.resolve())
-
-                get_module_paths(rtl_dir, sub_module_path, module_paths)
-
-    #Remove duplicates while preserving order
-    module_paths = list(dict.fromkeys(module_paths))
-
-    return module_paths
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Run regression tests based on YAML-defined test groups."
@@ -154,6 +130,30 @@ def resolve_target(target, test_data, single):
 
     return run_info
 
+def get_module_paths(rtl_dir, module_path, module_paths=[]):
+    """
+    Parses file for the instantiaion of modules.
+    Requires module instance names to start with "u_"
+
+    Args:
+        rtl_dir: Location of all RTL files
+        module_path: Path to the module currently being parsed
+        module_paths: running list of paths to included modules
+    """
+    with open(module_path, "r") as f:
+        for line in f:
+            if (" u_" in line or " DUT" in line):
+                module = line.split()[0]
+                sub_module_path = rtl_dir.joinpath(f"{module}.sv")
+                module_paths.append(sub_module_path.resolve())
+
+                get_module_paths(rtl_dir, sub_module_path, module_paths)
+
+    #Remove duplicates while preserving order
+    module_paths = list(dict.fromkeys(module_paths))
+
+    return module_paths
+
 def run_test(test, tb_file, test_out_dir, result_info):
     """
     Runs a specific testbench using Icarus Verilog
@@ -167,7 +167,7 @@ def run_test(test, tb_file, test_out_dir, result_info):
     # --- Project directories ---
     proj_dir     = Path(__file__).resolve().parent.parent
     rtl_dir      = proj_dir / "rtl"
-    include_dir  = proj_dir / "common" / "include"
+    include_dir  = proj_dir / "common" / "includes"
     filelist_dir = proj_dir / "filelists"
     tb_path      = proj_dir / "tb" / tb_file
     common_tb    = list(proj_dir.joinpath("tb", "common").rglob("*v*"))
@@ -207,24 +207,28 @@ def run_test(test, tb_file, test_out_dir, result_info):
     warning_present = False
     log_path = Path(test_out_dir) / f"{test}.log"
     with open(log_path, "w") as log_file:
-        log_file.write(f"Compilation command:\n {' '.join(run_cmd)}\n")
-        process = subprocess.Popen(run_cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
-        for line in process.stdout:
-            log_file.write(f"{line}\n")
-        log_file.write(f"Compilation of {test} complete\n")
 
-        process.wait()
+        try:
+            log_file.write(f"Compilation command:\n {' '.join(run_cmd)}\n")
+            process = subprocess.Popen(run_cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
+            for line in process.stdout:
+                log_file.write(f"{line}\n")
+            log_file.write(f"Compilation of {test} complete\n")
 
-        log_file.write(f"Beginning simulation of test: {test}...\n")
-        process = subprocess.Popen([f"{test_out_dir}/{test}.vvp"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
-        for line in process.stdout:
-            log_file.write(f"{line}\n")
-            if "TEST PASSED" in line:
-                test_passed = True
-            if "WARNING" in line:
-                warning_present = True
-        
-        process.wait()
+            process.wait()
+
+            log_file.write(f"Beginning simulation of test: {test}...\n")
+            process = subprocess.Popen([f"{test_out_dir}/{test}.vvp"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
+            for line in process.stdout:
+                log_file.write(f"{line}\n")
+                if "TEST PASSED" in line:
+                    test_passed = True
+                if "WARNING" in line.upper():
+                    warning_present = True
+            
+            process.wait()
+        except Exception as e:
+            test_passed = False
 
     if (test_passed == True):
         result_info["PASSED_TESTS"][test] = test_out_dir

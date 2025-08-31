@@ -2,16 +2,16 @@ from bitstring import BitArray
 import random
 
 #Functions used in multiple vector generation functions-----------------------------------------------------
-"""
-Description: Convert Verilog indexes into corrosponding python indexes.
-Parameters:
-    start_index: The first index in a Verilog signal access
-    end_index: The second index in a Verilog signal access
-Returns:
-    new_start: Corrosponding Python index for first Verilog index
-    new_end: Corrosponding Python indexe for second Verilog index
-"""
 def get_verilog_index(start_index=31, end_index=0):
+    """
+    Description: Convert Verilog indexes into corrosponding python indexes.
+    Parameters:
+        start_index: The first index in a Verilog signal access
+        end_index: The second index in a Verilog signal access
+    Returns:
+        new_start: Corrosponding Python index for first Verilog index
+        new_end: Corrosponding Python indexe for second Verilog index
+    """
     new_start = 31-start_index
 
     #is non-inclusive, so must take one off
@@ -19,29 +19,28 @@ def get_verilog_index(start_index=31, end_index=0):
 
     return new_start, new_end
 
-"""
-Description: Generate extension for an immediate
-Parameters:
-    num_ext_bits: Number of bits to extend
-    MSB: MSB of the given immediate
-    immediate: The immediate itself
-Returns:
-    An sign extended immediate
-"""
 def generate_extension(num_ext_bits, MSB, immediate):
+    """
+    Description: Generate extension for an immediate
+    Parameters:
+        num_ext_bits: Number of bits to extend
+        MSB: MSB of the given immediate
+        immediate: The immediate itself
+    Returns:
+        An sign extended immediate
+    """
     ext =  BitArray(int=-1*MSB, length=num_ext_bits)
     return ext + immediate
 
-
-"""
-Description: Writes a list of vectors to a given file
-Parameters:
-    full_vector: The list that's to be written to a line of the file
-    file: The file that's being written to
-Returns: 
-    N/A
-"""
 def write_vec_to_file(full_vector, file):
+    """
+    Description: Writes a list of vectors to a given file
+    Parameters:
+        full_vector: The list that's to be written to a line of the file
+        file: The file that's being written to
+    Returns: 
+        N/A
+    """
     for i in range(len(full_vector)):
         file.write(full_vector[i])
         #Don't want space at end
@@ -49,15 +48,15 @@ def write_vec_to_file(full_vector, file):
             file.write(" ")
     file.write("\n")
 
-"""
-Description: Performs an arithemtic right shift
-Parameters: 
-    num: BitArray number to be shifted
-    shift_amt: An unsigned shift amount
-Returns:
-    shifted_num: The shifted BitArray
-"""
 def arithmetic_right_shift(num, shift_amt):
+    """
+    Description: Performs an arithemtic right shift
+    Parameters: 
+        num: BitArray number to be shifted
+        shift_amt: An unsigned shift amount
+    Returns:
+        shifted_num: The shifted BitArray
+    """
     msb = num[0]
 
     shifted_num = num >> shift_amt
@@ -67,15 +66,16 @@ def arithmetic_right_shift(num, shift_amt):
     
     return shifted_num
 
-"""
-Description: Generates lower and upper bounds for a given testcase
-Parameters:
-    test_case: The type of range to be calculated
-returns:
-    lower_range: The lower bound
-    upper_range: The upper bound
-"""
+
 def generate_int_range(test_case):
+    """
+    Description: Generates lower and upper bounds for a given testcase
+    Parameters:
+        test_case: The type of range to be calculated
+    returns:
+        lower_range: The lower bound
+        upper_range: The upper bound
+    """
     if (test_case == "Random"):
         lower_range = -2**31
         upper_range = 2**31-1
@@ -93,15 +93,15 @@ def generate_int_range(test_case):
 
 #Vector generation functions--------------------------------------------------------------------------------
 
-"""
-Description: Generates test vectors for the extension.v module
-Parameters:
-    vecter_per_op: Number of vectors to produce per opcode
-    file: The file to be writing test vectors to
-returns: 
-    N/A
-"""
 def extension_vector_gen(vector_per_op, file):
+    """
+    Description: Generates test vectors for the extension.v module
+    Parameters:
+        vecter_per_op: Number of vectors to produce per opcode
+        file: The file to be writing test vectors to
+    returns: 
+        N/A
+    """
     immSrc = []
 
     #Create array of valid opCodes
@@ -205,16 +205,16 @@ def extension_vector_gen(vector_per_op, file):
             #Write all to file
             write_vec_to_file(full_vector, file)
 
-"""
-Description: Generates test vectors for the reduce.v module
-Parameters:
-    vecter_per_op: Number of vectors to produce per opcode
-    file: The file to be writing test vectors to
-returns: 
-    N/A
-"""
+
 def reduce_vector_gen(vector_per_op, file):
-    
+    """
+    Description: Generates test vectors for the reduce.v module
+    Parameters:
+        vecter_per_op: Number of vectors to produce per opcode
+        file: The file to be writing test vectors to
+    returns: 
+        N/A
+    """
     #generate control valid control signal
     widthSrc = []
 
@@ -274,17 +274,17 @@ def reduce_vector_gen(vector_per_op, file):
 
             write_vec_to_file(full_vector, file)
 
-"""
-Description: Generates test vectors for the ALU.v module
-Parameters:
-    vecter_per_op: Number of vectors to produce per opcode
-    file: The file to be writing test vectors to
-    test_case: what range of randomized inputs are to be generated
-returns: 
-    N/A
-"""
+
 def ALU_vector_gen(vector_per_op, file, test_case="Random"):
-    
+    """
+    Description: Generates test vectors for the ALU.v module
+    Parameters:
+        vecter_per_op: Number of vectors to produce per opcode
+        file: The file to be writing test vectors to
+        test_case: what range of randomized inputs are to be generated
+    returns: 
+        N/A
+    """
     #Initialize valid control signals
     ALU_control = []
 
@@ -462,17 +462,17 @@ def ALU_vector_gen(vector_per_op, file, test_case="Random"):
 
 def main():
     
-    filename = "ALU_test_vectors.txt"
+    filename = "./reduce_test_vectors.txt"
     vector_per_op = 200
 
     with open(filename, "w") as file:
-        if (filename == "ALU_test_vectors.txt"):
+        if ("ALU_test_vectors.txt" in filename):
             ALU_vector_gen(vector_per_op, file, "Random")
         
-        if (filename == "ext_unit_test_vectors.txt"):
+        if ("ext_unit_test_vectors.txt" in filename):
             extension_vector_gen(vector_per_op, file)
         
-        if (filename == "reduce_test_vectors.txt"):
+        if ("reduce_test_vectors.txt" in filename):
             reduce_vector_gen(vector_per_op, file)
     
     file.close()

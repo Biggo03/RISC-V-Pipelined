@@ -39,11 +39,14 @@ module alu_tb();
         dump_setup;
     
         //Open file
-        file = $fopen("ALU_test_vectors.txt", "r");
+        file = $fopen("test_inputs/vectors/ALU_test_vectors.txt", "r");
 
         if (file == 0) begin
             $fatal(1, "ERROR: Could not open test vector file");
+        end else begin
+            $display("Vector file opened succesfully");
         end
+        
         
         while (!$feof(file)) begin
             read = $fscanf(file, "%b %b %b %b %b %b %b %b\n", 

@@ -38,7 +38,13 @@ module reduce_tb();
         
         read = 0;
         
-        file = $fopen("reduce_test_vectors.txt", "r");
+        file = $fopen("test_inputs/vectors/reduce_test_vectors.txt", "r");
+
+        if (file == 0) begin
+            $fatal(1, "ERROR: Could not open test vector file");
+        end else begin
+            $display("Vector file opened succesfully");
+        end
         
         
         //Iterate through file

@@ -22,37 +22,111 @@
 
 module hazard_unit_tb();
 
-    //Stimulus signals
-    logic [4:0] Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW;
-    logic ResultSrcEb2, PCSrcE, RegWriteM, RegWriteW;
-    logic StallF, StallD, FlushD, FlushE;
-    logic [1:0] ForwardAE, ForwardBE;
-    
-    //signals for holding expected results.
+    // ---------------------------------------------------
+    // Stimulus signals
+    // ---------------------------------------------------
+    // Fetch stage inputs
+    logic       InstrMissF;
+
+    // Decode stage inputs
+    logic [4:0] Rs1D;
+    logic [4:0] Rs2D;
+
+    // Execute stage inputs
+    logic [4:0] Rs1E;
+    logic [4:0] Rs2E;
+    logic [4:0] RdE;
+    logic       ResultSrcEb2;
+    logic       PCSrcb1;
+
+    // Memory stage inputs
+    logic [4:0] RdM;
+    logic       RegWriteM;
+
+    // Writeback stage inputs
+    logic [4:0] RdW;
+    logic       RegWriteW;
+
+    // Branch predictor / cache inputs
+    logic [1:0]  PCSrcReg,
+    logic        InstrCacheRepActive,
+
+    // Stall outputs
+    logic       StallF;
+    logic       StallD;
+    logic       StallE,
+    logic       StallM,
+    logic       StallW,
+
+    // Flush outputs
+    logic       FlushD;
+    logic       FlushE;
+
+    // Forwarding outputs
+    logic [1:0] ForwardAE;
+    logic [1:0] ForwardBE;
+
+    // ---------------------------------------------------
+    // Expected results
+    // ---------------------------------------------------
     logic [1:0] ForwardExpectedA;
     logic [1:0] ForwardExpectedB;
-    
-    //Signals for holding expectd values of stall and flush signals
-    logic StallFExpected, StallDExpected, FlushEExpected, FlushDExpected;
-    
-    //DUT instantiation
-    hazard_unit DUT(.Rs1D (Rs1D),
-                      .Rs2D (Rs2D),
-                      .Rs1E (Rs1E),
-                      .Rs2E (Rs2E),
-                      .RdE (RdE),
-                      .ResultSrcEb2 (ResultSrcEb2),
-                      .PCSrcE (PCSrcE),
-                      .RdM (RdM),
-                      .RegWriteM (RegWriteM),
-                      .RdW (RdW),
-                      .RegWriteW (RegWriteW),
-                      .StallF (StallF),
-                      .StallD (StallD),
-                      .FlushD (FlushD),
-                      .FlushE (FlushE),
-                      .ForwardAE (ForwardAE),
-                      .ForwardBE (ForwardBE));
+
+    // Signals for holding expected values of stall and flush signals
+    logic       StallFExpected;
+    logic       StallDExpected;
+    logic       StallEExpected;
+    logic       StallMExpected;
+    logic       StallWExpected;
+
+    logic       FlushDExpected;
+    logic       FlushEExpected;
+
+    // ---------------------------------------------------
+    // DUT instantiation
+    // ---------------------------------------------------
+    hazard_unit DUT (
+        // Fetch stage inputs
+        .InstrMissF          (InstrMissF),
+
+        // Decode stage inputs
+        .Rs1D                (Rs1D),
+        .Rs2D                (Rs2D),
+
+        // Execute stage inputs
+        .Rs1E                (Rs1E),
+        .Rs2E                (Rs2E),
+        .RdE                 (RdE),
+        .ResultSrcEb2        (ResultSrcEb2),
+        .PCSrcb1             (PCSrcb1),
+
+        // Memory stage inputs
+        .RdM                 (RdM),
+        .RegWriteM           (RegWriteM),
+
+        // Writeback stage inputs
+        .RdW                 (RdW),
+        .RegWriteW           (RegWriteW),
+
+        // Branch predictor / cache inputs
+        .PCSrcReg            (PCSrcReg),
+        .InstrCacheRepActive (InstrCacheRepActive),
+
+        // Stall outputs
+        .StallF              (StallF),
+        .StallD              (StallD),
+        .StallE              (StallE),
+        .StallM              (StallM),
+        .StallW              (StallW),
+
+        // Flush outputs
+        .FlushD              (FlushD),
+        .FlushE              (FlushE),
+
+        // Forwarding outputs
+        .ForwardAE           (ForwardAE),
+        .ForwardBE           (ForwardBE)
+    );
     
     //Parameters to consolidate signal values
     localparam [1:0] NO_FORWARD = 2'b00;
@@ -134,22 +208,22 @@ module hazard_unit_tb();
             
             for (int j = 0; j < 64; j++) begin
             
-            //Create different ranges of Rs1D and Rs2D
-            if (j < 16 | j > 48) begin
-                if (j < 16) Rs1D = j;
-                else Rs1D = j - 32;
-            end else begin
-                if (j < 32) Rs2D = j;
-                else Rs2D = j - 32;
-            end
-            
-            //Check Flush calculation under various connditions
-            if (j < 16 | j > 48) PCSrcE = 0;
-            else PCSrcE = 1;
-            
-            //Check loadStall calculation under various conditions
-            if (j > 16 | j < 32 | j > 48) ResultSrcEb2 = 0;
-            else ResultSrcEb2 = 1;
+                //Create different ranges of Rs1D and Rs2D
+                if (j < 16 | j > 48) begin
+                    if (j < 16) Rs1D = j;
+                    else Rs1D = j - 32;
+                end else begin
+                    if (j < 32) Rs2D = j;
+                    else Rs2D = j - 32;
+                end
+                
+                //Check Flush calculation under various connditions
+                if (j < 16 | j > 48) PCSrcE = 0;
+                else PCSrcE = 1;
+                
+                //Check loadStall calculation under various conditions
+                if (j > 16 | j < 32 | j > 48) ResultSrcEb2 = 0;
+                else ResultSrcEb2 = 1;
             
             end
             

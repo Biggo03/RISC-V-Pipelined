@@ -73,10 +73,10 @@ module reg_file #(
     endgenerate
     
     always @(*) begin
-        if (A1 == A3 & WE3) RD1 = WD3;
+        if (A1 == A3 & WE3 & A1 != 0) RD1 = WD3;
         else RD1 = RegisterArray[A1];
         
-        if (A2 == A3 & WE3) RD2 = WD3;
+        if (A2 == A3 & WE3 & A2 != 0) RD2 = WD3;
         else RD2 = RegisterArray[A2]; 
     end
     

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import yaml
 import subprocess
@@ -152,7 +154,7 @@ def resolve_target(target, test_data, single):
 
     return run_info
 
-def run_test(test, tb_file, test_out_dir, pass_fail_info):
+def run_test(test, tb_file, test_out_dir, result_info):
     """
     Runs a specific testbench using Icarus Verilog
 
@@ -165,7 +167,7 @@ def run_test(test, tb_file, test_out_dir, pass_fail_info):
     # --- Project directories ---
     proj_dir     = Path(__file__).resolve().parent.parent
     rtl_dir      = proj_dir / "rtl"
-    include_dir  = proj_dir / "include"
+    include_dir  = proj_dir / "common" / "include"
     filelist_dir = proj_dir / "filelists"
     tb_path      = proj_dir / "tb" / tb_file
     common_tb    = list(proj_dir.joinpath("tb", "common").rglob("*v*"))
@@ -202,6 +204,7 @@ def run_test(test, tb_file, test_out_dir, pass_fail_info):
 
     # --- Run compilation and simulation ---
     test_passed = False
+    warning_present = False
     log_path = Path(test_out_dir) / f"{test}.log"
     with open(log_path, "w") as log_file:
         log_file.write(f"Compilation command:\n {' '.join(run_cmd)}\n")
@@ -212,19 +215,24 @@ def run_test(test, tb_file, test_out_dir, pass_fail_info):
 
         process.wait()
 
-        log_file.write(f"Beginning simulation of test: {test}...")
+        log_file.write(f"Beginning simulation of test: {test}...\n")
         process = subprocess.Popen([f"{test_out_dir}/{test}.vvp"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
         for line in process.stdout:
             log_file.write(f"{line}\n")
             if "TEST PASSED" in line:
                 test_passed = True
+            if "WARNING" in line:
+                warning_present = True
         
         process.wait()
 
     if (test_passed == True):
-        pass_fail_info["PASSED_TESTS"][test] = test_out_dir
+        result_info["PASSED_TESTS"][test] = test_out_dir
     else:
-        pass_fail_info["FAILED_TESTS"][test] = test_out_dir
+        result_info["FAILED_TESTS"][test] = test_out_dir
+
+    if (warning_present == True):
+        result_info["WARNING_TESTS"][test] = test_out_dir
 
     return
 
@@ -234,7 +242,7 @@ def main():
     run_info = resolve_target(args.target, test_data, args.single)
 
     top_out_dir = Path(os.path.abspath(args.output_dir))
-    pass_fail_info = {"PASSED_TESTS": {}, "FAILED_TESTS": {}}
+    result_info = {"PASSED_TESTS": {}, "FAILED_TESTS": {}, "WARNING_TESTS": {}}
 
     regression_logger.info(f"Beginning regression for {args.target}")
 
@@ -242,19 +250,28 @@ def main():
     for test, config in run_info.items():
         test_out_dir = top_out_dir / test
         test_out_dir.mkdir(parents=True, exist_ok=True)
-        run_test(test, config["tb"], test_out_dir, pass_fail_info)
+        run_test(test, config["tb"], test_out_dir, result_info)
 
     # Report results
-    passed_tests = pass_fail_info["PASSED_TESTS"]
-    failed_tests = pass_fail_info["FAILED_TESTS"]
+    passed_tests = result_info["PASSED_TESTS"]
+    failed_tests = result_info["FAILED_TESTS"]
+    warning_tests = result_info["WARNING_TESTS"]
 
     regression_logger.info("===== PASSED TESTS =====")
     for test in passed_tests.keys():
         regression_logger.info(f"{test} PASSED\nOutput path: {passed_tests[test]}")
 
-    regression_logger.info("===== FAILED TESTS =====")
-    for test in failed_tests.keys():
-        regression_logger.info(f"{test} FAILED\nOutput path: {failed_tests[test]}")
+    if (len(failed_tests) != 0):
+        regression_logger.info("===== FAILED TESTS =====")
+        for test in failed_tests.keys():
+            regression_logger.info(f"{test} FAILED\nOutput path: {failed_tests[test]}")
+    else:
+        regression_logger.info("===== ALL TESTS PASSED =====")
+    
+    if (len(warning_tests) != 0):
+        regression_logger.info("===== TESTS WITH WARNINGS =====")
+        for test in warning_tests.keys():
+            regression_logger.info(f"{test} CONTAINS WARNINGS\nOutput path: {warning_tests[test]}")
     
     regression_logger.info(f"Total PASSED tests: {len(passed_tests)}")
     regression_logger.info(f"Total FAILED tests: {len(failed_tests)}")

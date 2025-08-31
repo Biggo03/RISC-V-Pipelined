@@ -4,49 +4,31 @@ import subprocess
 import os
 import logging
 from pathlib import Path
-import glob
 
-def flatten_filelist(filelist_path, visited=None):
+def get_module_paths(rtl_dir, module_path, module_paths=[]):
     """
-    Recursively flattens a hierarchical Verilog filelist, resolving `-f <file>` inclusions.
-    Returns a list of absolute file paths with duplicates removed and order preserved.
+    Parses file for the instantiaion of modules.
+    Requires module instance names to start with "u_"
 
     Args:
-        filelist_path (str): Path to the top-level .f file.
-        visited (set): Internal use for recursion to avoid circular references.
-
-    Returns:
-        List[str]: Flattened, deduplicated list of Verilog source file paths.
+        rtl_dir: Location of all RTL files
+        module_path: Path to the module currently being parsed
+        module_paths: running list of paths to included modules
     """
-    filelist_path = os.path.abspath(filelist_path)
-    base_dir = os.path.dirname(filelist_path)
-    visited = visited or set()
-    result = []
-
-    if filelist_path in visited:
-        return []  # Prevent circular includes
-
-    visited.add(filelist_path)
-
-    with open(filelist_path, "r") as f:
+    with open(module_path, "r") as f:
         for line in f:
-            line = line.strip()
-            if not line or line.startswith("//"):
-                continue  # Skip comments and empty lines
+            if (" u_" in line or " DUT(" in line):
+                module = line.split()[0]
+                sub_module_path = rtl_dir.joinpath(f"{module}.sv")
+                module_paths.append(sub_module_path.resolve())
 
-            if line.startswith("-f"):
-                # Recursively process included filelists
-                include_path = line[2:].strip()
-                include_path = os.path.abspath(os.path.join(base_dir, include_path))
-                result.extend(flatten_filelist(include_path, visited))
-            else:
-                # Resolve relative paths
-                full_path = os.path.abspath(f"../{line}")
-                if full_path not in result:
-                    result.append(full_path)
+                get_module_paths(rtl_dir, sub_module_path, module_paths)
 
-    return result
-    
+    #Remove duplicates while preserving order
+    module_paths = list(dict.fromkeys(module_paths))
+
+    return module_paths
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Run regression tests based on YAML-defined test groups."
@@ -170,46 +152,79 @@ def resolve_target(target, test_data, single):
 
     return run_info
 
-def run_test(test, tb, filelist, output_dir):
+def run_test(test, tb_file, test_out_dir, pass_fail_info):
+    """
+    Runs a specific testbench using Icarus Verilog
 
-    proj_dir = Path(__file__).resolve().parent.parent
+    Args:
+        test: Name of the test
+        tb_file: Name of the testbench file
+        test_out_dir: Where the outputs of the test are placed
+    """
 
-    test_output_dir = f"{output_dir}/{test}"
-    os.makedirs(test_output_dir, exist_ok=True)
+    # --- Project directories ---
+    proj_dir     = Path(__file__).resolve().parent.parent
+    rtl_dir      = proj_dir / "rtl"
+    include_dir  = proj_dir / "include"
+    filelist_dir = proj_dir / "filelists"
+    tb_path      = proj_dir / "tb" / tb_file
+    common_tb    = list(proj_dir.joinpath("tb", "common").rglob("*v*"))
 
-    tb_file = f"{proj_dir}/tb/{tb}"
-    includes = glob.glob(f"{proj_dir}/includes/*v*", recursive=True)
-    common = glob.glob(f"{proj_dir}/tb/common/*v*", recursive=True)
+    os.makedirs(filelist_dir, exist_ok=True)
 
-    source_files = [tb_file]
-    source_files.extend(includes)
-    source_files.extend(common)
+    # --- Source files ---
+    source_files = [tb_path, *common_tb]
 
-    defines = [f'DUMP_PATH="{test_output_dir}/{test}.vcd"']
+    # --- Defines ---
+    defines = [f'DUMP_PATH="{test_out_dir}/{test}.vcd"']
 
-    #Initial
-    run_cmd = ["iverilog", "-g2012"]
+    # --- Build compile command ---
+    run_cmd = [
+        "iverilog", "-g2012",
+        "-I", str(include_dir)
+    ]
 
-    #Includes
-    run_cmd.extend(["-I", f"{proj_dir}/includes"])
+    # Add defines
+    for d in defines:
+        run_cmd.extend(["-D", d])
 
-    #Defines
-    for define in defines:
-        run_cmd.extend(["-D", define])
-    
-    rtl_files = flatten_filelist(f"{proj_dir}/filelists/{filelist}")
-    for path in rtl_files:
-        source_files.append(path)
+    # Write filelist for RTL modules
+    module_paths = get_module_paths(rtl_dir, tb_path)
+    filelist = filelist_dir / f"{test}.f"
+    filelist.write_text("\n".join(map(str, module_paths)) + "\n")
 
-    #Source files
-    run_cmd.extend(source_files)
+    # Add filelist, sources, and output
+    run_cmd.extend([
+        "-f", str(filelist),
+        *map(str, source_files),
+        "-o", f"{test_out_dir}/{test}.vvp"
+    ])
 
-    #Output file
-    run_cmd.extend(["-o", f"{test_output_dir}/{test}.vvp"])
+    # --- Run compilation and simulation ---
+    test_passed = False
+    log_path = Path(test_out_dir) / f"{test}.log"
+    with open(log_path, "w") as log_file:
+        log_file.write(f"Compilation command:\n {' '.join(run_cmd)}\n")
+        process = subprocess.Popen(run_cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
+        for line in process.stdout:
+            log_file.write(f"{line}\n")
+        log_file.write(f"Compilation of {test} complete\n")
 
-    with open(f"{test_output_dir}/{test}.log", "w") as log_file:
-        subprocess.run(run_cmd, text=True, stdout=log_file, stderr=subprocess.STDOUT, cwd=proj_dir)
-        subprocess.run([f"{test_output_dir}/{test}.vvp"], text=True, stdout=log_file, stderr=subprocess.STDOUT, cwd=proj_dir)
+        process.wait()
+
+        log_file.write(f"Beginning simulation of test: {test}...")
+        process = subprocess.Popen([f"{test_out_dir}/{test}.vvp"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
+        for line in process.stdout:
+            log_file.write(f"{line}\n")
+            if "TEST PASSED" in line:
+                test_passed = True
+        
+        process.wait()
+
+    if (test_passed == True):
+        pass_fail_info["PASSED_TESTS"][test] = test_out_dir
+    else:
+        pass_fail_info["FAILED_TESTS"][test] = test_out_dir
 
     return
 
@@ -218,10 +233,31 @@ def main():
     args, regression_logger, test_data = setup("regression_tests.yml")
     run_info = resolve_target(args.target, test_data, args.single)
 
-    output_dir = os.path.abspath(args.output_dir)
+    top_out_dir = Path(os.path.abspath(args.output_dir))
+    pass_fail_info = {"PASSED_TESTS": {}, "FAILED_TESTS": {}}
+
+    regression_logger.info(f"Beginning regression for {args.target}")
+
+    # Run all tests
+    for test, config in run_info.items():
+        test_out_dir = top_out_dir / test
+        test_out_dir.mkdir(parents=True, exist_ok=True)
+        run_test(test, config["tb"], test_out_dir, pass_fail_info)
+
+    # Report results
+    passed_tests = pass_fail_info["PASSED_TESTS"]
+    failed_tests = pass_fail_info["FAILED_TESTS"]
+
+    regression_logger.info("===== PASSED TESTS =====")
+    for test in passed_tests.keys():
+        regression_logger.info(f"{test} PASSED\nOutput path: {passed_tests[test]}")
+
+    regression_logger.info("===== FAILED TESTS =====")
+    for test in failed_tests.keys():
+        regression_logger.info(f"{test} FAILED\nOutput path: {failed_tests[test]}")
     
-    for test in run_info.keys():
-        run_test(test, run_info[test]["tb"], run_info[test]["filelist"], output_dir)
+    regression_logger.info(f"Total PASSED tests: {len(passed_tests)}")
+    regression_logger.info(f"Total FAILED tests: {len(failed_tests)}")
 
 if __name__ == "__main__":
     main()

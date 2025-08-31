@@ -45,6 +45,9 @@ module mux2_tb();
         //Ensure changing a value propogates
         d1 = 40; #10;
         assert (y == d1) else $display("Error");
+
+        $display("TEST PASSED");
+        $finish;
         
     end
 

@@ -31,8 +31,8 @@ module reg_file_tb();
     int file;
     int read;
     
-    //DUT instantiation
-    reg_file DUT(clk, reset, A1, A2, A3, WD3, WE3, RD1, RD2);
+    //u_DUT instantiation
+    reg_file u_DUT (clk, reset, A1, A2, A3, WD3, WE3, RD1, RD2);
     
     always begin
         clk = ~clk; #5;

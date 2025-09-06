@@ -30,7 +30,7 @@ module imm_extend_tb();
     int read;
     int test_num;
     
-    imm_extend DUT(instr, ImmSrc, ImmExt);
+    imm_extend u_DUT (instr, ImmSrc, ImmExt);
     
     initial begin
         

@@ -33,7 +33,7 @@ module width_decoder_tb();
     logic [2:0] funct3Output [5:0];
     
     //Instantiate DUT
-    width_decoder DUT(funct3, WidthOp, WidthSrc);
+    width_decoder u_DUT (funct3, WidthOp, WidthSrc);
     
     initial begin
 

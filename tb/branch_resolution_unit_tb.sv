@@ -28,13 +28,13 @@ module branch_resolution_unit_tb();
     logic N, Z, C, V, PCSrc, PCSrcExp;
     
     //queue to hold valid funct3 values
-    logic [2:0] funct3Val [$] = '{3'b000, 3'b001, 3'b101, 3'b111, 3'b100, 3'b110};
+    logic [2:0] funct3Val [6];
     
     // signal to hold value of N, Z, C, V
     logic [3:0] Flags [31:0];
     
     //Instantiate DUT
-    branch_resolution_unit DUT(funct3, BranchOp, N, Z, C, V, PCSrc);
+    branch_resolution_unit u_DUT (funct3, BranchOp, N, Z, C, V, PCSrc);
     
     //Assert that expected and actual oputputs match
     task AssertCorrect();
@@ -47,6 +47,12 @@ module branch_resolution_unit_tb();
     initial begin
         
         dump_setup;
+        funct3Val[0] = 3'b000;
+        funct3Val[1] = 3'b001;
+        funct3Val[2] = 3'b101;
+        funct3Val[3] = 3'b111;
+        funct3Val[4] = 3'b100;
+        funct3Val[5] = 3'b110;
 
         //Non-branching instructions
         BranchOp = 2'b00; PCSrcExp = 1'b0; #10;
@@ -57,7 +63,7 @@ module branch_resolution_unit_tb();
         AssertCorrect();
         
         //Conditional branches
-        BranchOp = 2'b10;
+        BranchOp = 2'b11;
         
         //Initialize all possible combinations of flags
         for (int i = 0; i < 32; i++) begin

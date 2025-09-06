@@ -37,7 +37,7 @@ module alu_decoder_tb();
 
     
     //Instantiate DUT
-    alu_decoder DUT(funct3, ALUOp, op5, funct7b5, ALUControl);
+    alu_decoder u_DUT (funct3, ALUOp, op5, funct7b5, ALUControl);
     
     //Task for printing assertions
     task PrintError(input int i);

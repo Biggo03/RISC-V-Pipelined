@@ -21,7 +21,7 @@ module instr_cache_set_multi_tb();
     integer cycles;
     
     //Device instantiation
-    instr_cache_set_multi DUT(.clk(clk),
+    instr_cache_set_multi u_DUT (.clk(clk),
                       .reset(reset),
                       .ActiveSet(ActiveSet),
                       .RepEnable(RepEnable),
@@ -39,7 +39,7 @@ module instr_cache_set_multi_tb();
     //Task for checking LRUBits are as expected
     task AssertLRUBits();
         for (integer i = 0; i < E; i = i + 1) begin
-            assert(DUT.LRUBits[i] === LRUBitsE[i]) else $fatal(1, "Unexpected LRU ordering. Incorrect LRU index: %d\nActual: %d\nExpected: %d", i, DUT.LRUBits[i], LRUBitsE[i]);
+            assert(u_DUT.LRUBits[i] === LRUBitsE[i]) else $fatal(1, "Unexpected LRU ordering. Incorrect LRU index: %d\nActual: %d\nExpected: %d", i, u_DUT.LRUBits[i], LRUBitsE[i]);
         end
             
     endtask

@@ -26,7 +26,7 @@ module mux2_tb();
     logic [31:0] d0, d1, y;
     logic s;
     
-    mux2 DUT(d0, d1, s, y);
+    mux2 u_DUT (d0, d1, s, y);
 
     initial begin
         

@@ -27,7 +27,7 @@ module mux4_tb();
     logic [1:0] s;
     
     
-    mux4 DUT(d0, d1, d2, d3, s, y);
+    mux4 u_DUT (d0, d1, d2, d3, s, y);
     
     initial begin
 

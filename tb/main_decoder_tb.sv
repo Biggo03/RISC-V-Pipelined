@@ -28,7 +28,7 @@ module main_decoder_tb();
     logic WidthOp, ALUSrc, PCBaseSrc, RegWrite, MemWrite;
     logic WidthOpExp, ALUSrcExp, PCBaseSrcExp, RegWriteExp, MemWriteExp;
     
-    main_decoder DUT(op, ImmSrc, ResultSrc, ALUOp, BranchOp, WidthOp,
+    main_decoder u_DUT (op, ImmSrc, ResultSrc, ALUOp, BranchOp, WidthOp,
                     ALUSrc, PCBaseSrc, RegWrite, MemWrite);
     
 

@@ -27,7 +27,7 @@ module write_decoder_tb();
     logic [31:0] en;
     int enExpected;
     
-    write_decoder DUT(A, WE, en);
+    write_decoder u_DUT (A, WE, en);
     
     
     initial begin

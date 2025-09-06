@@ -30,7 +30,7 @@ module reduce_tb();
     int read;
     int test_num;
     
-    reduce DUT(BaseResult, WidthSrc, Result);
+    reduce u_DUT (BaseResult, WidthSrc, Result);
     
     initial begin
 

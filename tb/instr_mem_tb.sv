@@ -29,7 +29,7 @@ module instr_mem_tb();
     logic [31:0] RAM [63:0];
     
     //Instantiate DUT
-    instr_mem DUT(A, RD);
+    instr_mem u_DUT (A, RD);
     
     initial begin
 

@@ -26,7 +26,7 @@ module mux3_tb();
     logic [1:0] s;
     
     
-    mux3 DUT(d0, d1, d2, s, y);
+    mux3 u_DUT (d0, d1, d2, s, y);
     
     initial begin
 

@@ -21,6 +21,7 @@
 
 
 module local_predictor_tb();
+    `include "tb_macros.sv"
 
     localparam ST = 2'b11;
     localparam WT = 2'b10;
@@ -29,8 +30,10 @@ module local_predictor_tb();
     
     logic clk, reset, PCSrcResE, Enable, PCSrcPred;
     logic [1:0] PCSrcPredExp;
+
+    int error_cnt;
     
-    local_predictor DUT(clk, reset, PCSrcResE, Enable, PCSrcPred);
+    local_predictor u_DUT (clk, reset, PCSrcResE, Enable, PCSrcPred);
     
     always begin
         clk = ~clk; #5;
@@ -40,6 +43,7 @@ module local_predictor_tb();
     initial begin
 
         dump_setup;
+        error_cnt = 0;
 
         clk = 0; reset = 1; PCSrcResE = 0; Enable = 0; PCSrcPredExp = WU;
         
@@ -49,22 +53,22 @@ module local_predictor_tb();
     
         #10;
     
-        assert(PCSrcPred === 0) else $fatal(1, "Initialization Failed");
+        `CHECK(PCSrcPred === 0, "[%t] Initialization Failed", $time)
         
-        #5;
+        #10;
         
         Enable = 1;
     
          //Check switching states works correctly
         for (int i = 0; i < 32; i = i + 1) begin
+            `CHECK(PCSrcPred === PCSrcPredExp[1], "[%t] State change error", $time)
+            
             if (i % 4 == 0) begin
                 PCSrcResE = ~PCSrcResE;
             end
             
             #10;
-            
-            assert(PCSrcPred === PCSrcPredExp[1]) else $fatal(1, "State change error");
-            
+
             //Change expected after assertion, as transition occurs on next clock edge
             if (PCSrcResE == 1 && PCSrcPredExp < 3) PCSrcPredExp = PCSrcPredExp + 1;
             else if (PCSrcResE == 0 && PCSrcPredExp > 0) PCSrcPredExp = PCSrcPredExp - 1;
@@ -80,17 +84,17 @@ module local_predictor_tb();
                     
             #10;
         
-            assert (PCSrcPred === PCSrcPredExp) else $fatal(1, "Enable Error");
+            `CHECK(PCSrcPred === PCSrcPredExp, "[%t] Enable Error", $time)
         end
         
         Enable = 1; reset = 1;
         
         #50;
         
-        assert (PCSrcPred === 0) else $fatal(1, "Taken Reset failed");
+        `CHECK(PCSrcPred === 0, "[%t] Taken Reset failed", $time)
         
-        
-        $display("TEST PASSED");
+        if (error_cnt == 0) $display("TEST PASSED");
+        else $display("TEST FAILED");
         $finish;
         
     end

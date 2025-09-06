@@ -68,7 +68,7 @@ module icache_l1 #(
     genvar i;
     generate 
         for (i = 0; i < S; i = i + 1) begin
-            instr_cache_set_multi #(
+            instr_cache_set_multi #( // u_instr_cache_set_multi (
                 .B          (B),
                 .NumTagBits (NumTagBits),
                 .E          (E)
@@ -98,7 +98,7 @@ module icache_l1 #(
     endgenerate
     
     //Cache Controller
-    instr_cache_ctlr #(
+    instr_cache_ctlr #( // u_instr_cache_ctlr ()
         .S (S)
     ) u_instr_cache_ctlr (
         // Clock & Reset

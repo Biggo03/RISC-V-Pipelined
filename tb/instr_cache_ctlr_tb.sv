@@ -31,7 +31,7 @@ module instr_cache_ctlr_tb();
     logic [1:0] PCSrcReg, BranchOpE;
     logic CacheRepActive;
     
-    instr_cache_ctlr DUT(.clk(clk),
+    instr_cache_ctlr u_DUT (.clk(clk),
                              .reset(reset),
                              .Set(Set),
                              .MissArray(MissArray),
@@ -67,17 +67,17 @@ module instr_cache_ctlr_tb();
         //Normal operation hit
         BranchOpE[0] = 0; MissArray = 0; PCSrcReg[1] = 0;
         #10;
-        assert(DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal(1, "Normal operation hit fail");
+        assert(u_DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal(1, "Normal operation hit fail");
         
         //Normal operation miss
         MissArray = '1;
         #10;
-        assert(DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal(1, "Normal operation miss fail");
+        assert(u_DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal(1, "Normal operation miss fail");
         
         //Correct branch hit
         MissArray = 0; BranchOpE[0] = 1;
         #10;
-        assert(DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal(1, "Correct branch hit step 1 failed");
+        assert(u_DUT.DelayApplied === 0 & CacheRepActive === 1) else $fatal(1, "Correct branch hit step 1 failed");
         
         BranchOpE[0] = 0;
         #10;
@@ -86,30 +86,30 @@ module instr_cache_ctlr_tb();
         MissArray = {64{1'b1}} ; BranchOpE[0] = 1;
         #5;
         //CacheRepActive goes low
-        assert(CacheRepActive === 0 && DUT.DelayApplied === 0) else $fatal(1, "Correct branch miss CacheRepActive error");
+        assert(CacheRepActive === 0 && u_DUT.DelayApplied === 0) else $fatal(1, "Correct branch miss CacheRepActive error");
         #6;
         BranchOpE[0] = 0;
         //CacheRepActive goes high based on DelayApplied
-        assert(DUT.DelayApplied === 1 && CacheRepActive === 1) else $fatal(1, "Correct branch miss state transition failed");
+        assert(u_DUT.DelayApplied === 1 && CacheRepActive === 1) else $fatal(1, "Correct branch miss state transition failed");
         #9;
         
         //Misprediction hit
         MissArray = 0; BranchOpE[0] = 1;
         #10;
-        assert(DUT.DelayApplied === 0 && CacheRepActive === 1) else $fatal(1, "Misprediction hit error");
+        assert(u_DUT.DelayApplied === 0 && CacheRepActive === 1) else $fatal(1, "Misprediction hit error");
         #10;
         
         //Misprediction miss;
         MissArray = {64{1'b1}}; BranchOpE[0] = 1;
         #5;
-        assert(CacheRepActive === 0 && DUT.DelayApplied === 0) else $fatal(1, "Misprediction miss CacheRepActive error");
+        assert(CacheRepActive === 0 && u_DUT.DelayApplied === 0) else $fatal(1, "Misprediction miss CacheRepActive error");
         #5;
         
         //At clk edge, indicate a miss
         PCSrcReg[1] = 1;
         #1;
         
-        assert(CacheRepActive === 0 && DUT.DelayApplied === 1) else $fatal(1, "Misprediction miss state transition error");
+        assert(CacheRepActive === 0 && u_DUT.DelayApplied === 1) else $fatal(1, "Misprediction miss state transition error");
         
         #9;
         BranchOpE[0] = 0; 
@@ -118,7 +118,7 @@ module instr_cache_ctlr_tb();
         #1;
         PCSrcReg[1] = 0;
         #1;
-        assert(CacheRepActive === 1 && DUT.DelayApplied === 0) else $fatal(1, "Misprediction miss state transition error (2)");
+        assert(CacheRepActive === 1 && u_DUT.DelayApplied === 0) else $fatal(1, "Misprediction miss state transition error (2)");
         
         $display("TEST PASSED");
         $finish;

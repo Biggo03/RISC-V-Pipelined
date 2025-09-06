@@ -29,7 +29,7 @@ module branch_control_unit_tb();
     
     logic [2:0] test;
     
-    branch_control_unit DUT(.OpF(Op),
+    branch_control_unit u_DUT (.OpF(Op),
                           .PCSrcPredF(PCSrcPredF),
                           .PCSrcPredE(PCSrcPredE),
                           .BranchOpEb0(BranchOpEb0),

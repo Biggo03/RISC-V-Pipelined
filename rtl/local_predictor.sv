@@ -40,18 +40,15 @@ module local_predictor (
     always @(posedge clk, posedge reset) begin
         
         if (reset) begin
-            PCSrcPred <= 0;
             PresentState <= WU;
-            NextState <= WU;
-        end else begin
+        end else if (Enable) begin
             PresentState <= NextState;
-            PCSrcPred <= NextState[1];
         end
         
     end             
     
     //Next state logic
-    always @(Enable, PresentState, PCSrcResE, clk) begin
+    always @(*) begin
         
         if (Enable) begin
             
@@ -79,5 +76,8 @@ module local_predictor (
         end
         
     end
+    
+    //Assign output
+    assign PCSrcPred = PresentState[1];
 
 endmodule

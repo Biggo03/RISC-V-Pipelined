@@ -26,7 +26,7 @@ module mux5_tb();
     logic [31:0] d0, d1, d2, d3, d4, y;
     logic [2:0] s;
     
-    mux5 DUT(d0, d1, d2, d3, d4, s, y);
+    mux5 u_DUT (d0, d1, d2, d3, d4, s, y);
     
     initial begin
 

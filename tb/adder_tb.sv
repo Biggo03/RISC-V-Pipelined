@@ -4,7 +4,7 @@ module adder_tb();
 
     logic [31:0] a, b, y;
 
-    adder DUT(a, b, y);
+    adder u_DUT (a, b, y);
     
     initial begin
 

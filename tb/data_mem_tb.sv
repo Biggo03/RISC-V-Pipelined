@@ -33,7 +33,7 @@ module data_mem_tb();
     logic [7:0] RDByteExp [255:0];
     
     //Instantiate DUT
-    data_mem DUT(clk, WE, WidthSrc, A, WD, RD);
+    data_mem u_DUT (clk, WE, WidthSrc, A, WD, RD);
     
     //Clock generation
     always begin

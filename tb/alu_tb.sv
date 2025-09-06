@@ -31,8 +31,8 @@ module alu_tb();
     int file;
     int read;
     
-    //DUT instantiation
-    alu DUT(ALUControl, A, B, ALUResult, N, Z, C, V);
+    //u_DUT instantiation
+    alu u_DUT (ALUControl, A, B, ALUResult, N, Z, C, V);
     
     initial begin
 

@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module icache_l1_dir_tb();
+    `include "tb_macros.sv"
     
     //Test cache parameters
     localparam S = 32;
@@ -32,7 +33,7 @@ module icache_l1_dir_tb();
     localparam b = $clog2(B);
     localparam NumTagBits = 32-s-b;
     
-    //DUT signals
+    //u_DUT signals
     logic clk, reset;
     logic RepReady;
     logic [31:0] Address, RD;
@@ -40,7 +41,6 @@ module icache_l1_dir_tb();
     logic [1:0] PCSrcReg, BranchOpE;
     logic L1IMiss;
     logic CacheRepActive;
-    
     
     //Signals to make addressing more intuitive
     logic [b-1:0] ByteAddr;
@@ -51,11 +51,13 @@ module icache_l1_dir_tb();
     
     //Stores tag of each block
     logic [NumTagBits-1:0] Tags [S-1:0][E-1:0];
+
+    int error_cnt;
     
-    icache_l1#(.S(S), 
-                  .E(E), 
-                  .B(B))
-             DUT (.clk(clk),
+    icache_l1 #(.S(S), // u_icache_l1 (
+               .E(E), 
+               .B(B))
+             u_DUT (.clk(clk),
                   .reset(reset),
                   .RepReady(RepReady),
                   .Address(Address),
@@ -107,8 +109,9 @@ module icache_l1_dir_tb();
                 //Check 
                 for (int k = 0; k < words; k = k + 1) begin
                     ByteAddr = k * 4;
+                    Address[b-1:0] = ByteAddr;
                     #10;
-                    assert(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0) else $fatal(1, "Population Read Error");
+                    `CHECK(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0, "[%t] Population Read Error", $time)
                 end
             end
         end
@@ -124,15 +127,14 @@ module icache_l1_dir_tb();
                     ByteAddr = k * 4;
                     Address[b-1:0] = ByteAddr;
                     #10;
-                    assert(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0) else $fatal(1, "Population Read Error");
+                    `CHECK(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0, "[%t] Reread Read Error", $time)
                 end
             end
             
         end
         
-        //Now test based on branch behaviour
-        
-        $display("TEST PASSED");
+        if (error_cnt == 0) $display("TEST PASSED");
+        else $display("TEST FAILED");
         $finish;
     end
               

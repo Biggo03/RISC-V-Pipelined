@@ -25,7 +25,7 @@ module flop_tb();
     logic clk, en, reset;
     logic [31:0] D, Q;
     
-    flop DUT(clk, en, reset, D, Q);
+    flop u_DUT (clk, en, reset, D, Q);
     
     initial begin
 

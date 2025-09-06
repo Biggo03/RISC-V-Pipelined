@@ -24,7 +24,7 @@
     logic clk, reset, MemWrite;
     logic [31:0] WriteData, DataAdr;
     
-    riscv_top DUT(clk, reset, WriteData, DataAdr, MemWrite);
+    riscv_top u_DUT (clk, reset, WriteData, DataAdr, MemWrite);
     
     initial begin
 

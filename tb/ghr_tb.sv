@@ -31,7 +31,7 @@ module ghr_tb();
 
     logic        clk;
     logic        reset;
-    logic        BranchOpEb0;
+    logic [1:0]  BranchOpE;
     logic        PCSrcResE;
     logic        StallE;
 
@@ -44,7 +44,7 @@ module ghr_tb();
         .clk        (clk),
         .reset      (reset),
         .StallE     (StallE),
-        .BranchOpEb0(BranchOpEb0),
+        .BranchOpE  (BranchOpE),
         .PCSrcResE  (PCSrcResE),
         .LocalSrc   (LocalSrc)
     );
@@ -59,7 +59,7 @@ module ghr_tb();
         error_cnt = 0;
         
         //Initialize System
-        clk = 0; reset = 1; BranchOpEb0 = 0; PCSrcResE = 0; StallE = 0; LocalSrcExp = UT;
+        clk = 0; reset = 1; BranchOpE = 0; PCSrcResE = 0; StallE = 0; LocalSrcExp = UT;
         
         #10;
         
@@ -69,7 +69,7 @@ module ghr_tb();
         
         `CHECK(LocalSrc === UT, "[%t] Initialization Failed", $time)
         
-        BranchOpEb0 = 1;
+        BranchOpE[0] = 1;
         
         //Check switching states works correctly
         for (int i = 0; i < 32; i = i + 1) begin
@@ -91,7 +91,7 @@ module ghr_tb();
             
         end
         
-        BranchOpEb0 = 0;
+        BranchOpE[0] = 0;
         
         //Check enable works correctly
         for (int i = 0; i < 32; i = i + 1) begin

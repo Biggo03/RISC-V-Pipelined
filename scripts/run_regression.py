@@ -5,6 +5,7 @@ import yaml
 import subprocess
 import os
 import logging
+import re
 from pathlib import Path
 
 def parse_args():
@@ -130,7 +131,7 @@ def resolve_target(target, test_data, single):
 
     return run_info
 
-def get_module_paths(rtl_dir, module_path, module_paths=[]):
+def get_module_paths(rtl_dir, module_path, module_paths=None):
     """
     Parses file for the instantiaion of modules.
     Requires module instance names to start with "u_"
@@ -140,14 +141,20 @@ def get_module_paths(rtl_dir, module_path, module_paths=[]):
         module_path: Path to the module currently being parsed
         module_paths: running list of paths to included modules
     """
+    if module_paths is None:
+        module_paths = []
+
+    pattern = re.compile(r"u_[^\s]+\s\(")
+
     with open(module_path, "r") as f:
         for line in f:
-            if (" u_" in line or " DUT" in line):
+            if (re.search(pattern, line)):
                 module = line.split()[0]
                 sub_module_path = rtl_dir.joinpath(f"{module}.sv")
-                module_paths.append(sub_module_path.resolve())
 
-                get_module_paths(rtl_dir, sub_module_path, module_paths)
+                if sub_module_path.exists():
+                    module_paths.append(sub_module_path.resolve())
+                    get_module_paths(rtl_dir, sub_module_path, module_paths)
 
     #Remove duplicates while preserving order
     module_paths = list(dict.fromkeys(module_paths))
@@ -163,13 +170,14 @@ def run_test(test, tb_file, test_out_dir, result_info):
         tb_file: Name of the testbench file
         test_out_dir: Where the outputs of the test are placed
     """
-
+    regression_logger = logging.getLogger("regression_logger")
     # --- Project directories ---
     proj_dir     = Path(__file__).resolve().parent.parent
     rtl_dir      = proj_dir / "rtl"
     include_dir  = proj_dir / "common" / "includes"
     filelist_dir = proj_dir / "filelists"
     tb_path      = proj_dir / "tb" / tb_file
+    tb_include_dir = proj_dir.joinpath("tb", "common")
     common_tb    = list(proj_dir.joinpath("tb", "common").rglob("*v*"))
 
     os.makedirs(filelist_dir, exist_ok=True)
@@ -183,7 +191,8 @@ def run_test(test, tb_file, test_out_dir, result_info):
     # --- Build compile command ---
     run_cmd = [
         "iverilog", "-g2012",
-        "-I", str(include_dir)
+        "-I", str(include_dir),
+        "-I", str(tb_include_dir)
     ]
 
     # Add defines
@@ -223,7 +232,7 @@ def run_test(test, tb_file, test_out_dir, result_info):
                 log_file.write(f"{line}\n")
                 if "TEST PASSED" in line:
                     test_passed = True
-                if "WARNING" in line.upper():
+                if ("WARNING" in line.upper() and "VCD" not in line.upper()):
                     warning_present = True
             
             process.wait()
@@ -232,11 +241,13 @@ def run_test(test, tb_file, test_out_dir, result_info):
 
     if (test_passed == True):
         result_info["PASSED_TESTS"][test] = test_out_dir
+        regression_logger.info(f"{test} PASSED")
     else:
         result_info["FAILED_TESTS"][test] = test_out_dir
-
+        regression_logger.info(f"{test} FAILED")
     if (warning_present == True):
         result_info["WARNING_TESTS"][test] = test_out_dir
+        regression_logger.info(f"{test} CONTAINS WARNINGS")
 
     return
 
@@ -254,6 +265,7 @@ def main():
     for test, config in run_info.items():
         test_out_dir = top_out_dir / test
         test_out_dir.mkdir(parents=True, exist_ok=True)
+        subprocess.run(f"rm -rf {test_out_dir}/*", shell=True)
         run_test(test, config["tb"], test_out_dir, result_info)
 
     # Report results
@@ -261,22 +273,26 @@ def main():
     failed_tests = result_info["FAILED_TESTS"]
     warning_tests = result_info["WARNING_TESTS"]
 
-    regression_logger.info("===== PASSED TESTS =====")
-    for test in passed_tests.keys():
-        regression_logger.info(f"{test} PASSED\nOutput path: {passed_tests[test]}")
+    if (len(passed_tests) != 0):
+        regression_logger.info("====================PASSED TESTS ====================")
+        for test in passed_tests.keys():
+            regression_logger.info(f"{test}: {passed_tests[test]}")
+    else:
+        regression_logger.info("==================== NO TESTS PASS====================")
 
     if (len(failed_tests) != 0):
-        regression_logger.info("===== FAILED TESTS =====")
+        regression_logger.info("====================FAILED TESTS ====================")
         for test in failed_tests.keys():
-            regression_logger.info(f"{test} FAILED\nOutput path: {failed_tests[test]}")
+            regression_logger.info(f"{test}: {failed_tests[test]}")
     else:
-        regression_logger.info("===== ALL TESTS PASSED =====")
+        regression_logger.info("==================== NO TESTS FAILED ====================")
     
     if (len(warning_tests) != 0):
-        regression_logger.info("===== TESTS WITH WARNINGS =====")
+        regression_logger.info("==================== TESTS WITH WARNINGS ====================")
         for test in warning_tests.keys():
-            regression_logger.info(f"{test} CONTAINS WARNINGS\nOutput path: {warning_tests[test]}")
+            regression_logger.info(f"{test}: {warning_tests[test]}")
     
+    regression_logger.info(f"==================== SUMMARY ====================")
     regression_logger.info(f"Total PASSED tests: {len(passed_tests)}")
     regression_logger.info(f"Total FAILED tests: {len(failed_tests)}")
 

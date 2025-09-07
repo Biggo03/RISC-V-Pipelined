@@ -14,7 +14,7 @@ module instr_cache_set_multi_tb();
     logic [(B*8)-1:0] RepBlock;
     logic [63:0] RepWord;
     logic [31:0] Data;
-    logic CacheMiss;
+    logic CacheSetMiss;
     
     logic [1:0] LRUBitsE [3:0];
     
@@ -29,11 +29,11 @@ module instr_cache_set_multi_tb();
                       .Tag(Tag),
                       .RepWord(RepWord),
                       .Data(Data),
-                      .CacheMiss(CacheMiss));
+                      .CacheSetMiss(CacheSetMiss));
     
     //Task for assering Cache misses produce the expected outputs
     task AssertMiss();
-        assert(CacheMiss === 1) else $fatal(1, "Incorrectly indicated cache hit\nData Output: %b", Data);
+        assert(CacheSetMiss === 1) else $fatal(1, "Incorrectly indicated cache hit\nData Output: %b", Data);
     endtask
     
     //Task for checking LRUBits are as expected
@@ -82,9 +82,9 @@ module instr_cache_set_multi_tb();
                 #10;
             end
             $display("Number of cycles for replacement: %d", cycles);
-            //wait(CacheMiss == 0);
+            //wait(CacheSetMiss == 0);
             
-            assert(Data === RepBlock[31:0] && CacheMiss == 0) else $fatal(1, "Incorrect Data output on miss\nData:          %h\nExpected Data: %h", Data, RepBlock[31:0]);
+            assert(Data === RepBlock[31:0] && CacheSetMiss == 0) else $fatal(1, "Incorrect Data output on miss\nData:          %h\nExpected Data: %h", Data, RepBlock[31:0]);
             
             //Update tag
             Tag =  Tag + 100;
@@ -108,7 +108,7 @@ module instr_cache_set_multi_tb();
         for (integer i = 0; i < E; i = i + 1) begin
             Block = Block + 4;
             #10;
-            assert(Data === RepBlock[(Block*8) +: 32] && CacheMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 1)\nData:          %h\nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
+            assert(Data === RepBlock[(Block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 1)\nData:          %h\nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
             Tag = Tag - 100;
         end
         
@@ -155,9 +155,9 @@ module instr_cache_set_multi_tb();
         end
         
         
-        wait(CacheMiss == 0);
+        wait(CacheSetMiss == 0);
         AssertLRUBits();
-        assert(Data === RepBlock[(Block*8) +: 32] && CacheMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 2)\nData:          %h\nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
+        assert(Data === RepBlock[(Block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 2)\nData:          %h\nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
                                                                            
         //Check that LRUBits update properly when a stored tag is accessed
         RepEnable = 0; Tag = BlockTagsE[1]; //Block 1's tag

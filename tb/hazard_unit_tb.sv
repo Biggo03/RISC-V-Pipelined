@@ -89,8 +89,8 @@ module hazard_unit_tb();
         .Rs1E                (Rs1E),
         .Rs2E                (Rs2E),
         .RdE                 (RdE),
-        .ResultSrcEb2        (ResultSrcE[2]),
-        .PCSrcb1             (PCSrc[1]),
+        .ResultSrcE          (ResultSrcE),
+        .PCSrc               (PCSrc),
 
         // Memory stage inputs
         .RdM                 (RdM),

@@ -58,7 +58,7 @@ module data_path (
     output logic [6:0]  OpD,
     output logic [2:0]  funct3D,
     output logic [2:0]  funct3E,
-    output logic        funct7b5D,
+    output logic [6:0]  funct7D,
     output logic [1:0]  BranchOpE,
     output logic        N,
     output logic        Z,
@@ -77,7 +77,7 @@ module data_path (
     output logic [4:0]  Rs1E,
     output logic [4:0]  Rs2E,
     output logic [4:0]  RdE,
-    output logic        ResultSrcEb2,
+    output logic [2:0]  ResultSrcE,
     output logic [4:0]  RdM,
     output logic [4:0]  RdW,
     output logic        RegWriteM,
@@ -101,7 +101,6 @@ module data_path (
     logic [31:0] PCPlus4E;
     logic [31:0] ImmExtE;
     logic [2:0]  WidthSrcE;
-    logic [2:0]  ResultSrcE;
     logic        MemWriteE;
     logic        RegWriteE;
 
@@ -166,7 +165,7 @@ module data_path (
         .Rs2D           (Rs2D),
         .OpD            (OpD),
         .funct3D        (funct3D),
-        .funct7b5D      (funct7b5D),
+        .funct7D        (funct7D),
         .PCSrcPredD     (PCSrcPredD)
     );
 
@@ -229,9 +228,6 @@ module data_path (
         .PCSrcPredE     (PCSrcPredE),
         .TargetMatchE   (TargetMatchE)
     );
-    
-    //Need whole ResultSrcE signal internally, only need MSB externally
-    assign ResultSrcEb2 = ResultSrcE[2];
     
     memory_stage u_memory_stage (
         // Clock & Reset

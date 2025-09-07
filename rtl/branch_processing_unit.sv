@@ -31,7 +31,7 @@ module branch_processing_unit (
         // Instruction decode inputs
         input  logic [2:0]  funct3E,
         input  logic [1:0]  BranchOpE,
-        input  logic [6:5]  InstrF,
+        input  logic [31:0] InstrF,
 
         // PC inputs
         input  logic [9:0]  PCF,
@@ -84,7 +84,7 @@ module branch_processing_unit (
         // Branch resolution inputs
         .PCSrcResE      (PCSrcResE),
         .TargetMatchE   (TargetMatchE),
-        .BranchOpEb0    (BranchOpE[0]),
+        .BranchOpE      (BranchOpE),
 
         // Predictor outputs
         .PCSrcPredF     (PCSrcPredF),
@@ -100,7 +100,7 @@ module branch_processing_unit (
         .PCSrcPredE   (PCSrcPredE),
 
         // Branch resolution inputs
-        .BranchOpEb0  (BranchOpE[0]),
+        .BranchOpE    (BranchOpE),
         .TargetMatchE (TargetMatchE),
         .PCSrcResE    (PCSrcResE),
 

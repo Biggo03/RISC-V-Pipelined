@@ -40,7 +40,7 @@ module decode_stage (
     output logic [4:0]  Rs2D,
     output logic [6:0]  OpD,
     output logic [2:0]  funct3D,
-    output logic        funct7b5D,
+    output logic [6:0]  funct7D,
     output logic        PCSrcPredD
 );
     
@@ -81,7 +81,7 @@ module decode_stage (
     
     assign OpD = InstrD[6:0];
     assign funct3D = InstrD[14:12];
-    assign funct7b5D = InstrD[30];
+    assign funct7D[5] = InstrD[30];
     
     
     

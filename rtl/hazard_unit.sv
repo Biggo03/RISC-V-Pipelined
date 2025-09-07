@@ -25,8 +25,8 @@ module hazard_unit (
     input  logic [4:0]  Rs1E,
     input  logic [4:0]  Rs2E,
     input  logic [4:0]  RdE,
-    input  logic        ResultSrcEb2,
-    input  logic        PCSrcb1,
+    input  logic [2:0]  ResultSrcE,
+    input  logic [1:0]  PCSrc,
 
     // Memory stage inputs
     input  logic [4:0]  RdM,
@@ -80,7 +80,7 @@ module hazard_unit (
     end  
     
     //Stall and flush logic
-    assign LoadStall = ResultSrcEb2 & ((Rs1D == RdE) | (Rs2D == RdE));
+    assign LoadStall = ResultSrcE[2] & ((Rs1D == RdE) | (Rs2D == RdE));
     
     //Stalls
     assign StallF = (LoadStall | InstrMissF) & ~PCSrcReg[1];
@@ -90,7 +90,7 @@ module hazard_unit (
     assign StallW = InstrMissF;
     
     //Flushes
-    assign FlushE = (PCSrcb1 & (InstrCacheRepActive | PCSrcReg[1])) | LoadStall;
-    assign FlushD = PCSrcb1;
+    assign FlushE = (PCSrc[1] & (InstrCacheRepActive | PCSrcReg[1])) | LoadStall;
+    assign FlushD = PCSrc[1];
 
 endmodule

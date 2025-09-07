@@ -36,11 +36,11 @@ module icache_l1_dir_tb();
     //u_DUT signals
     logic clk, reset;
     logic RepReady;
-    logic [31:0] Address, RD;
+    logic [31:0] PCF, InstrF;
     logic [63:0] RepWord;
     logic [1:0] PCSrcReg, BranchOpE;
-    logic L1IMiss;
-    logic CacheRepActive;
+    logic InstrMissF;
+    logic InstrCacheRepActive;
     
     //Signals to make addressing more intuitive
     logic [b-1:0] ByteAddr;
@@ -60,13 +60,13 @@ module icache_l1_dir_tb();
              u_DUT (.clk(clk),
                   .reset(reset),
                   .RepReady(RepReady),
-                  .Address(Address),
+                  .PCF(PCF),
                   .RepWord(RepWord),
                   .PCSrcReg(PCSrcReg),
                   .BranchOpE(BranchOpE),
-                  .RD(RD),
-                  .L1IMiss(L1IMiss),
-                  .CacheRepActive(CacheRepActive));
+                  .InstrF(InstrF),
+                  .InstrMissF(InstrMissF),
+                  .InstrCacheRepActive(InstrCacheRepActive));
 
     always begin
         clk = ~clk; #5;
@@ -82,12 +82,12 @@ module icache_l1_dir_tb();
         for (int i = 0; i < S; i = i + 1) begin
             SetNum = i;
             ByteAddr = 0;
-            Address[b-1:0] = ByteAddr;
-            Address[s+b-1:b] = SetNum;
+            PCF[b-1:0] = ByteAddr;
+            PCF[s+b-1:b] = SetNum;
             for (int n = 0; n < E; n = n + 1) begin
                 //Set and store unique tag for block
-                Address[31:s+b] = (i * 8) + n**3;
-                Tags[i][n] = Address[31:s+b];
+                PCF[31:s+b] = (i * 8) + n**3;
+                Tags[i][n] = PCF[31:s+b];
                 #10;
                 RepReady = 1;
                 
@@ -109,9 +109,9 @@ module icache_l1_dir_tb();
                 //Check 
                 for (int k = 0; k < words; k = k + 1) begin
                     ByteAddr = k * 4;
-                    Address[b-1:0] = ByteAddr;
+                    PCF[b-1:0] = ByteAddr;
                     #10;
-                    `CHECK(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0, "[%t] Population Read Error", $time)
+                    `CHECK(InstrF === RepBlocks[i][n][k*32 +: 32] && InstrMissF === 0, "[%t] Population Read Error", $time)
                 end
             end
         end
@@ -119,15 +119,15 @@ module icache_l1_dir_tb();
         //Reread
         for (int i = 0; i < S; i = i + 1) begin
             SetNum = i;
-            Address[s+b-1:b] = SetNum;
-            Address[31:s+b] = Tags[i][0];
+            PCF[s+b-1:b] = SetNum;
+            PCF[31:s+b] = Tags[i][0];
             #10;
             for (int n = 0; n < E; n = n + 1) begin
                 for (int k = 0; k < words; k = k + 1) begin
                     ByteAddr = k * 4;
-                    Address[b-1:0] = ByteAddr;
+                    PCF[b-1:0] = ByteAddr;
                     #10;
-                    `CHECK(RD === RepBlocks[i][n][k*32 +: 32] && L1IMiss === 0, "[%t] Reread Read Error", $time)
+                    `CHECK(InstrF === RepBlocks[i][n][k*32 +: 32] && InstrMissF === 0, "[%t] Reread Read Error", $time)
                 end
             end
             

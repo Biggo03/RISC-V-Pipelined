@@ -24,7 +24,7 @@ module riscv_top (
 
     // Memory outputs
     output logic [31:0] WriteDataM,
-    output logic [31:0] DataAdr,
+    output logic [31:0] ALUResultM,
     output logic        MemWriteM
 );
     
@@ -60,7 +60,7 @@ module riscv_top (
         .PCF                   (PCF),
 
         // ALU & memory outputs
-        .ALUResultM            (DataAdr),
+        .ALUResultM            (ALUResultM),
         .WriteDataM            (WriteDataM),
 
         // Control outputs
@@ -70,30 +70,30 @@ module riscv_top (
         .MemWriteM             (MemWriteM)
     );
 
-    icache_l1 #(
+    icache_l1 #( // u_icache_l1 (
         .S (32),
         .E (4),
         .B (64)
     ) u_icache_l1 (
         // Clock & Reset
-        .clk             (clk),
-        .reset           (reset),
+        .clk                  (clk),
+        .reset                (reset),
 
         // Control inputs
-        .RepReady        (RepReady),
-        .PCSrcReg        (PCSrcReg),
-        .BranchOpE       (BranchOpE),
+        .RepReady             (RepReady),
+        .PCSrcReg             (PCSrcReg),
+        .BranchOpE            (BranchOpE),
 
         // Address & data inputs
-        .Address         (PCF),
-        .RepWord         (RepWord),
+        .PCF                  (PCF),
+        .RepWord              (RepWord),
 
         // Data outputs
-        .RD              (InstrF),
+        .InstrF               (InstrF),
 
         // Status outputs
-        .L1IMiss         (InstrMissF),
-        .CacheRepActive  (InstrCacheRepActive)
+        .InstrMissF           (InstrMissF),
+        .InstrCacheRepActive  (InstrCacheRepActive)
     );
         
     data_mem u_data_mem (
@@ -103,7 +103,7 @@ module riscv_top (
         .WidthSrc (WidthSrcMOUT),
 
         // Address & write data inputs
-        .A        (DataAdr),
+        .A        (ALUResultM),
         .WD       (WriteDataM),
 
         // Read data output

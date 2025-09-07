@@ -24,22 +24,22 @@ module branch_control_unit_tb();
 
     logic [1:0] Op;
     logic PCSrcPredF, PCSrcPredE;
-    logic BranchOpEb0, TargetMatchE, PCSrcResE;
-    logic [1:0] PCSrc;
+    logic TargetMatchE, PCSrcResE;
+    logic [1:0] BranchOpE, PCSrc;
     
     logic [2:0] test;
     
     branch_control_unit u_DUT (.OpF(Op),
                           .PCSrcPredF(PCSrcPredF),
                           .PCSrcPredE(PCSrcPredE),
-                          .BranchOpEb0(BranchOpEb0),
+                          .BranchOpE(BranchOpE),
                           .TargetMatchE(TargetMatchE),
                           .PCSrcResE(PCSrcResE),
                           .PCSrc(PCSrc));
     
     task RollbackAssertion(input logic [1:0] val);
                 #10;
-                assert (PCSrc === val) else $fatal(1, "Rollback Error\nInputs: TargetMatchE: %b BranchOpEb0: %b, PCSrcPredE: %b, PCSrcResE: %b\nOutput: PCSrc: %b",TargetMatchE,BranchOpEb0 , PCSrcPredE, PCSrcResE, PCSrc);
+                assert (PCSrc === val) else $fatal(1, "Rollback Error\nInputs: TargetMatchE: %b BranchOpE[0]: %b, PCSrcPredE: %b, PCSrcResE: %b\nOutput: PCSrc: %b",TargetMatchE,BranchOpE[0] , PCSrcPredE, PCSrcResE, PCSrc);
     endtask
 
     initial begin
@@ -47,9 +47,9 @@ module branch_control_unit_tb();
         dump_setup;
 
         Op = 0; PCSrcPredF = 0; PCSrcPredE = 0; 
-        BranchOpEb0 = 0; TargetMatchE = 0; PCSrcResE = 0;
+        BranchOpE = 0; TargetMatchE = 0; PCSrcResE = 0;
         
-        //When BranchOpEb0 = 0, should only get output from prediction logic
+        //When BranchOpE[0] = 0, should only get output from prediction logic
         //Will use this to ensure first stage outputs are as expected.
         for (int i = 0; i < 3; i++) begin
             
@@ -70,7 +70,7 @@ module branch_control_unit_tb();
         assert (PCSrc == 2'b00) else $fatal(1, "Branch untaken prediction error");
         
         //Check each output for rollback logic
-        TargetMatchE = 1; BranchOpEb0 = 1; PCSrcPredE = 1; PCSrcResE = 1;
+        TargetMatchE = 1; BranchOpE[0] = 1; PCSrcPredE = 1; PCSrcResE = 1;
         RollbackAssertion(2'b00); //1111
         
         TargetMatchE = 0;
@@ -95,9 +95,9 @@ module branch_control_unit_tb();
         TargetMatchE = 1;
         RollbackAssertion(2'b00); //1100
         
-        BranchOpEb0 = 0;
+        BranchOpE[0] = 0;
         
-        //All combinations tested for when BranchOpEb0 = 0, ensure stage 1 output goes through
+        //All combinations tested for when BranchOpE[0] = 0, ensure stage 1 output goes through
         for (int i = 0; i < 8; i++) begin
             
             test = i;

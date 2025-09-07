@@ -27,7 +27,7 @@ module branching_buffer (
     input  logic [1:0]  LocalSrc,
     input  logic        PCSrcResE,
     input  logic        TargetMatch,
-    input  logic        BranchOpEb0,
+    input  logic [1:0]  BranchOpE,
 
     // Branch predictor outputs
     output logic        PCSrcPredF,
@@ -46,7 +46,7 @@ module branching_buffer (
     genvar i;
     
     //Every group of 4 bits corrosponds to a given PCE index
-    assign Enable = BranchOpEb0 ? 1'b1 << {PCE, LocalSrc} : 0;
+    assign Enable = BranchOpE[0] ? 1'b1 << {PCE, LocalSrc} : 0;
     
     generate
         for (i = 0; i < 4096; i = i + 1) begin
@@ -71,7 +71,7 @@ module branching_buffer (
     always @(posedge clk) begin
         if (reset) begin
             LocalReset <= {4096{1'b1}};
-        end else if (~TargetMatch && BranchOpEb0) begin
+        end else if (~TargetMatch && BranchOpE[0]) begin
             BufferEntry[PCE][31:0] <= PCTargetE;
             LocalReset <= 0; //Initizlize to 0 to ensure only current branch stays reset
             LocalReset[PCE] <= 1'b1;

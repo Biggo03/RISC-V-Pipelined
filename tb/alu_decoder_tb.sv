@@ -25,24 +25,25 @@ module alu_decoder_tb();
     //Stimulus and expected output
     logic [2:0] funct3;
     logic [1:0] ALUOp;
-    logic op5, funct7b5;
+    logic [6:0] funct7;
+    logic [6:0] op;
     logic [3:0] ALUControl;
     
     //Arrays for holding expected values based on corrosponding funct3 value
     //x values in cases where output dependant on more than funct3
     logic [3:0] ALUControlExp [7:0];
     
-    //Array for holding all combos of op5 and funct7b5
+    //Array for holding all combos of op5 and funct7[5]
     logic [1:0] op5_funct7 [3:0]; //= '{2'b00, 2'b01, 2'b10, 2'b11};
 
     
     //Instantiate DUT
-    alu_decoder u_DUT (funct3, ALUOp, op5, funct7b5, ALUControl);
+    alu_decoder u_DUT (funct3, ALUOp, op, funct7, ALUControl);
     
     //Task for printing assertions
     task PrintError(input int i);
         
-        $fatal(1, "Error: ALUOp: %b, funct3: %b, op5: %b, funct7b5: %b\nExpected Output: %b\nActual Output:   %b", ALUOp, funct3, op5, funct7b5, ALUControlExp[i], ALUControl);
+        $fatal(1, "Error: ALUOp: %b, funct3: %b, op[5]: %b, funct7[5]: %b\nExpected Output: %b\nActual Output:   %b", ALUOp, funct3, op[5], funct7[5], ALUControlExp[i], ALUControl);
         
     endtask
         
@@ -93,8 +94,8 @@ module alu_decoder_tb();
                 for (integer j = 0; j < 4; j++) begin
                     
                     //Set actual inputs
-                    op5 = op5_funct7[j][1];
-                    funct7b5 = op5_funct7[j][0];
+                    op[5] = op5_funct7[j][1];
+                    funct7[5] = op5_funct7[j][0];
                     #10;
                     
                     if (op5_funct7[j] < 3) ALUControlExp[0] = 4'b1000;
@@ -110,8 +111,8 @@ module alu_decoder_tb();
                 for (int j = 0; j < 4; j++) begin
                     
                     //Set actual inputs
-                    op5 = op5_funct7[j][1];
-                    funct7b5 = op5_funct7[j][0];
+                    op[5] = op5_funct7[j][1];
+                    funct7[5] = op5_funct7[j][0];
                     #10;
                     
                     //Dependant on funct7[5], op5 does not change decoding

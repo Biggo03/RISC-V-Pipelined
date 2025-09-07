@@ -17,8 +17,8 @@ module alu_decoder (
     // Instruction decode inputs
     input  logic [2:0] funct3,
     input  logic [1:0] ALUOp,
-    input  logic       op5,
-    input  logic       funct7b5,
+    input  logic [6:0] op,
+    input  logic [6:0] funct7,
 
     // Decode outputs
     output logic [3:0] ALUControl
@@ -47,7 +47,7 @@ module alu_decoder (
                 3'b000: begin
                 
                     //Sub if op[5] and funct7[5] = 1
-                    if (op5 & funct7b5) ALUControl = 4'b1001; //Sub
+                    if (op[5] & funct7[5]) ALUControl = 4'b1001; //Sub
                     else ALUControl = 4'b1000; //Add
                 
                 end
@@ -56,7 +56,7 @@ module alu_decoder (
                 3'b101: begin
                 
                     // Logical, {op[5], funct7[5]} = 00, 10
-                    if (~funct7b5) ALUControl = 4'b0000; //SRL
+                    if (~funct7[5]) ALUControl = 4'b0000; //SRL
                     //Arithmetic {op[5], funct7[5]} = 11, 01
                     else ALUControl = 4'b0001; //SRA
             

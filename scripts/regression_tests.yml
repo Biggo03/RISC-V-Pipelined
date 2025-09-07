@@ -34,7 +34,7 @@ TESTS:
   integration:
 
     riscv_top:
-      tb: riscv_top.sv
+      tb: riscv_top_tb.sv
       tags: [system, slow]
 
   control:
@@ -101,10 +101,6 @@ TESTS:
     
     instr_cache_set_multi_tb:
       tb: instr_cache_set_multi_tb.sv
-      tags: [unit, sequential, fast]
-    
-    instr_cache_set_tb:
-      tb: instr_cache_set_tb.sv
       tags: [unit, sequential, fast]
 
   building_blocks:

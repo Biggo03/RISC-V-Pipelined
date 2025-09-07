@@ -18,7 +18,7 @@ module branch_control_unit (
     input  logic [1:0] OpF,
     input  logic       PCSrcPredF,
     input  logic       PCSrcPredE,
-    input  logic       BranchOpEb0,
+    input  logic [1:0] BranchOpE,
     input  logic       TargetMatchE,
     input  logic       PCSrcResE,
 
@@ -36,7 +36,7 @@ module branch_control_unit (
     logic [1:0] FirstStageOut;
     logic [3:0] SecondStageIn;
     
-    assign SecondStageIn = {TargetMatchE, BranchOpEb0, PCSrcPredE, PCSrcResE};
+    assign SecondStageIn = {TargetMatchE, BranchOpE[0], PCSrcPredE, PCSrcResE};
     
     //Prediction logic
     always @(*) begin

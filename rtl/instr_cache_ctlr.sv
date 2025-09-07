@@ -29,8 +29,8 @@ module instr_cache_ctlr #(
 
     // Control outputs
     output logic [S-1:0]          ActiveArray,
-    output logic                  CacheMiss,
-    output logic                  CacheRepActive
+    output logic                  InstrMissF,
+    output logic                  InstrCacheRepActive
 );
     
     // ---- Control signal ----
@@ -38,19 +38,19 @@ module instr_cache_ctlr #(
     
     //Decoding input set
     assign ActiveArray = 1'b1 << Set;
-    assign CacheMiss = MissArray[Set];
+    assign InstrMissF = MissArray[Set];
     
     //Signal determining if replacement active
-    assign CacheRepActive = ~(BranchOpE[0] & CacheMiss & (~DelayApplied)) & ~PCSrcReg[1];
+    assign InstrCacheRepActive = ~(BranchOpE[0] & InstrMissF & (~DelayApplied)) & ~PCSrcReg[1];
     
     //Replacement state machine logic
     //DelayApplied = 0 indicates in ReadyToDelay state
     always @(posedge clk) begin
         if (reset) begin
             DelayApplied <= 0; 
-        end else if (~DelayApplied & ~CacheRepActive) begin
+        end else if (~DelayApplied & ~InstrCacheRepActive) begin
             DelayApplied <= 1'b1;
-        end else if (DelayApplied & (~CacheMiss | PCSrcReg[1])) begin
+        end else if (DelayApplied & (~InstrMissF | PCSrcReg[1])) begin
             DelayApplied <= 0;
         end
     end

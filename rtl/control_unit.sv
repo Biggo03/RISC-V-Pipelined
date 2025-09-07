@@ -17,7 +17,7 @@ module control_unit (
     // Instruction decode inputs
     input  logic [6:0] OpD,
     input  logic [2:0] funct3D,
-    input  logic       funct7b5D,
+    input  logic [6:0] funct7D,
 
     // Main decoder outputs
     output logic [2:0] ImmSrcD,
@@ -60,8 +60,8 @@ module control_unit (
         // Instruction decode inputs
         .funct3     (funct3D),
         .ALUOp      (ALUOp),
-        .op5        (OpD[5]),
-        .funct7b5   (funct7b5D),
+        .op         (OpD),
+        .funct7     (funct7D),
 
         // Control output
         .ALUControl (ALUControlD)

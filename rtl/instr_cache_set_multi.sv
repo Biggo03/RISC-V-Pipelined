@@ -36,7 +36,7 @@ module instr_cache_set_multi #(
 
     // Data outputs
     output logic [31:0]           Data,
-    output logic                  CacheMiss
+    output logic                  CacheSetMiss
 );
     
     // ----- Parameters -----
@@ -70,13 +70,13 @@ module instr_cache_set_multi #(
     integer i;
     genvar n;
     
-    assign RepActive = CacheMiss && ActiveSet && RepEnable;
+    assign RepActive = CacheSetMiss && ActiveSet && RepEnable;
 
     //Tag and valid comparison logic
     always @(*) begin
     
         MatchedBlock = 0;
-        CacheMiss = 1;
+        CacheSetMiss = 1;
         LastLRUStatus = 0;
         
         if (ActiveSet) begin
@@ -91,15 +91,15 @@ module instr_cache_set_multi #(
             end
         
             //Declare a miss
-            if (MatchedBlock == 0) CacheMiss = 1;
-            else CacheMiss = 0;
+            if (MatchedBlock == 0) CacheSetMiss = 1;
+            else CacheSetMiss = 0;
             
         end
     end
     
     //Block to remove logic
     always @(posedge clk) begin
-        if (CacheMiss && ActiveSet && ~RepBegin) begin
+        if (CacheSetMiss && ActiveSet && ~RepBegin) begin
             if (ValidBits == {E{1'b1}}) begin
                 for (i = 0; i < E; i = i + 1) begin
                     if (LRUBits[i] == E-1) begin              
@@ -151,7 +151,7 @@ module instr_cache_set_multi #(
             end
         
         //Handle LRU updates on non-replacing accesses
-        end else  if (ActiveSet && ~CacheMiss) begin
+        end else  if (ActiveSet && ~CacheSetMiss) begin
             RepBegin <= 0;
             for (i = 0; i < E; i = i + 1) begin
                 if (~MatchedBlock[i] && ValidBits[i] && LRUBits[i] < LastLRUStatus) begin

@@ -43,7 +43,7 @@ module pipelined_riscv_core (
     // ----- Control unit inputs -----
     logic [6:0] OpD;
     logic [2:0] funct3D;
-    logic       funct7b5D;
+    logic [6:0] funct7D;
 
     // ----- Control unit outputs -----
     logic [3:0] ALUControlD;
@@ -62,7 +62,7 @@ module pipelined_riscv_core (
     logic [4:0] Rs1E;
     logic [4:0] Rs2E;
     logic [4:0] RdE;
-    logic       ResultSrcEb2;
+    logic [2:0] ResultSrcE;
     logic [4:0] RdM;
     logic [4:0] RdW;
     logic       RegWriteM;
@@ -78,15 +78,15 @@ module pipelined_riscv_core (
     logic       FlushE;
 
     // ----- Branch processing unit inputs -----
-    logic       N;
-    logic       Z;
-    logic       C;
-    logic       V;
+    logic        N;
+    logic        Z;
+    logic        C;
+    logic        V;
     logic [2:0]  funct3E;
     logic [31:0] PCE; 
     logic [31:0] PCTargetE;
-    logic       TargetMatchE;
-    logic       PCSrcPredE;
+    logic        TargetMatchE;
+    logic        PCSrcPredE;
 
     // ----- Branch processing unit outputs -----
     logic [31:0] PredPCTargetF;
@@ -98,7 +98,7 @@ module pipelined_riscv_core (
         // Instruction decode inputs
         .OpD         (OpD),
         .funct3D     (funct3D),
-        .funct7b5D   (funct7b5D),
+        .funct7D     (funct7D),
 
         // Control outputs
         .ALUControlD (ALUControlD),
@@ -125,8 +125,8 @@ module pipelined_riscv_core (
         .Rs1E                 (Rs1E),
         .Rs2E                 (Rs2E),
         .RdE                  (RdE),
-        .ResultSrcEb2         (ResultSrcEb2),
-        .PCSrcb1              (PCSrc[1]),
+        .ResultSrcE           (ResultSrcE),
+        .PCSrc                (PCSrc),
 
         // Memory stage inputs
         .RdM                  (RdM),
@@ -173,7 +173,7 @@ module pipelined_riscv_core (
         // Instruction decode inputs
         .funct3E        (funct3E),
         .BranchOpE      (BranchOpE),
-        .InstrF         (InstrF[6:5]),
+        .InstrF         (InstrF),
 
         // PC inputs
         .PCF            (PCF[9:0]),
@@ -238,7 +238,7 @@ module pipelined_riscv_core (
         .OpD              (OpD),
         .funct3D          (funct3D),
         .funct3E          (funct3E),
-        .funct7b5D        (funct7b5D),
+        .funct7D          (funct7D),
         .BranchOpE        (BranchOpE),
         .N                (N),
         .Z                (Z),
@@ -253,7 +253,7 @@ module pipelined_riscv_core (
         .Rs1E             (Rs1E),
         .Rs2E             (Rs2E),
         .RdE              (RdE),
-        .ResultSrcEb2     (ResultSrcEb2),
+        .ResultSrcE       (ResultSrcE),
         .RdM              (RdM),
         .RdW              (RdW),
         .RegWriteM        (RegWriteM),

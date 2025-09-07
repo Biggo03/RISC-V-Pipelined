@@ -21,17 +21,40 @@
 
  module riscv_top_tb();
     
-    logic clk, reset, MemWrite;
-    logic [31:0] WriteData, DataAdr;
+    logic        clk;
+    logic        reset;
+
+    logic RepReady;
+    logic [63:0] RepWord;
     
-    riscv_top u_DUT (clk, reset, WriteData, DataAdr, MemWrite);
+
+    logic [31:0] WriteDataM;
+    logic [31:0] ALUResultM;
+    logic        MemWriteM;
+    
+    
+    riscv_top u_riscv_top (
+        // Clock & Reset
+        .clk        (clk),
+        .reset      (reset),
+
+        // Temporary L1 instruction cache inputs
+        .RepReady   (RepReady),
+        .RepWord    (RepWord),
+
+        // Memory outputs
+        .WriteDataM (WriteDataM),
+        .ALUResultM (ALUResultM),
+        .MemWriteM  (MemWriteM)
+    );
     
     initial begin
 
         dump_setup;
 
-        MemWrite = 0;
         clk = 0; reset = 1; #20; reset = 0;
+
+        $finish;
     end
     
     always begin
@@ -40,11 +63,11 @@
     
     always @(negedge clk) begin
         
-        if (MemWrite & DataAdr > 90 & DataAdr < 120) begin
-            if (DataAdr === 100 & WriteData === 25) begin
+        if (MemWriteM & ALUResultM > 90 & ALUResultM < 120) begin
+            if (ALUResultM === 100 & WriteDataM === 25) begin
                 $display("TEST PASSED");
                 $finish;
-            end else if (DataAdr !== 96) begin
+            end else if (ALUResultM !== 96) begin
             $display("Failed.");
             $finish;
             

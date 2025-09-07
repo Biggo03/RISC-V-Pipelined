@@ -20,7 +20,7 @@ module ghr (
 
     // Control inputs
     input  logic       StallE,
-    input  logic       BranchOpEb0,
+    input  logic [1:0] BranchOpE,
     input  logic       PCSrcResE,
 
     // Control outputs
@@ -54,7 +54,7 @@ module ghr (
     //Next state logic
     always @(*) begin
         
-        if (BranchOpEb0 & ~StallE) begin
+        if (BranchOpE[0] & ~StallE) begin
 
             case (PresentState)
                 

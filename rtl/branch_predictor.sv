@@ -29,7 +29,7 @@ module branch_predictor (
     // Branch resolution inputs
     input  logic        PCSrcResE,
     input  logic        TargetMatchE,
-    input  logic        BranchOpEb0,
+    input  logic [1:0]  BranchOpE,
 
     // Predictor outputs
     output logic        PCSrcPredF,
@@ -46,7 +46,7 @@ module branch_predictor (
 
         // Control inputs
         .StallE      (StallE),
-        .BranchOpEb0 (BranchOpEb0),
+        .BranchOpE   (BranchOpE),
         .PCSrcResE   (PCSrcResE),
 
         // Control output
@@ -66,7 +66,7 @@ module branch_predictor (
         .LocalSrc       (LocalSrc),
         .PCSrcResE      (PCSrcResE),
         .TargetMatch    (TargetMatchE),
-        .BranchOpEb0    (BranchOpEb0),
+        .BranchOpE      (BranchOpE),
 
         // Control outputs
         .PCSrcPredF     (PCSrcPredF),

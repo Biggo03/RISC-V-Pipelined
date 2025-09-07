@@ -27,8 +27,8 @@ module branching_buffer_tb();
     logic clk, reset;
     logic [31:0] PCTargetE;
     logic [9:0] PCF, PCE;
-    logic [1:0] LocalSrc;
-    logic PCSrcResE, TargetMatch, BranchOpEb0;
+    logic [1:0] LocalSrc, BranchOpE;
+    logic PCSrcResE, TargetMatch;
     logic PCSrcPredF;
     logic [31:0] PredPCTargetF;
 
@@ -42,7 +42,7 @@ module branching_buffer_tb();
                         .LocalSrc(LocalSrc),
                         .PCSrcResE(PCSrcResE),
                         .TargetMatch(TargetMatch),
-                        .BranchOpEb0(BranchOpEb0),
+                        .BranchOpE(BranchOpE),
                         .PCSrcPredF(PCSrcPredF),
                         .PredPCTargetF(PredPCTargetF));
 
@@ -57,13 +57,13 @@ module branching_buffer_tb();
         
         //Initialize
         clk = 0; reset = 1; PCTargetE = 0; PCF = 0; PCE = 0; LocalSrc = 0;
-        PCSrcResE = 0; TargetMatch = 0; BranchOpEb0 = 0;
+        PCSrcResE = 0; TargetMatch = 0; BranchOpE = 0;
         
         #100;
         reset = 0;
 
         #100;
-        BranchOpEb0 = 1;
+        BranchOpE[0] = 1;
         
         //Start by populating entries with target addresses
         for (int i = 0; i < 1024; i++) begin
@@ -72,7 +72,7 @@ module branching_buffer_tb();
             #10;
         end
         
-        BranchOpEb0 = 0;
+        BranchOpE[0] = 0;
         TargetMatch = 1;
         
         //Check if correct address is fetched by PCF
@@ -83,7 +83,7 @@ module branching_buffer_tb();
         end
         
         //Check to see if branch updates work correctly (Should be in WU)
-        PCE = 0; PCF = 0; LocalSrc = 0; BranchOpEb0 = 1; PCSrcResE = 1;
+        PCE = 0; PCF = 0; LocalSrc = 0; BranchOpE[0] = 1; PCSrcResE = 1;
         #10;
         `CHECK(PCSrcPredF === 1, "[%t] Local predictor transition failed (first)", $time)
         

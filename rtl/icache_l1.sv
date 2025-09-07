@@ -29,15 +29,15 @@ module icache_l1 #(
     input  logic [1:0]  BranchOpE,
 
     // Address & data inputs
-    input  logic [31:0] Address,
+    input  logic [31:0] PCF,
     input  logic [63:0] RepWord,
 
     // Data outputs
-    output logic [31:0] RD,
+    output logic [31:0] InstrF,
 
     // Status outputs
-    output logic        L1IMiss,
-    output logic        CacheRepActive
+    output logic        InstrMissF,
+    output logic        InstrCacheRepActive
 );
     
     // ----- Parameters -----
@@ -58,11 +58,11 @@ module icache_l1 #(
     // ----- Replacement control -----
     logic RepEnable;
 
-    assign Block = Address[b-1:0];
-    assign Set = Address[s+b-1:b]; 
-    assign Tag = Address[31:s+b]; 
+    assign Block = PCF[b-1:0];
+    assign Set = PCF[s+b-1:b]; 
+    assign Tag = PCF[31:s+b]; 
     
-    assign RepEnable = CacheRepActive & RepReady;
+    assign RepEnable = InstrCacheRepActive & RepReady;
     
     //Generate Sets
     genvar i;
@@ -92,7 +92,7 @@ module icache_l1 #(
                 .Data       (DataArray[i]),
 
                 // Status output
-                .CacheMiss  (MissArray[i])
+                .CacheSetMiss  (MissArray[i])
             );
         end
     endgenerate
@@ -102,23 +102,23 @@ module icache_l1 #(
         .S (S)
     ) u_instr_cache_ctlr (
         // Clock & Reset
-        .clk            (clk),
-        .reset          (reset),
+        .clk                  (clk),
+        .reset                (reset),
 
         // Control inputs
-        .Set            (Set),
-        .MissArray      (MissArray),
-        .PCSrcReg       (PCSrcReg),
-        .BranchOpE      (BranchOpE),
+        .Set                  (Set),
+        .MissArray            (MissArray),
+        .PCSrcReg             (PCSrcReg),
+        .BranchOpE            (BranchOpE),
 
         // Control outputs
-        .ActiveArray    (ActiveArray),
-        .CacheMiss      (L1IMiss),
-        .CacheRepActive (CacheRepActive)
+        .ActiveArray          (ActiveArray),
+        .InstrMissF           (InstrMissF),
+        .InstrCacheRepActive  (InstrCacheRepActive)
     );
     
     
     //Assign output
-    assign RD = DataArray[Set];
+    assign InstrF = DataArray[Set];
 
 endmodule

@@ -22,23 +22,27 @@
 
 module alu_decoder_tb();
     
-    //Stimulus and expected output
+    // Stimulus and expected output
     logic [2:0] funct3;
     logic [1:0] ALUOp;
     logic [6:0] funct7;
     logic [6:0] op;
     logic [3:0] ALUControl;
-    
-    //Arrays for holding expected values based on corrosponding funct3 value
-    //x values in cases where output dependant on more than funct3
-    logic [3:0] ALUControlExp [7:0];
-    
-    //Array for holding all combos of op5 and funct7[5]
-    logic [1:0] op5_funct7 [3:0]; //= '{2'b00, 2'b01, 2'b10, 2'b11};
 
-    
-    //Instantiate DUT
-    alu_decoder u_DUT (funct3, ALUOp, op, funct7, ALUControl);
+    // Arrays for holding expected values based on corresponding funct3 value
+    logic [3:0] ALUControlExp [7:0];
+
+    // Array for holding all combos of op5 and funct7[5]
+    logic [1:0] op5_funct7 [3:0];
+
+    // Instantiate DUT
+    alu_decoder u_DUT (
+        .funct3     (funct3),
+        .ALUOp      (ALUOp),
+        .op         (op),
+        .funct7     (funct7),
+        .ALUControl (ALUControl)
+    );
     
     //Task for printing assertions
     task PrintError(input int i);

@@ -22,24 +22,29 @@
 
 module instr_cache_ctlr_tb();
 
-    logic [5:0] Set;
-    logic [63:0] MissArray, ActiveArray;
-    logic InstrMissF;
-    logic Stall;
-    
-    logic clk, reset;
-    logic [1:0] PCSrcReg, BranchOpE;
-    logic InstrCacheRepActive;
-    
-    instr_cache_ctlr u_DUT (.clk(clk),
-                             .reset(reset),
-                             .Set(Set),
-                             .MissArray(MissArray),
-                             .PCSrcReg(PCSrcReg),
-                             .BranchOpE(BranchOpE),
-                             .ActiveArray(ActiveArray),
-                             .InstrMissF(InstrMissF),
-                             .InstrCacheRepActive(InstrCacheRepActive));
+    logic [5:0]  Set;
+    logic [63:0] MissArray;
+    logic [63:0] ActiveArray;
+    logic        InstrMissF;
+    logic        Stall;
+
+    logic        clk;
+    logic        reset;
+    logic [1:0]  PCSrcReg;
+    logic [1:0]  BranchOpE;
+    logic        InstrCacheRepActive;
+
+    instr_cache_ctlr u_DUT (
+        .clk                (clk),
+        .reset              (reset),
+        .Set                (Set),
+        .MissArray          (MissArray),
+        .PCSrcReg           (PCSrcReg),
+        .BranchOpE          (BranchOpE),
+        .ActiveArray        (ActiveArray),
+        .InstrMissF         (InstrMissF),
+        .InstrCacheRepActive(InstrCacheRepActive)
+    );
     
     always begin
         clk = ~clk; #5;

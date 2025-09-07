@@ -22,51 +22,57 @@
 module icache_l1_dir_tb();
     `include "tb_macros.sv"
     
-    //Test cache parameters
-    localparam S = 32;
-    localparam E = 4;
-    localparam B = 64;
-    localparam words = B/4;
+    // Test cache parameters
+    localparam S         = 32;
+    localparam E         = 4;
+    localparam B         = 64;
+    localparam words     = B/4;
     localparam RepCycles = words/2;
-    
-    localparam s = $clog2(S);
-    localparam b = $clog2(B);
+
+    localparam s          = $clog2(S);
+    localparam b          = $clog2(B);
     localparam NumTagBits = 32-s-b;
-    
-    //u_DUT signals
-    logic clk, reset;
-    logic RepReady;
-    logic [31:0] PCF, InstrF;
+
+    // DUT signals
+    logic        clk;
+    logic        reset;
+    logic        RepReady;
+    logic [31:0] PCF;
+    logic [31:0] InstrF;
     logic [63:0] RepWord;
-    logic [1:0] PCSrcReg, BranchOpE;
-    logic InstrMissF;
-    logic InstrCacheRepActive;
-    
-    //Signals to make addressing more intuitive
+    logic [1:0]  PCSrcReg;
+    logic [1:0]  BranchOpE;
+    logic        InstrMissF;
+    logic        InstrCacheRepActive;
+
+    // Signals to make addressing more intuitive
     logic [b-1:0] ByteAddr;
     logic [s-1:0] SetNum;
-    
-    //Store blocks
+
+    // Store blocks
     logic [(B*8)-1:0] RepBlocks [S-1:0][E-1:0];
-    
-    //Stores tag of each block
+
+    // Stores tag of each block
     logic [NumTagBits-1:0] Tags [S-1:0][E-1:0];
 
     int error_cnt;
-    
-    icache_l1 #(.S(S), // u_icache_l1 (
-               .E(E), 
-               .B(B))
-             u_DUT (.clk(clk),
-                  .reset(reset),
-                  .RepReady(RepReady),
-                  .PCF(PCF),
-                  .RepWord(RepWord),
-                  .PCSrcReg(PCSrcReg),
-                  .BranchOpE(BranchOpE),
-                  .InstrF(InstrF),
-                  .InstrMissF(InstrMissF),
-                  .InstrCacheRepActive(InstrCacheRepActive));
+
+    icache_l1 #( //u_icache_l1 (
+        .S (S),
+        .E (E), 
+        .B (B)
+    ) u_DUT (
+        .clk                 (clk),
+        .reset               (reset),
+        .RepReady            (RepReady),
+        .PCF                 (PCF),
+        .RepWord             (RepWord),
+        .PCSrcReg            (PCSrcReg),
+        .BranchOpE           (BranchOpE),
+        .InstrF              (InstrF),
+        .InstrMissF          (InstrMissF),
+        .InstrCacheRepActive (InstrCacheRepActive)
+    );
 
     always begin
         clk = ~clk; #5;

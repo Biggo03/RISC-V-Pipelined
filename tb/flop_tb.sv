@@ -22,10 +22,19 @@
 
 module flop_tb();
 
-    logic clk, en, reset;
-    logic [31:0] D, Q;
-    
-    flop u_DUT (clk, en, reset, D, Q);
+    logic        clk;
+    logic        en;
+    logic        reset;
+    logic [31:0] D;
+    logic [31:0] Q;
+
+    flop u_DUT (
+        .clk   (clk),
+        .en    (en),
+        .reset (reset),
+        .D     (D),
+        .Q     (Q)
+    );
     
     initial begin
 

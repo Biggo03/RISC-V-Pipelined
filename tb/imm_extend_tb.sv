@@ -22,15 +22,20 @@
 
 module imm_extend_tb();
 
-    logic [31:7] instr;
-    logic [2:0] ImmSrc;
-    logic [31:0] ImmExt, ImmExtExpected;
-    
+    logic [31:7] Instr;
+    logic [2:0]  ImmSrc;
+    logic [31:0] ImmExt;
+    logic [31:0] ImmExtExpected;
+
     int file;
     int read;
     int test_num;
-    
-    imm_extend u_DUT (instr, ImmSrc, ImmExt);
+
+    imm_extend u_DUT (
+        .Instr   (Instr),
+        .ImmSrc  (ImmSrc),
+        .ImmExt  (ImmExt)
+    );
     
     initial begin
         
@@ -49,14 +54,14 @@ module imm_extend_tb();
         
         //Iterate through file
         while (!$feof(file)) begin
-            read = $fscanf(file, "%b %b %b\n", instr, ImmSrc, ImmExtExpected);
+            read = $fscanf(file, "%b %b %b\n", Instr, ImmSrc, ImmExtExpected);
             
             //Ensure file reads correct number of elements
             if (read == 3) begin
                 #1;
                 assert (ImmExt == ImmExtExpected) else begin
-                    $fatal(1, "Error: ImmSrc = %b, instr = %b\nExpected output: %b\nActual output:   %b", 
-                       ImmSrc, instr, ImmExtExpected,ImmExt);
+                    $fatal(1, "Error: ImmSrc = %b, Instr = %b\nExpected output: %b\nActual output:   %b", 
+                       ImmSrc, Instr, ImmExtExpected,ImmExt);
                 end
                 
             end else begin

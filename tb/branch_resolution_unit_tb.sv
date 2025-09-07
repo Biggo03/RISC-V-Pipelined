@@ -22,25 +22,38 @@
 
 module branch_resolution_unit_tb();
 
-    //Stimulus and expected outputs
+    // Stimulus and expected outputs
     logic [2:0] funct3;
     logic [1:0] BranchOp;
-    logic N, Z, C, V, PCSrc, PCSrcExp;
-    
-    //queue to hold valid funct3 values
+    logic       N;
+    logic       Z;
+    logic       C;
+    logic       V;
+    logic       PCSrcRes;
+    logic       PCSrcResExp;
+
+    // Queue to hold valid funct3 values
     logic [2:0] funct3Val [6];
-    
-    // signal to hold value of N, Z, C, V
+
+    // Signal to hold value of N, Z, C, V
     logic [3:0] Flags [31:0];
-    
-    //Instantiate DUT
-    branch_resolution_unit u_DUT (funct3, BranchOp, N, Z, C, V, PCSrc);
+
+    // Instantiate DUT
+    branch_resolution_unit u_DUT (
+        .funct3   (funct3),
+        .BranchOp (BranchOp),
+        .N        (N),
+        .Z        (Z),
+        .C        (C),
+        .V        (V),
+        .PCSrcRes    (PCSrcRes)
+    );
     
     //Assert that expected and actual oputputs match
     task AssertCorrect();
         
-        assert (PCSrc === PCSrcExp) else
-        $fatal(1, "Error: BranchOp: %b, funct3: %b\nN: %b, Z: %b, C: %b, V: %b\nExpected Output: %b\nActual Output:   %b", BranchOp, funct3, N, Z, C, V, PCSrcExp, PCSrc);
+        assert (PCSrcRes === PCSrcResExp) else
+        $fatal(1, "Error: BranchOp: %b, funct3: %b\nN: %b, Z: %b, C: %b, V: %b\nExpected Output: %b\nActual Output:   %b", BranchOp, funct3, N, Z, C, V, PCSrcResExp, PCSrcRes);
     
     endtask
 
@@ -55,11 +68,11 @@ module branch_resolution_unit_tb();
         funct3Val[5] = 3'b110;
 
         //Non-branching instructions
-        BranchOp = 2'b00; PCSrcExp = 1'b0; #10;
+        BranchOp = 2'b00; PCSrcResExp = 1'b0; #10;
         AssertCorrect();
         
         //Jumps
-        BranchOp = 2'b01; PCSrcExp = 1'b1; #10;
+        BranchOp = 2'b01; PCSrcResExp = 1'b1; #10;
         AssertCorrect();
         
         //Conditional branches
@@ -84,13 +97,13 @@ module branch_resolution_unit_tb();
                 
                 //Determine correct output
                 case (funct3Val[i])
-                    3'b000: PCSrcExp = Z;
-                    3'b001: PCSrcExp = ~Z;
-                    3'b101: PCSrcExp = ~(N ^ V);
-                    3'b111: PCSrcExp = C;
-                    3'b100: PCSrcExp = N ^ V;
-                    3'b110: PCSrcExp = ~C;
-                    default: PCSrcExp = 1'bx;
+                    3'b000: PCSrcResExp = Z;
+                    3'b001: PCSrcResExp = ~Z;
+                    3'b101: PCSrcResExp = ~(N ^ V);
+                    3'b111: PCSrcResExp = C;
+                    3'b100: PCSrcResExp = N ^ V;
+                    3'b110: PCSrcResExp = ~C;
+                    default: PCSrcResExp = 1'bx;
                 endcase
                 
                 #10;

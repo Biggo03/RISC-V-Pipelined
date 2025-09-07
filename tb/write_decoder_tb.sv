@@ -22,12 +22,16 @@
 
 module write_decoder_tb();
 
-    logic [4:0] A;
-    logic WE;
+    logic [4:0]  A;
+    logic        WE;
     logic [31:0] en;
-    int enExpected;
-    
-    write_decoder u_DUT (A, WE, en);
+    int          enExpected;
+
+    write_decoder u_DUT (
+        .A  (A),
+        .WE (WE),
+        .en (en)
+    );
     
     
     initial begin

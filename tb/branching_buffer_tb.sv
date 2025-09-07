@@ -24,27 +24,33 @@ module branching_buffer_tb();
     `include "tb_macros.sv"
 
 
-    logic clk, reset;
+    logic        clk;
+    logic        reset;
     logic [31:0] PCTargetE;
-    logic [9:0] PCF, PCE;
-    logic [1:0] LocalSrc, BranchOpE;
-    logic PCSrcResE, TargetMatch;
-    logic PCSrcPredF;
+    logic [9:0]  PCF;
+    logic [9:0]  PCE;
+    logic [1:0]  LocalSrc;
+    logic [1:0]  BranchOpE;
+    logic        PCSrcResE;
+    logic        TargetMatch;
+    logic        PCSrcPredF;
     logic [31:0] PredPCTargetF;
 
     int error_cnt;
 
-    branching_buffer u_DUT (.clk(clk),
-                        .reset(reset),
-                        .PCTargetE(PCTargetE),
-                        .PCF(PCF),
-                        .PCE(PCE),
-                        .LocalSrc(LocalSrc),
-                        .PCSrcResE(PCSrcResE),
-                        .TargetMatch(TargetMatch),
-                        .BranchOpE(BranchOpE),
-                        .PCSrcPredF(PCSrcPredF),
-                        .PredPCTargetF(PredPCTargetF));
+    branching_buffer u_DUT (
+        .clk           (clk),
+        .reset         (reset),
+        .PCTargetE     (PCTargetE),
+        .PCF           (PCF),
+        .PCE           (PCE),
+        .LocalSrc      (LocalSrc),
+        .PCSrcResE     (PCSrcResE),
+        .TargetMatch   (TargetMatch),
+        .BranchOpE     (BranchOpE),
+        .PCSrcPredF    (PCSrcPredF),
+        .PredPCTargetF (PredPCTargetF)
+    );
 
     always begin
         clk = ~clk; #5;

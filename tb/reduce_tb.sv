@@ -23,14 +23,19 @@
 module reduce_tb();
 
     logic [31:0] BaseResult;
-    logic [2:0] WidthSrc;
-    logic [31:0] Result, ResultExpected;
-    
+    logic [2:0]  WidthSrc;
+    logic [31:0] Result;
+    logic [31:0] ResultExpected;
+
     int file;
     int read;
     int test_num;
-    
-    reduce u_DUT (BaseResult, WidthSrc, Result);
+
+    reduce u_DUT (
+        .BaseResult (BaseResult),
+        .WidthSrc   (WidthSrc),
+        .Result     (Result)
+    );
     
     initial begin
 

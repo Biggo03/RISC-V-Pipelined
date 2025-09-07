@@ -22,17 +22,33 @@
 
 module reg_file_tb();
     
-    //Stimulus
-    logic clk, reset, WE3;
-    logic [4:0] A1, A2, A3;
-    logic [31:0] RD1, RD2, WD3;
-    
-    //File reading signals
+    // Stimulus
+    logic        clk;
+    logic        reset;
+    logic        WE3;
+    logic [4:0]  A1;
+    logic [4:0]  A2;
+    logic [4:0]  A3;
+    logic [31:0] RD1;
+    logic [31:0] RD2;
+    logic [31:0] WD3;
+
+    // File reading signals
     int file;
     int read;
-    
-    //u_DUT instantiation
-    reg_file u_DUT (clk, reset, A1, A2, A3, WD3, WE3, RD1, RD2);
+
+    // u_DUT instantiation
+    reg_file u_DUT (
+        .clk   (clk),
+        .reset (reset),
+        .A1    (A1),
+        .A2    (A2),
+        .A3    (A3),
+        .WD3   (WD3),
+        .WE3   (WE3),
+        .RD1   (RD1),
+        .RD2   (RD2)
+    );
     
     always begin
         clk = ~clk; #5;

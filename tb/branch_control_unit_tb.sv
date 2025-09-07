@@ -23,19 +23,24 @@
 module branch_control_unit_tb();
 
     logic [1:0] Op;
-    logic PCSrcPredF, PCSrcPredE;
-    logic TargetMatchE, PCSrcResE;
-    logic [1:0] BranchOpE, PCSrc;
-    
+    logic       PCSrcPredF;
+    logic       PCSrcPredE;
+    logic       TargetMatchE;
+    logic       PCSrcResE;
+    logic [1:0] BranchOpE;
+    logic [1:0] PCSrc;
+
     logic [2:0] test;
-    
-    branch_control_unit u_DUT (.OpF(Op),
-                          .PCSrcPredF(PCSrcPredF),
-                          .PCSrcPredE(PCSrcPredE),
-                          .BranchOpE(BranchOpE),
-                          .TargetMatchE(TargetMatchE),
-                          .PCSrcResE(PCSrcResE),
-                          .PCSrc(PCSrc));
+
+    branch_control_unit u_DUT (
+        .OpF          (Op),
+        .PCSrcPredF   (PCSrcPredF),
+        .PCSrcPredE   (PCSrcPredE),
+        .BranchOpE    (BranchOpE),
+        .TargetMatchE (TargetMatchE),
+        .PCSrcResE    (PCSrcResE),
+        .PCSrc        (PCSrc)
+    );
     
     task RollbackAssertion(input logic [1:0] val);
                 #10;

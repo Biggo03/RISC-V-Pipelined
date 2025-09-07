@@ -27,13 +27,23 @@ module local_predictor_tb();
     localparam WT = 2'b10;
     localparam WU = 2'b01;
     localparam SU = 2'b00;
-    
-    logic clk, reset, PCSrcResE, Enable, PCSrcPred;
+
+    logic       clk;
+    logic       reset;
+    logic       PCSrcResE;
+    logic       Enable;
+    logic       PCSrcPred;
     logic [1:0] PCSrcPredExp;
 
     int error_cnt;
-    
-    local_predictor u_DUT (clk, reset, PCSrcResE, Enable, PCSrcPred);
+
+    local_predictor u_DUT (
+        .clk        (clk),
+        .reset      (reset),
+        .PCSrcResE  (PCSrcResE),
+        .Enable     (Enable),
+        .PCSrcPred  (PCSrcPred)
+    );
     
     always begin
         clk = ~clk; #5;

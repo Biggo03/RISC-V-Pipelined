@@ -2,9 +2,15 @@
 
 module adder_tb();
 
-    logic [31:0] a, b, y;
+    logic [31:0] a;
+    logic [31:0] b;
+    logic [31:0] y;
 
-    adder u_DUT (a, b, y);
+    adder u_DUT (
+        .a (a),
+        .b (b),
+        .y (y)
+    );
     
     initial begin
 

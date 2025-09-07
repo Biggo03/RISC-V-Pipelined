@@ -22,11 +22,18 @@
 
 module mux2_tb();
     
-    //Generate signals for testing
-    logic [31:0] d0, d1, y;
-    logic s;
-    
-    mux2 u_DUT (d0, d1, s, y);
+    // Generate signals for testing
+    logic [31:0] d0;
+    logic [31:0] d1;
+    logic [31:0] y;
+    logic        s;
+
+    mux2 u_DUT (
+        .d0 (d0),
+        .d1 (d1),
+        .s  (s),
+        .y  (y)
+    );
 
     initial begin
         

@@ -22,17 +22,36 @@
 
 module alu_tb();
     
-    //Stimulus and expected results
-    logic [31:0] A, B, ALUResult, ALUResultExpected;
-    logic [3:0] ALUControl;
-    logic N, Z, C, V, NExpected, ZExpected, CExpected, VExpected;
-    
-    //File reading signals
+    // Stimulus and expected results
+    logic [31:0] A;
+    logic [31:0] B;
+    logic [31:0] ALUResult;
+    logic [31:0] ALUResultExpected;
+    logic [3:0]  ALUControl;
+    logic        N;
+    logic        Z;
+    logic        C;
+    logic        V;
+    logic        NExpected;
+    logic        ZExpected;
+    logic        CExpected;
+    logic        VExpected;
+
+    // File reading signals
     int file;
     int read;
-    
-    //u_DUT instantiation
-    alu u_DUT (ALUControl, A, B, ALUResult, N, Z, C, V);
+
+    // u_DUT instantiation
+    alu u_DUT (
+        .ALUControl      (ALUControl),
+        .A               (A),
+        .B               (B),
+        .ALUResult       (ALUResult),
+        .N               (N),
+        .Z               (Z),
+        .C               (C),
+        .V               (V)
+    );
     
     initial begin
 

@@ -22,11 +22,24 @@
 
 module mux5_tb();
     
-    //generate signals used for testing
-    logic [31:0] d0, d1, d2, d3, d4, y;
-    logic [2:0] s;
-    
-    mux5 u_DUT (d0, d1, d2, d3, d4, s, y);
+    // generate signals used for testing
+    logic [31:0] d0;
+    logic [31:0] d1;
+    logic [31:0] d2;
+    logic [31:0] d3;
+    logic [31:0] d4;
+    logic [31:0] y;
+    logic [2:0]  s;
+
+    mux5 u_DUT (
+        .d0 (d0),
+        .d1 (d1),
+        .d2 (d2),
+        .d3 (d3),
+        .d4 (d4),
+        .s  (s),
+        .y  (y)
+    );
     
     initial begin
 

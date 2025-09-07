@@ -22,14 +22,41 @@
 
 module main_decoder_tb();
 
+    //Stimulus signals
     logic [6:0] op;
-    logic [2:0] ImmSrc, ResultSrc, ImmSrcExp, ResultSrcExp;
-    logic [1:0] ALUOp, BranchOp, ALUOpExp, BranchOpExp;
-    logic WidthOp, ALUSrc, PCBaseSrc, RegWrite, MemWrite;
-    logic WidthOpExp, ALUSrcExp, PCBaseSrcExp, RegWriteExp, MemWriteExp;
-    
-    main_decoder u_DUT (op, ImmSrc, ResultSrc, ALUOp, BranchOp, WidthOp,
-                    ALUSrc, PCBaseSrc, RegWrite, MemWrite);
+    logic [2:0] ImmSrc;
+    logic [2:0] ResultSrc;
+    logic [1:0] ALUOp;
+    logic [1:0] BranchOp;
+    logic       WidthOp;
+    logic       ALUSrc;
+    logic       PCBaseSrc;
+    logic       RegWrite;
+    logic       MemWrite;
+
+    //Expected signals
+    logic [2:0] ImmSrcExp;
+    logic [2:0] ResultSrcExp;
+    logic [1:0] ALUOpExp;
+    logic [1:0] BranchOpExp;
+    logic       WidthOpExp;
+    logic       ALUSrcExp;
+    logic       PCBaseSrcExp;
+    logic       RegWriteExp;
+    logic       MemWriteExp;
+
+    main_decoder u_DUT (
+        .op        (op),
+        .ImmSrc    (ImmSrc),
+        .ResultSrc (ResultSrc),
+        .ALUOp     (ALUOp),
+        .BranchOp  (BranchOp),
+        .WidthOp   (WidthOp),
+        .ALUSrc    (ALUSrc),
+        .PCBaseSrc (PCBaseSrc),
+        .RegWrite  (RegWrite),
+        .MemWrite  (MemWrite)
+    );
     
 
     //Repetitive assertions warrant a task

@@ -1,35 +1,39 @@
 module instr_cache_set_multi_tb();
 
-    localparam B = 64;
+    localparam B          = 64;
     localparam NumTagBits = 26;
-    localparam E = 4;
-    localparam words = B/4;
-    
-    //Used Signals
-    logic clk, reset;
-    logic ActiveSet, RepEnable;
-    logic [$clog2(B)-1:0] Block;
+    localparam E          = 4;
+    localparam words      = B/4;
+
+    // Used Signals
+    logic                  clk;
+    logic                  reset;
+    logic                  ActiveSet;
+    logic                  RepEnable;
+    logic [$clog2(B)-1:0]  Block;
     logic [NumTagBits-1:0] Tag;
     logic [NumTagBits-1:0] BlockTagsE [E-1:0];
-    logic [(B*8)-1:0] RepBlock;
-    logic [63:0] RepWord;
-    logic [31:0] Data;
-    logic CacheSetMiss;
-    
+    logic [(B*8)-1:0]      RepBlock;
+    logic [63:0]           RepWord;
+    logic [31:0]           Data;
+    logic                  CacheSetMiss;
+
     logic [1:0] LRUBitsE [3:0];
-    
+
     integer cycles;
-    
-    //Device instantiation
-    instr_cache_set_multi u_DUT (.clk(clk),
-                      .reset(reset),
-                      .ActiveSet(ActiveSet),
-                      .RepEnable(RepEnable),
-                      .Block(Block),
-                      .Tag(Tag),
-                      .RepWord(RepWord),
-                      .Data(Data),
-                      .CacheSetMiss(CacheSetMiss));
+
+    // Device instantiation
+    instr_cache_set_multi u_DUT (
+        .clk          (clk),
+        .reset        (reset),
+        .ActiveSet    (ActiveSet),
+        .RepEnable    (RepEnable),
+        .Block        (Block),
+        .Tag          (Tag),
+        .RepWord      (RepWord),
+        .Data         (Data),
+        .CacheSetMiss (CacheSetMiss)
+    );
     
     //Task for assering Cache misses produce the expected outputs
     task AssertMiss();

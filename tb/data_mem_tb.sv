@@ -22,18 +22,28 @@
 
 module data_mem_tb();
     
-    //Stimulus and device outputs
-    logic clk, WE;
-    logic [1:0] WidthSrc;
-    logic [31:0] A, WD, RD;
-    
-    //Array for expected values of each storage type
-    logic [31:0] RDWExp [63:0];
-    logic [15:0] RDHWExp [127:0];
-    logic [7:0] RDByteExp [255:0];
-    
-    //Instantiate DUT
-    data_mem u_DUT (clk, WE, WidthSrc, A, WD, RD);
+    // Stimulus and device outputs
+    logic        clk;
+    logic        WE;
+    logic [1:0]  WidthSrc;
+    logic [31:0] A;
+    logic [31:0] WD;
+    logic [31:0] RD;
+
+    // Array for expected values of each storage type
+    logic [31:0] RDWExp   [63:0];
+    logic [15:0] RDHWExp  [127:0];
+    logic [7:0]  RDByteExp[255:0];
+
+    // Instantiate DUT
+    data_mem u_DUT (
+        .clk      (clk),
+        .WE       (WE),
+        .WidthSrc (WidthSrc),
+        .A        (A),
+        .WD       (WD),
+        .RD       (RD)
+    );
     
     //Clock generation
     always begin

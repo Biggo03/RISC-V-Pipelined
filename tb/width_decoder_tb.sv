@@ -22,18 +22,24 @@
 
 module width_decoder_tb();
     
-    //stimulus, outputs and expected outputs
-    logic [2:0] funct3, WidthSrc, WidthSrcExp;
-    logic WidthOp;
-    
-    //Array for holding testable values of funct3
+    // stimulus, outputs and expected outputs
+    logic [2:0] funct3;
+    logic [2:0] WidthSrc;
+    logic [2:0] WidthSrcExp;
+    logic       WidthOp;
+
+    // Array for holding testable values of funct3
     logic [2:0] funct3Val [5:0];
-    
-    //Array for holding associated expected output
+
+    // Array for holding associated expected output
     logic [2:0] funct3Output [5:0];
-    
-    //Instantiate DUT
-    width_decoder u_DUT (funct3, WidthOp, WidthSrc);
+
+    // Instantiate DUT
+    width_decoder u_DUT (
+        .funct3   (funct3),
+        .WidthOp  (WidthOp),
+        .WidthSrc (WidthSrc)
+    );
     
     initial begin
 

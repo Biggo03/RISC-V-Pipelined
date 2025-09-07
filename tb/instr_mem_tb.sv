@@ -22,14 +22,18 @@
 
 module instr_mem_tb();
     
-    //Stimulus, output
-    logic [31:0] A, RD;
-    
-    //Copy of memory to compare against
+    // Stimulus, output
+    logic [31:0] A;
+    logic [31:0] RD;
+
+    // Copy of memory to compare against
     logic [31:0] RAM [63:0];
-    
-    //Instantiate DUT
-    instr_mem u_DUT (A, RD);
+
+    // Instantiate DUT
+    instr_mem u_DUT (
+        .A  (A),
+        .RD (RD)
+    );
     
     initial begin
 

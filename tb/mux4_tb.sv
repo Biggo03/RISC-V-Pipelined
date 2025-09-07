@@ -23,11 +23,21 @@
 module mux4_tb();
 
 
-    logic [31:0] d0, d1, d2, d3, y;
-    logic [1:0] s;
-    
-    
-    mux4 u_DUT (d0, d1, d2, d3, s, y);
+    logic [31:0] d0;
+    logic [31:0] d1;
+    logic [31:0] d2;
+    logic [31:0] d3;
+    logic [31:0] y;
+    logic [1:0]  s;
+
+    mux4 u_DUT (
+        .d0 (d0),
+        .d1 (d1),
+        .d2 (d2),
+        .d3 (d3),
+        .s  (s),
+        .y  (y)
+    );
     
     initial begin
 

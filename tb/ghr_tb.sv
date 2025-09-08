@@ -31,22 +31,22 @@ module ghr_tb();
 
     logic        clk;
     logic        reset;
-    logic [1:0]  BranchOpE;
-    logic        PCSrcResE;
-    logic        StallE;
+    logic [1:0]  branch_op_e;
+    logic        pc_src_res_e;
+    logic        stall_e;
 
-    logic [1:0]  LocalSrc;
+    logic [1:0]  local_src;
     logic [1:0]  LocalSrcExp;
 
     int          error_cnt;
 
     ghr u_DUT (
-        .clk        (clk),
-        .reset      (reset),
-        .StallE     (StallE),
-        .BranchOpE  (BranchOpE),
-        .PCSrcResE  (PCSrcResE),
-        .LocalSrc   (LocalSrc)
+        .clk_i                          (clk),
+        .reset_i                        (reset),
+        .stall_e_i                      (stall_e),
+        .branch_op_e_i                  (branch_op_e),
+        .pc_src_res_e_i                 (pc_src_res_e),
+        .local_src_o                    (local_src)
     );
 
     always begin
@@ -59,7 +59,7 @@ module ghr_tb();
         error_cnt = 0;
         
         //Initialize System
-        clk = 0; reset = 1; BranchOpE = 0; PCSrcResE = 0; StallE = 0; LocalSrcExp = UT;
+        clk = 0; reset = 1; branch_op_e = 0; pc_src_res_e = 0; stall_e = 0; LocalSrcExp = UT;
         
         #10;
         
@@ -67,17 +67,17 @@ module ghr_tb();
         
         #10;
         
-        `CHECK(LocalSrc === UT, "[%t] Initialization Failed", $time)
+        `CHECK(local_src === UT, "[%t] Initialization Failed", $time)
         
-        BranchOpE[0] = 1;
+        branch_op_e[0] = 1;
         
         //Check switching states works correctly
         for (int i = 0; i < 32; i = i + 1) begin
             if (i % 4 == 0) begin
-                PCSrcResE = ~PCSrcResE;
+                pc_src_res_e = ~pc_src_res_e;
             end
             
-            if (PCSrcResE == 1) begin
+            if (pc_src_res_e == 1) begin
                 if (LocalSrcExp == UU || LocalSrcExp == TU) LocalSrcExp = UT;
                 else if (LocalSrcExp == UT || LocalSrcExp == TT) LocalSrcExp = TT;
             end else begin
@@ -87,21 +87,21 @@ module ghr_tb();
             
             #10;
             
-            `CHECK(LocalSrc === LocalSrcExp, "[%t] State change error when LocalSrc in %b", $time, LocalSrc)
+            `CHECK(local_src === LocalSrcExp, "[%t] State change error when local_src in %b", $time, local_src)
             
         end
         
-        BranchOpE[0] = 0;
+        branch_op_e[0] = 0;
         
         //Check enable works correctly
         for (int i = 0; i < 32; i = i + 1) begin
             if (i % 4 == 0) begin
-                PCSrcResE = ~PCSrcResE;
+                pc_src_res_e = ~pc_src_res_e;
             end
             
             #10;
             
-            `CHECK(LocalSrc === LocalSrcExp, "[%t] Enable Error", $time)
+            `CHECK(local_src === LocalSrcExp, "[%t] enable Error", $time)
             
         end
         

@@ -37,13 +37,13 @@ module icache_l1_dir_tb();
     logic        clk;
     logic        reset;
     logic        RepReady;
-    logic [31:0] PCF;
-    logic [31:0] InstrF;
+    logic [31:0] pc_f;
+    logic [31:0] instr_f;
     logic [63:0] RepWord;
-    logic [1:0]  PCSrcReg;
-    logic [1:0]  BranchOpE;
-    logic        InstrMissF;
-    logic        InstrCacheRepActive;
+    logic [1:0]  pc_src_reg;
+    logic [1:0]  branch_op_e;
+    logic        instr_miss_f;
+    logic        instr_cache_rep_active;
 
     // Signals to make addressing more intuitive
     logic [b-1:0] ByteAddr;
@@ -58,20 +58,20 @@ module icache_l1_dir_tb();
     int error_cnt;
 
     icache_l1 #( //u_icache_l1 (
-        .S (S),
-        .E (E), 
-        .B (B)
+        .S                              (S),
+        .E                              (E),
+        .B                              (B)
     ) u_DUT (
-        .clk                 (clk),
-        .reset               (reset),
-        .RepReady            (RepReady),
-        .PCF                 (PCF),
-        .RepWord             (RepWord),
-        .PCSrcReg            (PCSrcReg),
-        .BranchOpE           (BranchOpE),
-        .InstrF              (InstrF),
-        .InstrMissF          (InstrMissF),
-        .InstrCacheRepActive (InstrCacheRepActive)
+        .clk_i                          (clk),
+        .reset_i                        (reset),
+        .RepReady                       (RepReady),
+        .pc_f_i                         (pc_f),
+        .RepWord                        (RepWord),
+        .pc_src_reg_i                   (pc_src_reg),
+        .branch_op_e_i                  (branch_op_e),
+        .instr_f_o                      (instr_f),
+        .instr_miss_f_o                 (instr_miss_f),
+        .instr_cache_rep_active_o       (instr_cache_rep_active)
     );
 
     always begin
@@ -82,18 +82,18 @@ module icache_l1_dir_tb();
 
         dump_setup;
 
-        reset = 1; clk = 0; BranchOpE = 0; PCSrcReg = 0; #100; reset = 0; 
+        reset = 1; clk = 0; branch_op_e = 0; pc_src_reg = 0; #100; reset = 0; 
         
         //Fill up cache and check initial reads
         for (int i = 0; i < S; i = i + 1) begin
             SetNum = i;
             ByteAddr = 0;
-            PCF[b-1:0] = ByteAddr;
-            PCF[s+b-1:b] = SetNum;
+            pc_f[b-1:0] = ByteAddr;
+            pc_f[s+b-1:b] = SetNum;
             for (int n = 0; n < E; n = n + 1) begin
-                //Set and store unique tag for block
-                PCF[31:s+b] = (i * 8) + n**3;
-                Tags[i][n] = PCF[31:s+b];
+                //set and store unique tag for block
+                pc_f[31:s+b] = (i * 8) + n**3;
+                Tags[i][n] = pc_f[31:s+b];
                 #10;
                 RepReady = 1;
                 
@@ -115,9 +115,9 @@ module icache_l1_dir_tb();
                 //Check 
                 for (int k = 0; k < words; k = k + 1) begin
                     ByteAddr = k * 4;
-                    PCF[b-1:0] = ByteAddr;
+                    pc_f[b-1:0] = ByteAddr;
                     #10;
-                    `CHECK(InstrF === RepBlocks[i][n][k*32 +: 32] && InstrMissF === 0, "[%t] Population Read Error", $time)
+                    `CHECK(instr_f === RepBlocks[i][n][k*32 +: 32] && instr_miss_f === 0, "[%t] Population Read Error", $time)
                 end
             end
         end
@@ -125,15 +125,15 @@ module icache_l1_dir_tb();
         //Reread
         for (int i = 0; i < S; i = i + 1) begin
             SetNum = i;
-            PCF[s+b-1:b] = SetNum;
-            PCF[31:s+b] = Tags[i][0];
+            pc_f[s+b-1:b] = SetNum;
+            pc_f[31:s+b] = Tags[i][0];
             #10;
             for (int n = 0; n < E; n = n + 1) begin
                 for (int k = 0; k < words; k = k + 1) begin
                     ByteAddr = k * 4;
-                    PCF[b-1:0] = ByteAddr;
+                    pc_f[b-1:0] = ByteAddr;
                     #10;
-                    `CHECK(InstrF === RepBlocks[i][n][k*32 +: 32] && InstrMissF === 0, "[%t] Reread Read Error", $time)
+                    `CHECK(instr_f === RepBlocks[i][n][k*32 +: 32] && instr_miss_f === 0, "[%t] Reread Read Error", $time)
                 end
             end
             

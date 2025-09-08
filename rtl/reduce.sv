@@ -18,32 +18,32 @@ module reduce (
     input  logic [31:0] BaseResult,
 
     // Control inputs
-    input  logic [2:0]  WidthSrc,
+    input  logic [2:0]  width_src_i,
 
     // Data outputs
-    output logic [31:0] Result
+    output logic [31:0] result_o
 );
     
     always @(*) begin
-        case(WidthSrc)
+        case(width_src_i)
         
             //32-bit
-            3'b000: Result = BaseResult;
+            3'b000: result_o = BaseResult;
         
             //16-bit signed
-            3'b010: Result = {{16{BaseResult[15]}}, BaseResult[15:0]};
+            3'b010: result_o = {{16{BaseResult[15]}}, BaseResult[15:0]};
         
             //16-bit unsigned
-            3'b110: Result = {16'b0, BaseResult[15:0]};
+            3'b110: result_o = {16'b0, BaseResult[15:0]};
         
             //8-bit signed
-            3'b001: Result = {{24{BaseResult[7]}}, BaseResult[7:0]};
+            3'b001: result_o = {{24{BaseResult[7]}}, BaseResult[7:0]};
         
             //8-bit unsigned
-            3'b101: Result = {24'b0, BaseResult[7:0]};
+            3'b101: result_o = {24'b0, BaseResult[7:0]};
         
             //Undefined
-            default: Result = 32'bx;
+            default: result_o = 32'bx;
         
         endcase
     

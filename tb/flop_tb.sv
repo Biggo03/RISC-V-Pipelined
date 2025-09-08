@@ -29,11 +29,11 @@ module flop_tb();
     logic [31:0] Q;
 
     flop u_DUT (
-        .clk   (clk),
-        .en    (en),
-        .reset (reset),
-        .D     (D),
-        .Q     (Q)
+        .clk_i                          (clk),
+        .en                             (en),
+        .reset                          (reset),
+        .D                              (D),
+        .Q                              (Q)
     );
     
     initial begin
@@ -46,7 +46,7 @@ module flop_tb();
         //Initialize register and base values
         reset = 1; en = 0; D = 1; #10; reset = 0; #10;
         
-        //Enable register
+        //enable register
         en = 1; #10;
         
         //Ensure Q changes with D accordingly
@@ -59,11 +59,11 @@ module flop_tb();
         en = 0; #10;
         
         D = 4; #10;
-        assert (Q == 2) else $fatal(1, "Enable Error");
+        assert (Q == 2) else $fatal(1, "enable Error");
         
-        //Ensure Reset works properly (synchronous)
+        //Ensure reset works properly (synchronous)
         reset = 1; #10; 
-        assert (Q == 0) else $fatal(1, "Reset Error");
+        assert (Q == 0) else $fatal(1, "reset Error");
         
         $display("TEST PASSED");
         $finish;

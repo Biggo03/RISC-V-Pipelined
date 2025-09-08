@@ -19,7 +19,7 @@ module write_decoder (
     input  logic [4:0]  A,
     input  logic        WE,
 
-    // Enable outputs
+    // enable outputs
     output logic [31:0] en
 );
     

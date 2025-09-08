@@ -24,10 +24,10 @@ module alu_decoder_tb();
     
     // Stimulus and expected output
     logic [2:0] funct3;
-    logic [1:0] ALUOp;
+    logic [1:0] alu_op;
     logic [6:0] funct7;
     logic [6:0] op;
-    logic [3:0] ALUControl;
+    logic [3:0] alu_control;
 
     // Arrays for holding expected values based on corresponding funct3 value
     logic [3:0] ALUControlExp [7:0];
@@ -37,17 +37,17 @@ module alu_decoder_tb();
 
     // Instantiate DUT
     alu_decoder u_DUT (
-        .funct3     (funct3),
-        .ALUOp      (ALUOp),
-        .op         (op),
-        .funct7     (funct7),
-        .ALUControl (ALUControl)
+        .funct3_i                       (funct3),
+        .alu_op_i                       (alu_op),
+        .op                             (op),
+        .funct7_i                       (funct7),
+        .alu_control_o                  (alu_control)
     );
     
     //Task for printing assertions
     task PrintError(input int i);
         
-        $fatal(1, "Error: ALUOp: %b, funct3: %b, op[5]: %b, funct7[5]: %b\nExpected Output: %b\nActual Output:   %b", ALUOp, funct3, op[5], funct7[5], ALUControlExp[i], ALUControl);
+        $fatal(1, "Error: alu_op: %b, funct3: %b, op[5]: %b, funct7[5]: %b\nExpected Output: %b\nActual Output:   %b", alu_op, funct3, op[5], funct7[5], ALUControlExp[i], alu_control);
         
     endtask
         
@@ -70,22 +70,22 @@ module alu_decoder_tb();
         end
 
         //S-type and I-type load instructions
-        //Not dependant on any values other than ALUOp
-        ALUOp = 2'b00; #10;
+        //Not dependant on any values other than alu_op
+        alu_op = 2'b00; #10;
         
-        assert (ALUControl === 4'b1000) 
-        else $fatal(1, "Error: ALUOp: 00\nExpected output: %b\nActual output:   %b", 4'b1000, ALUControl);
+        assert (alu_control === 4'b1000) 
+        else $fatal(1, "Error: alu_op: 00\nExpected output: %b\nActual output:   %b", 4'b1000, alu_control);
         
         //B-type instructions
-        //Again not dependant on any values other than ALUOp
-        ALUOp = 2'b01; #10;
+        //Again not dependant on any values other than alu_op
+        alu_op = 2'b01; #10;
         
-        assert (ALUControl === 4'b1001) 
-        else $fatal(1, "Error: ALUOp: 01\nExpected output: %b\n\Actual output:   %b", 4'b1001, ALUControl);
+        assert (alu_control === 4'b1001) 
+        else $fatal(1, "Error: alu_op: 01\nExpected output: %b\n\Actual output:   %b", 4'b1001, alu_control);
         
         
-        //All other operations depend on more than ALUOp
-        ALUOp = 2'b10;
+        //All other operations depend on more than alu_op
+        alu_op = 2'b10;
         
         for (integer i = 0; i < 8; i++) begin
             
@@ -97,7 +97,7 @@ module alu_decoder_tb();
                 //00, 01, 10 == addition, 11 = subtraction
                 for (integer j = 0; j < 4; j++) begin
                     
-                    //Set actual inputs
+                    //set actual inputs
                     op[5] = op5_funct7[j][1];
                     funct7[5] = op5_funct7[j][0];
                     #10;
@@ -105,7 +105,7 @@ module alu_decoder_tb();
                     if (op5_funct7[j] < 3) ALUControlExp[0] = 4'b1000;
                     else ALUControlExp[0] = 4'b1001;
                     
-                    assert(ALUControl === ALUControlExp[0]) else PrintError(0);
+                    assert(alu_control === ALUControlExp[0]) else PrintError(0);
                     
                 end
                 
@@ -114,7 +114,7 @@ module alu_decoder_tb();
                 
                 for (int j = 0; j < 4; j++) begin
                     
-                    //Set actual inputs
+                    //set actual inputs
                     op[5] = op5_funct7[j][1];
                     funct7[5] = op5_funct7[j][0];
                     #10;
@@ -123,7 +123,7 @@ module alu_decoder_tb();
                     if (op5_funct7[j][0] == 1'b0) ALUControlExp[5] = 4'b0000;
                     else ALUControlExp[5] = 4'b0001;
                     
-                    assert(ALUControl === ALUControlExp[5]) else PrintError(5);
+                    assert(alu_control === ALUControlExp[5]) else PrintError(5);
                     
                 end
             
@@ -131,13 +131,13 @@ module alu_decoder_tb();
             end else
                 
                 #10;
-                assert (ALUControl == ALUControlExp[i]) else PrintError(i);
+                assert (alu_control == ALUControlExp[i]) else PrintError(i);
                 
             end
             
-            ALUOp = 2'b11; #10;
+            alu_op = 2'b11; #10;
             
-            assert(ALUControl === 4'bx) else $fatal(1, "Error: Unused ALUOp code results in unexpected output");
+            assert(alu_control === 4'bx) else $fatal(1, "Error: Unused alu_op code results in unexpected output");
             
                 $display("TEST PASSED");
                 $finish;

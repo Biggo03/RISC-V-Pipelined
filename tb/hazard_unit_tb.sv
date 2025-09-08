@@ -26,45 +26,45 @@ module hazard_unit_tb();
     // Stimulus signals
     // ---------------------------------------------------
     // Fetch stage inputs
-    logic       InstrMissF;
+    logic       instr_miss_f;
 
     // Decode stage inputs
-    logic [4:0] Rs1D;
-    logic [4:0] Rs2D;
+    logic [4:0] rs1_d;
+    logic [4:0] rs2_d;
 
     // Execute stage inputs
-    logic [4:0] Rs1E;
-    logic [4:0] Rs2E;
-    logic [4:0] RdE;
-    logic [2:0] ResultSrcE;
-    logic [1:0] PCSrc;
+    logic [4:0] rs1_e;
+    logic [4:0] rs2_e;
+    logic [4:0] rd_e;
+    logic [2:0] result_src_e;
+    logic [1:0] pc_src;
 
     // Memory stage inputs
-    logic [4:0] RdM;
-    logic       RegWriteM;
+    logic [4:0] rd_m;
+    logic       reg_write_m;
 
     // Writeback stage inputs
-    logic [4:0] RdW;
-    logic       RegWriteW;
+    logic [4:0] rd_w;
+    logic       reg_write_w;
 
     // Branch predictor / cache inputs
-    logic [1:0]  PCSrcReg;
-    logic        InstrCacheRepActive;
+    logic [1:0]  pc_src_reg;
+    logic        instr_cache_rep_active;
 
-    // Stall outputs
-    logic       StallF;
-    logic       StallD;
-    logic       StallE;
-    logic       StallM;
-    logic       StallW;
+    // stall outputs
+    logic       stall_f;
+    logic       stall_d;
+    logic       stall_e;
+    logic       stall_m;
+    logic       stall_w;
 
-    // Flush outputs
-    logic       FlushD;
-    logic       FlushE;
+    // flush outputs
+    logic       flush_d;
+    logic       flush_e;
 
     // Forwarding outputs
-    logic [1:0] ForwardAE;
-    logic [1:0] ForwardBE;
+    logic [1:0] forward_a_e;
+    logic [1:0] forward_b_e;
 
     // ---------------------------------------------------
     // Expected results
@@ -79,45 +79,45 @@ module hazard_unit_tb();
     // ---------------------------------------------------
     hazard_unit u_DUT (
         // Fetch stage inputs
-        .InstrMissF          (InstrMissF),
+        .instr_miss_f_i                 (instr_miss_f),
 
         // Decode stage inputs
-        .Rs1D                (Rs1D),
-        .Rs2D                (Rs2D),
+        .rs1_d_i                        (rs1_d),
+        .rs2_d_i                        (rs2_d),
 
         // Execute stage inputs
-        .Rs1E                (Rs1E),
-        .Rs2E                (Rs2E),
-        .RdE                 (RdE),
-        .ResultSrcE          (ResultSrcE),
-        .PCSrc               (PCSrc),
+        .rs1_e_i                        (rs1_e),
+        .rs2_e_i                        (rs2_e),
+        .rd_e_i                         (rd_e),
+        .result_src_e_i                 (result_src_e),
+        .pc_src_i                       (pc_src),
 
         // Memory stage inputs
-        .RdM                 (RdM),
-        .RegWriteM           (RegWriteM),
+        .rd_m_i                         (rd_m),
+        .reg_write_m_i                  (reg_write_m),
 
         // Writeback stage inputs
-        .RdW                 (RdW),
-        .RegWriteW           (RegWriteW),
+        .rd_w_i                         (rd_w),
+        .reg_write_w_i                  (reg_write_w),
 
         // Branch predictor / cache inputs
-        .PCSrcReg            (PCSrcReg),
-        .InstrCacheRepActive (InstrCacheRepActive),
+        .pc_src_reg_i                   (pc_src_reg),
+        .instr_cache_rep_active_i       (instr_cache_rep_active),
 
-        // Stall outputs
-        .StallF              (StallF),
-        .StallD              (StallD),
-        .StallE              (StallE),
-        .StallM              (StallM),
-        .StallW              (StallW),
+        // stall outputs
+        .stall_f_o                      (stall_f),
+        .stall_d_o                      (stall_d),
+        .stall_e_o                      (stall_e),
+        .stall_m_o                      (stall_m),
+        .stall_w_o                      (stall_w),
 
-        // Flush outputs
-        .FlushD              (FlushD),
-        .FlushE              (FlushE),
+        // flush outputs
+        .flush_d_o                      (flush_d),
+        .flush_e_o                      (flush_e),
 
         // Forwarding outputs
-        .ForwardAE           (ForwardAE),
-        .ForwardBE           (ForwardBE)
+        .forward_a_e_o                  (forward_a_e),
+        .forward_b_e_o                  (forward_b_e)
     );
     
     //Parameters to consolidate signal values
@@ -127,16 +127,16 @@ module hazard_unit_tb();
     
 
     task AssertForwardA();
-        assert (ForwardExpectedA === ForwardAE) else $error(1, "Error: ForwardingAE doesn't match expected\nRs1E: %b, RdM: %b, RdW: %b, RegWriteM: %b RegWriteW: %b\nExpected Output: %b\nActual Output:   %b",
-                                                              Rs1E, RdM, RdW, RegWriteM, RegWriteW, ForwardExpectedA, ForwardAE);
+        assert (ForwardExpectedA === forward_a_e) else $error(1, "Error: ForwardingAE doesn't match expected\nRs1E: %b, rd_m: %b, rd_w: %b, reg_write_m: %b reg_write_w: %b\nExpected Output: %b\nActual Output:   %b",
+                                                              rs1_e, rd_m, rd_w, reg_write_m, reg_write_w, ForwardExpectedA, forward_a_e);
     
     endtask
 
-    //Asserts correct outputs when checking functionality of ForwardBE
+    //Asserts correct outputs when checking functionality of forward_b_e
     task AssertForwardB();
         
-        assert (ForwardExpectedB === ForwardAE) else $error(1, "Error: ForwardingAE doesn't match expected\nRs1E: %b, RdM: %b, RdW: %b, RegWriteM: %b RegWriteW: %b\nExpected Output: %b\nActual Output:   %b",
-                                                              Rs1E, RdM, RdW, RegWriteM, RegWriteW, ForwardExpectedB, ForwardBE);
+        assert (ForwardExpectedB === forward_a_e) else $error(1, "Error: ForwardingAE doesn't match expected\nRs1E: %b, rd_m: %b, rd_w: %b, reg_write_m: %b reg_write_w: %b\nExpected Output: %b\nActual Output:   %b",
+                                                              rs1_e, rd_m, rd_w, reg_write_m, reg_write_w, ForwardExpectedB, forward_b_e);
     endtask
 
     initial begin
@@ -145,37 +145,37 @@ module hazard_unit_tb();
 
         //Initial values
         error_cnt = 0;
-        InstrMissF = 0;
-        Rs1D = 0;
-        Rs2D = 0;
-        Rs1E = 0;
-        Rs2E = 0;
-        RdE = 0;
-        ResultSrcE = 0;
-        PCSrc = 0;
-        RdM = 0;
-        RegWriteM = 0;
-        PCSrcReg = 0;
-        InstrCacheRepActive = 0;
+        instr_miss_f = 0;
+        rs1_d = 0;
+        rs2_d = 0;
+        rs1_e = 0;
+        rs2_e = 0;
+        rd_e = 0;
+        result_src_e = 0;
+        pc_src = 0;
+        rd_m = 0;
+        reg_write_m = 0;
+        pc_src_reg = 0;
+        instr_cache_rep_active = 0;
 
         #10;
         
-        //Test all register combinations for ForwrdAE and ForwardBE
+        //Test all register combinations for ForwrdAE and forward_b_e
         for (int i = 0; i < 64; i++) begin
             
             //Do this so can test both types of forwarding
-            if (i < 32) RdM = i;
-            else RdW = i-32;
+            if (i < 32) rd_m = i;
+            else rd_w = i-32;
         
             for (int j = 0; j < 32; j++) begin
             
-                Rs1E = j;
-                Rs2E = j;
+                rs1_e = j;
+                rs2_e = j;
                 
                 //Test ForwardExpectedAE
-                if (Rs1E === 0) ForwardExpectedA = NO_FORWARD;
-                else if (Rs1E === RdM & RegWriteM) ForwardExpectedA = MEM_FORWARD; 
-                else if (Rs1E === RdW & RegWriteW) ForwardExpectedA = WB_FORWARD;
+                if (rs1_e === 0) ForwardExpectedA = NO_FORWARD;
+                else if (rs1_e === rd_m & reg_write_m) ForwardExpectedA = MEM_FORWARD; 
+                else if (rs1_e === rd_w & reg_write_w) ForwardExpectedA = WB_FORWARD;
                 else ForwardExpectedA = NO_FORWARD;
                 
                 #10;
@@ -183,9 +183,9 @@ module hazard_unit_tb();
                 AssertForwardA();
                 
                 //Test ForwardExpectedBE
-                if (Rs2E === 0) ForwardExpectedB = NO_FORWARD;
-                else if (Rs2E === RdM & RegWriteM) ForwardExpectedB = MEM_FORWARD; 
-                else if (Rs2E === RdW & RegWriteW) ForwardExpectedB = WB_FORWARD;
+                if (rs2_e === 0) ForwardExpectedB = NO_FORWARD;
+                else if (rs2_e === rd_m & reg_write_m) ForwardExpectedB = MEM_FORWARD; 
+                else if (rs2_e === rd_w & reg_write_w) ForwardExpectedB = WB_FORWARD;
                 else ForwardExpectedB = NO_FORWARD;
                 
                 #10;
@@ -202,11 +202,11 @@ module hazard_unit_tb();
         expect_no_hazard();
 
         drive_load_hazard_rs1();
-        expect_load_hazard("Rs1 Hazard Case");
+        expect_load_hazard("rs1 Hazard Case");
         drive_no_hazard();
 
         drive_load_hazard_rs2();
-        expect_load_hazard("Rs2 Hazard Case");
+        expect_load_hazard("rs2 Hazard Case");
         drive_no_hazard();
 
         drive_cache_miss();
@@ -243,173 +243,173 @@ module hazard_unit_tb();
 
     //Drive tasks
     task drive_no_hazard();
-        ResultSrcE = 0;
-        Rs1D = 0;
-        Rs2D = 0;
-        RdE = 1;
+        result_src_e = 0;
+        rs1_d = 0;
+        rs2_d = 0;
+        rd_e = 1;
 
-        InstrMissF = 0;
-        PCSrc = 0;
-        PCSrcReg = 0;
-        InstrCacheRepActive = 0;
+        instr_miss_f = 0;
+        pc_src = 0;
+        pc_src_reg = 0;
+        instr_cache_rep_active = 0;
         #5;
     endtask
 
     task drive_load_hazard_rs1();
-        ResultSrcE = 3'b111;
-        Rs1D = 1;
-        RdE = Rs1D;
+        result_src_e = 3'b111;
+        rs1_d = 1;
+        rd_e = rs1_d;
         #5;
     endtask
 
     task drive_load_hazard_rs2();
-        ResultSrcE = 3'b111;
-        Rs2D = 2;
-        RdE = Rs2D;
+        result_src_e = 3'b111;
+        rs2_d = 2;
+        rd_e = rs2_d;
         #5;
     endtask
 
     task drive_cache_miss();
-        InstrMissF = 1;
-        InstrCacheRepActive = 1; //No branching instruction
+        instr_miss_f = 1;
+        instr_cache_rep_active = 1; //No branching instruction
         #5;
     endtask
 
     task drive_cache_hit_branch_miss();
-        InstrMissF = 0;
-        InstrCacheRepActive = 1;
-        PCSrc = 2'b11;
-        PCSrcReg = 0;
+        instr_miss_f = 0;
+        instr_cache_rep_active = 1;
+        pc_src = 2'b11;
+        pc_src_reg = 0;
         #5;
     endtask
 
     //Scenario tasks
     task scenario_cache_miss_branch_miss(logic next_miss);
-        InstrMissF = 1;
-        InstrCacheRepActive = 0;
-        PCSrcReg = 0;
-        PCSrc = 2'b11;
+        instr_miss_f = 1;
+        instr_cache_rep_active = 0;
+        pc_src_reg = 0;
+        pc_src = 2'b11;
         #10;
 
-        InstrMissF = 1;
-        InstrCacheRepActive = 0;
-        PCSrcReg = 2'b11;
-        PCSrc = 2'b11;
+        instr_miss_f = 1;
+        instr_cache_rep_active = 0;
+        pc_src_reg = 2'b11;
+        pc_src = 2'b11;
         #10;
 
-        if (next_miss == 1) InstrMissF = 1;
-        else InstrMissF = 0;
-        InstrCacheRepActive = 1;
-        PCSrcReg = 0;
-        PCSrc = 0;
+        if (next_miss == 1) instr_miss_f = 1;
+        else instr_miss_f = 0;
+        instr_cache_rep_active = 1;
+        pc_src_reg = 0;
+        pc_src = 0;
 
     endtask
 
     task scenario_cache_miss_branch_hit();
-        InstrMissF = 1;
-        InstrCacheRepActive = 0;
-        PCSrc = 2'b01;
-        PCSrcReg = 0;
+        instr_miss_f = 1;
+        instr_cache_rep_active = 0;
+        pc_src = 2'b01;
+        pc_src_reg = 0;
 
         #10;
 
-        InstrMissF = 1;
-        InstrCacheRepActive = 1;
-        PCSrc = 2'b01;
-        PCSrcReg = 0;
+        instr_miss_f = 1;
+        instr_cache_rep_active = 1;
+        pc_src = 2'b01;
+        pc_src_reg = 0;
         
     endtask
 
     //Expect tasks
     task expect_no_hazard();
-        `CHECK(StallF == 0, "[%t] No hazard case: StallF should be 0", $time)
-        `CHECK(StallD == 0, "[%t] No hazard case: StallD should be 0", $time)
-        `CHECK(StallE == 0, "[%t] No hazard case: StallE should be 0", $time)
-        `CHECK(StallM == 0, "[%t] No hazard case: StallM should be 0", $time)
-        `CHECK(StallW == 0, "[%t] No hazard case: StallW should be 0", $time)
+        `CHECK(stall_f == 0, "[%t] No hazard case: stall_f should be 0", $time)
+        `CHECK(stall_d == 0, "[%t] No hazard case: stall_d should be 0", $time)
+        `CHECK(stall_e == 0, "[%t] No hazard case: stall_e should be 0", $time)
+        `CHECK(stall_m == 0, "[%t] No hazard case: stall_m should be 0", $time)
+        `CHECK(stall_w == 0, "[%t] No hazard case: stall_w should be 0", $time)
 
-        `CHECK(FlushD == 0, "[%t] No hazard case: FlushD should be 0", $time)
-        `CHECK(FlushE == 0, "[%t] No hazard case: FlushE should be 0", $time)
+        `CHECK(flush_d == 0, "[%t] No hazard case: flush_d should be 0", $time)
+        `CHECK(flush_e == 0, "[%t] No hazard case: flush_e should be 0", $time)
     endtask
     
     task expect_load_hazard(input string variant);
-        `CHECK(StallF == 1, "[%t] %s: StallF should be 1", $time, variant)
-        `CHECK(StallD == 1, "[%t] %s: StallD should be 1", $time, variant)
+        `CHECK(stall_f == 1, "[%t] %s: stall_f should be 1", $time, variant)
+        `CHECK(stall_d == 1, "[%t] %s: stall_d should be 1", $time, variant)
 
-        `CHECK(FlushE == 1, "[%t] %s: FlushE should be 1", $time, variant)
+        `CHECK(flush_e == 1, "[%t] %s: flush_e should be 1", $time, variant)
     endtask
 
     task expect_cache_miss();
-        `CHECK(StallF == 1, "[%t] Cache Miss Case: StallF should be 1", $time)
-        `CHECK(StallD == 1, "[%t] Cache Miss Case: StallD should be 1", $time)
-        `CHECK(StallE == 1, "[%t] Cache Miss Case: StallE should be 1", $time)
-        `CHECK(StallM == 1, "[%t] Cache Miss Case: StallM should be 1", $time)
-        `CHECK(StallW == 1, "[%t] Cache Miss Case: StallW should be 1", $time)
+        `CHECK(stall_f == 1, "[%t] Cache Miss Case: stall_f should be 1", $time)
+        `CHECK(stall_d == 1, "[%t] Cache Miss Case: stall_d should be 1", $time)
+        `CHECK(stall_e == 1, "[%t] Cache Miss Case: stall_e should be 1", $time)
+        `CHECK(stall_m == 1, "[%t] Cache Miss Case: stall_m should be 1", $time)
+        `CHECK(stall_w == 1, "[%t] Cache Miss Case: stall_w should be 1", $time)
     endtask
 
     task expect_cache_hit_branch_miss();
-        `CHECK(StallF == 0, "[%t] Cache Hit Branch Miss: StallF should be 0", $time)
-        `CHECK(StallD == 0, "[%t] Cache Hit Branch Miss: StallD should be 0", $time)
-        `CHECK(StallE == 0, "[%t] Cache Hit Branch Miss: StallE should be 0", $time)
-        `CHECK(StallM == 0, "[%t] Cache Hit Branch Miss: StallM should be 0", $time)
-        `CHECK(StallW == 0, "[%t] Cache Hit Branch Miss: StallW should be 0", $time)
+        `CHECK(stall_f == 0, "[%t] Cache Hit Branch Miss: stall_f should be 0", $time)
+        `CHECK(stall_d == 0, "[%t] Cache Hit Branch Miss: stall_d should be 0", $time)
+        `CHECK(stall_e == 0, "[%t] Cache Hit Branch Miss: stall_e should be 0", $time)
+        `CHECK(stall_m == 0, "[%t] Cache Hit Branch Miss: stall_m should be 0", $time)
+        `CHECK(stall_w == 0, "[%t] Cache Hit Branch Miss: stall_w should be 0", $time)
 
-        `CHECK(FlushD == 1, "[%t] Cache Hit Branch Miss: FlushD should be 1", $time)
-        `CHECK(FlushE == 1, "[%t] Cache Hit Branch Miss: FlushE should be 1", $time)
+        `CHECK(flush_d == 1, "[%t] Cache Hit Branch Miss: flush_d should be 1", $time)
+        `CHECK(flush_e == 1, "[%t] Cache Hit Branch Miss: flush_e should be 1", $time)
     endtask
 
     task expect_cache_miss_branch_miss(logic next_miss);
         #5;
         //=================================================================================================================
-        `CHECK(StallF == 1, "[%t] Cache Miss Branch Miss Cycle 1: StallF should be 1", $time)
-        `CHECK(StallD == 1, "[%t] Cache Miss Branch Miss Cycle 1: StallD should be 1", $time)
-        `CHECK(StallE == 1, "[%t] Cache Miss Branch Miss Cycle 1: StallE should be 1", $time)
-        `CHECK(StallM == 1, "[%t] Cache Miss Branch Miss Cycle 1: StallM should be 1", $time)
-        `CHECK(StallW == 1, "[%t] Cache Miss Branch Miss Cycle 1: StallW should be 1", $time)
+        `CHECK(stall_f == 1, "[%t] Cache Miss Branch Miss Cycle 1: stall_f should be 1", $time)
+        `CHECK(stall_d == 1, "[%t] Cache Miss Branch Miss Cycle 1: stall_d should be 1", $time)
+        `CHECK(stall_e == 1, "[%t] Cache Miss Branch Miss Cycle 1: stall_e should be 1", $time)
+        `CHECK(stall_m == 1, "[%t] Cache Miss Branch Miss Cycle 1: stall_m should be 1", $time)
+        `CHECK(stall_w == 1, "[%t] Cache Miss Branch Miss Cycle 1: stall_w should be 1", $time)
 
-        `CHECK(FlushD == 1, "[%t] Cache Miss Branch Miss Cycle 1: FlushD should be 1", $time)
-        `CHECK(FlushE == 0, "[%t] Cache Miss Branch Miss Cycle 1: FlushE should be 0", $time)
+        `CHECK(flush_d == 1, "[%t] Cache Miss Branch Miss Cycle 1: flush_d should be 1", $time)
+        `CHECK(flush_e == 0, "[%t] Cache Miss Branch Miss Cycle 1: flush_e should be 0", $time)
         //=================================================================================================================
         #10;
         //=================================================================================================================
-        `CHECK(StallF == 0, "[%t] Cache Miss Branch Miss Cycle 2: StallF should be 0", $time)
-        `CHECK(StallD == 1, "[%t] Cache Miss Branch Miss Cycle 2: StallD should be 1", $time)
-        `CHECK(StallE == 1, "[%t] Cache Miss Branch Miss Cycle 2: StallE should be 1", $time)
-        `CHECK(StallM == 1, "[%t] Cache Miss Branch Miss Cycle 2: StallM should be 1", $time)
-        `CHECK(StallW == 1, "[%t] Cache Miss Branch Miss Cycle 2: StallW should be 1", $time)
+        `CHECK(stall_f == 0, "[%t] Cache Miss Branch Miss Cycle 2: stall_f should be 0", $time)
+        `CHECK(stall_d == 1, "[%t] Cache Miss Branch Miss Cycle 2: stall_d should be 1", $time)
+        `CHECK(stall_e == 1, "[%t] Cache Miss Branch Miss Cycle 2: stall_e should be 1", $time)
+        `CHECK(stall_m == 1, "[%t] Cache Miss Branch Miss Cycle 2: stall_m should be 1", $time)
+        `CHECK(stall_w == 1, "[%t] Cache Miss Branch Miss Cycle 2: stall_w should be 1", $time)
 
-        `CHECK(FlushD == 1, "[%t] Cache Miss Branch Miss Cycle 2: FlushD should be 1", $time)
-        `CHECK(FlushE == 1, "[%t] Cache Miss Branch Miss Cycle 2: FlushE should be 1", $time)
+        `CHECK(flush_d == 1, "[%t] Cache Miss Branch Miss Cycle 2: flush_d should be 1", $time)
+        `CHECK(flush_e == 1, "[%t] Cache Miss Branch Miss Cycle 2: flush_e should be 1", $time)
         //=================================================================================================================
         #10;
         //=================================================================================================================
-        `CHECK(StallF == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: StallF should be %b", $time, next_miss)
-        `CHECK(StallD == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: StallD should be %b", $time, next_miss)
-        `CHECK(StallE == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: StallE should be %b", $time, next_miss)
-        `CHECK(StallM == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: StallM should be %b", $time, next_miss)
-        `CHECK(StallW == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: StallW should be %b", $time, next_miss)
+        `CHECK(stall_f == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: stall_f should be %b", $time, next_miss)
+        `CHECK(stall_d == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: stall_d should be %b", $time, next_miss)
+        `CHECK(stall_e == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: stall_e should be %b", $time, next_miss)
+        `CHECK(stall_m == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: stall_m should be %b", $time, next_miss)
+        `CHECK(stall_w == next_miss, "[%t] Cache Miss Branch Miss Cycle 3: stall_w should be %b", $time, next_miss)
 
-        `CHECK(FlushD == 0, "[%t] Cache Miss Branch Miss Cycle 3: FlushD should be 0", $time)
-        `CHECK(FlushE == 0, "[%t] Cache Miss Branch Miss Cycle 3: FlushE should be 0", $time)
+        `CHECK(flush_d == 0, "[%t] Cache Miss Branch Miss Cycle 3: flush_d should be 0", $time)
+        `CHECK(flush_e == 0, "[%t] Cache Miss Branch Miss Cycle 3: flush_e should be 0", $time)
         //=================================================================================================================
     endtask
 
     task expect_cache_miss_branch_hit();
         #5;
         //=================================================================================================================
-        `CHECK(StallF == 1, "[%t] Cache Miss Branch Hit Cycle 1: StallF should be 1", $time)
-        `CHECK(StallD == 1, "[%t] Cache Miss Branch Hit Cycle 1: StallD should be 1", $time)
-        `CHECK(StallE == 1, "[%t] Cache Miss Branch Hit Cycle 1: StallE should be 1", $time)
-        `CHECK(StallM == 1, "[%t] Cache Miss Branch Hit Cycle 1: StallM should be 1", $time)
-        `CHECK(StallW == 1, "[%t] Cache Miss Branch Hit Cycle 1: StallW should be 1", $time)
+        `CHECK(stall_f == 1, "[%t] Cache Miss Branch Hit Cycle 1: stall_f should be 1", $time)
+        `CHECK(stall_d == 1, "[%t] Cache Miss Branch Hit Cycle 1: stall_d should be 1", $time)
+        `CHECK(stall_e == 1, "[%t] Cache Miss Branch Hit Cycle 1: stall_e should be 1", $time)
+        `CHECK(stall_m == 1, "[%t] Cache Miss Branch Hit Cycle 1: stall_m should be 1", $time)
+        `CHECK(stall_w == 1, "[%t] Cache Miss Branch Hit Cycle 1: stall_w should be 1", $time)
         //=================================================================================================================
         #10;
         //=================================================================================================================
-        `CHECK(StallF == 1, "[%t] Cache Miss Branch Hit Cycle 2: StallF should be 1", $time)
-        `CHECK(StallD == 1, "[%t] Cache Miss Branch Hit Cycle 2: StallD should be 1", $time)
-        `CHECK(StallE == 1, "[%t] Cache Miss Branch Hit Cycle 2: StallE should be 1", $time)
-        `CHECK(StallM == 1, "[%t] Cache Miss Branch Hit Cycle 2: StallM should be 1", $time)
-        `CHECK(StallW == 1, "[%t] Cache Miss Branch Hit Cycle 2: StallW should be 1", $time)
+        `CHECK(stall_f == 1, "[%t] Cache Miss Branch Hit Cycle 2: stall_f should be 1", $time)
+        `CHECK(stall_d == 1, "[%t] Cache Miss Branch Hit Cycle 2: stall_d should be 1", $time)
+        `CHECK(stall_e == 1, "[%t] Cache Miss Branch Hit Cycle 2: stall_e should be 1", $time)
+        `CHECK(stall_m == 1, "[%t] Cache Miss Branch Hit Cycle 2: stall_m should be 1", $time)
+        `CHECK(stall_w == 1, "[%t] Cache Miss Branch Hit Cycle 2: stall_w should be 1", $time)
         //=================================================================================================================
     endtask
 

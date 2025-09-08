@@ -17,22 +17,22 @@
 module reg_file #(
     parameter int WIDTH = 32
 ) (
-    // Clock & Reset
-    input  logic             clk,
-    input  logic             reset,
+    // Clock & reset_i
+    input  logic             clk_i,
+    input  logic             reset_i,
 
     // Register addresses
-    input  logic [4:0]       A1,
-    input  logic [4:0]       A2,
-    input  logic [4:0]       A3,
+    input  logic [4:0]       a1_i,
+    input  logic [4:0]       a2_i,
+    input  logic [4:0]       a3_i,
 
     // Write port
-    input  logic [WIDTH-1:0] WD3,
-    input  logic             WE3,
+    input  logic [WIDTH-1:0] wd3_i,
+    input  logic             we3_i,
 
     // Read ports
-    output logic [WIDTH-1:0] RD1,
-    output logic [WIDTH-1:0] RD2
+    output logic [WIDTH-1:0] rd1_o,
+    output logic [WIDTH-1:0] rd2_o
 );
     
     // ----- Register file storage -----
@@ -42,53 +42,53 @@ module reg_file #(
     logic [31:0] en;
     
     flop u_zero_reg (
-        // Clock & Reset
-        .clk   (clk),
-        .en    (1'b0),
-        .reset (reset),
+        // Clock & reset_i
+        .clk_i                          (clk_i),
+        .en                             (1'b0),
+        .reset                          (reset_i),
 
         // Data input
-        .D     (32'b0),
+        .D                              (32'b0),
 
         // Data output
-        .Q     (RegisterArray[0])
+        .Q                              (RegisterArray[0])
     );
 
     genvar i;
     generate
         for (i = 1; i < 32; i = i+1) begin
             flop u_reg (
-            // Clock & Reset
-            .clk   (clk),
-            .en    (en[i]),
-            .reset (reset),
+            // Clock & reset_i
+            .clk_i                          (clk_i),
+            .en                             (en[i]),
+            .reset                          (reset_i),
 
             // Data input
-            .D     (WD3),
+            .D                              (wd3_i),
 
             // Data output
-            .Q     (RegisterArray[i])
+            .Q                              (RegisterArray[i])
             );
         end
     endgenerate
     
     always @(*) begin
-        if (A1 == A3 & WE3 & A1 != 0) RD1 = WD3;
-        else RD1 = RegisterArray[A1];
+        if (a1_i == a3_i & we3_i & a1_i != 0) rd1_o = wd3_i;
+        else rd1_o = RegisterArray[a1_i];
         
-        if (A2 == A3 & WE3 & A2 != 0) RD2 = WD3;
-        else RD2 = RegisterArray[A2]; 
+        if (a2_i == a3_i & we3_i & a2_i != 0) rd2_o = wd3_i;
+        else rd2_o = RegisterArray[a2_i]; 
     end
     
     write_decoder u_write_decoder (
         // Register address input
-        .A  (A3),
+        .A                              (a3_i),
 
         // Control input
-        .WE (WE3),
+        .WE                             (we3_i),
 
         // Decoder output
-        .en (en)
+        .en                             (en)
     );  
           
 endmodule

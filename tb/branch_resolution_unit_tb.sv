@@ -24,12 +24,12 @@ module branch_resolution_unit_tb();
 
     // Stimulus and expected outputs
     logic [2:0] funct3;
-    logic [1:0] BranchOp;
+    logic [1:0] branch_op;
     logic       N;
     logic       Z;
     logic       C;
     logic       V;
-    logic       PCSrcRes;
+    logic       pc_src_res;
     logic       PCSrcResExp;
 
     // Queue to hold valid funct3 values
@@ -40,20 +40,20 @@ module branch_resolution_unit_tb();
 
     // Instantiate DUT
     branch_resolution_unit u_DUT (
-        .funct3   (funct3),
-        .BranchOp (BranchOp),
-        .N        (N),
-        .Z        (Z),
-        .C        (C),
-        .V        (V),
-        .PCSrcRes    (PCSrcRes)
+        .funct3_i                       (funct3),
+        .branch_op_i                    (branch_op),
+        .N                              (N),
+        .Z                              (Z),
+        .C                              (C),
+        .V                              (V),
+        .pc_src_res_o                   (pc_src_res)
     );
     
     //Assert that expected and actual oputputs match
     task AssertCorrect();
         
-        assert (PCSrcRes === PCSrcResExp) else
-        $fatal(1, "Error: BranchOp: %b, funct3: %b\nN: %b, Z: %b, C: %b, V: %b\nExpected Output: %b\nActual Output:   %b", BranchOp, funct3, N, Z, C, V, PCSrcResExp, PCSrcRes);
+        assert (pc_src_res === PCSrcResExp) else
+        $fatal(1, "Error: branch_op: %b, funct3: %b\nN: %b, Z: %b, C: %b, V: %b\nExpected Output: %b\nActual Output:   %b", branch_op, funct3, N, Z, C, V, PCSrcResExp, pc_src_res);
     
     endtask
 
@@ -68,15 +68,15 @@ module branch_resolution_unit_tb();
         funct3Val[5] = 3'b110;
 
         //Non-branching instructions
-        BranchOp = 2'b00; PCSrcResExp = 1'b0; #10;
+        branch_op = 2'b00; PCSrcResExp = 1'b0; #10;
         AssertCorrect();
         
         //Jumps
-        BranchOp = 2'b01; PCSrcResExp = 1'b1; #10;
+        branch_op = 2'b01; PCSrcResExp = 1'b1; #10;
         AssertCorrect();
         
         //Conditional branches
-        BranchOp = 2'b11;
+        branch_op = 2'b11;
         
         //Initialize all possible combinations of flags
         for (int i = 0; i < 32; i++) begin
@@ -89,7 +89,7 @@ module branch_resolution_unit_tb();
             
             for (int j = 0; j < 32; j++) begin
                 
-                //Set Flag values
+                //set Flag values
                 N = Flags[j][0];
                 Z = Flags[j][1];
                 C = Flags[j][2];

@@ -24,15 +24,15 @@ module main_decoder_tb();
 
     //Stimulus signals
     logic [6:0] op;
-    logic [2:0] ImmSrc;
-    logic [2:0] ResultSrc;
-    logic [1:0] ALUOp;
-    logic [1:0] BranchOp;
-    logic       WidthOp;
-    logic       ALUSrc;
-    logic       PCBaseSrc;
-    logic       RegWrite;
-    logic       MemWrite;
+    logic [2:0] imm_src;
+    logic [2:0] result_src;
+    logic [1:0] alu_op;
+    logic [1:0] branch_op;
+    logic       width_op;
+    logic       alu_src;
+    logic       pc_base_src;
+    logic       reg_write;
+    logic       mem_write;
 
     //Expected signals
     logic [2:0] ImmSrcExp;
@@ -46,16 +46,16 @@ module main_decoder_tb();
     logic       MemWriteExp;
 
     main_decoder u_DUT (
-        .op        (op),
-        .ImmSrc    (ImmSrc),
-        .ResultSrc (ResultSrc),
-        .ALUOp     (ALUOp),
-        .BranchOp  (BranchOp),
-        .WidthOp   (WidthOp),
-        .ALUSrc    (ALUSrc),
-        .PCBaseSrc (PCBaseSrc),
-        .RegWrite  (RegWrite),
-        .MemWrite  (MemWrite)
+        .op                             (op),
+        .imm_src_o                      (imm_src),
+        .result_src_o                   (result_src),
+        .alu_op_o                       (alu_op),
+        .branch_op_o                    (branch_op),
+        .width_op_o                     (width_op),
+        .alu_src_o                      (alu_src),
+        .pc_base_src_o                  (pc_base_src),
+        .reg_write_o                    (reg_write),
+        .mem_write_o                    (mem_write)
     );
     
 
@@ -63,26 +63,26 @@ module main_decoder_tb();
     task CheckOutput();
         string msg;
     
-        assert(RegWrite === RegWriteExp & WidthOp === WidthOpExp & ALUSrc === ALUSrcExp &
-               PCBaseSrc === PCBaseSrcExp & MemWrite === MemWriteExp &
-               ALUOp === ALUOpExp & BranchOp === BranchOpExp & 
-               ImmSrc === ImmSrcExp & ResultSrc === ResultSrcExp)
-               else $fatal(1, "Error: Incorrect output for operation %b\nExpected: RegWrite: %b,ImmSrc: %b, ALUSrc: %b, MemWrite: %b, ResultSrc: %b, BranchOp: %b, ALUOp: %b, WidthOp: %b, PCBaseSrc: %b\nActual:   RegWrite: %b,ImmSrc: %b, ALUSrc: %b, MemWrite: %b, ResultSrc: %b, BranchOp: %b, ALUOp: %b, WidthOp: %b, PCBaseSrc: %b", 
+        assert(reg_write === RegWriteExp & width_op === WidthOpExp & alu_src === ALUSrcExp &
+               pc_base_src === PCBaseSrcExp & mem_write === MemWriteExp &
+               alu_op === ALUOpExp & branch_op === BranchOpExp & 
+               imm_src === ImmSrcExp & result_src === ResultSrcExp)
+               else $fatal(1, "Error: Incorrect output for operation %b\nExpected: reg_write: %b,imm_src: %b, alu_src: %b, mem_write: %b, result_src: %b, branch_op: %b, alu_op: %b, width_op: %b, pc_base_src: %b\nActual:   reg_write: %b,imm_src: %b, alu_src: %b, mem_write: %b, result_src: %b, branch_op: %b, alu_op: %b, width_op: %b, pc_base_src: %b", 
                op, RegWriteExp, ImmSrcExp, ALUSrcExp, MemWriteExp, ResultSrcExp, BranchOpExp, ALUOpExp, WidthOpExp, PCBaseSrcExp,
-               RegWrite, ImmSrc, ALUSrc, MemWrite, ResultSrc, BranchOp, ALUOp, WidthOp, PCBaseSrc);
+               reg_write, imm_src, alu_src, mem_write, result_src, branch_op, alu_op, width_op, pc_base_src);
     endtask
     
-    //Inputs ordered to match main decoder truth table
+    //inputs ordered to match main decoder truth table
     //Local variable names take priority
-    task SetExpected(input logic RegWrite,
-                     input logic [2:0] ImmSrc,
-                     input logic ALUSrc, MemWrite,
-                     input logic [2:0] ResultSrc,
-                     input logic [1:0] BranchOp, ALUOp,
-                     input logic WidthOp, PCBaseSrc);
+    task SetExpected(input logic reg_write,
+                     input logic [2:0] imm_src,
+                     input logic alu_src, mem_write,
+                     input logic [2:0] result_src,
+                     input logic [1:0] branch_op, alu_op,
+                     input logic width_op, pc_base_src);
         
-        RegWriteExp = RegWrite; WidthOpExp = WidthOp; ALUSrcExp = ALUSrc; PCBaseSrcExp = PCBaseSrc; MemWriteExp = MemWrite;
-        ALUOpExp = ALUOp; BranchOpExp = BranchOp; ImmSrcExp = ImmSrc; ResultSrcExp = ResultSrc; 
+        RegWriteExp = reg_write; WidthOpExp = width_op; ALUSrcExp = alu_src; PCBaseSrcExp = pc_base_src; MemWriteExp = mem_write;
+        ALUOpExp = alu_op; BranchOpExp = branch_op; ImmSrcExp = imm_src; ResultSrcExp = result_src; 
         
     endtask
    

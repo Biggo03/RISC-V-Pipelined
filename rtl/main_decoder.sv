@@ -19,22 +19,22 @@ module main_decoder (
     input  logic [6:0] op,
 
     // Decode outputs
-    output logic [2:0] ImmSrc,
-    output logic [2:0] ResultSrc,
-    output logic [1:0] ALUOp,
-    output logic [1:0] BranchOp,
-    output logic       WidthOp,
-    output logic       ALUSrc,
-    output logic       PCBaseSrc,
-    output logic       RegWrite,
-    output logic       MemWrite
+    output logic [2:0] imm_src_o,
+    output logic [2:0] result_src_o,
+    output logic [1:0] alu_op_o,
+    output logic [1:0] branch_op_o,
+    output logic       width_op_o,
+    output logic       alu_src_o,
+    output logic       pc_base_src_o,
+    output logic       reg_write_o,
+    output logic       mem_write_o
 );
 
     // ---- Intermediate signal ----
     logic [14:0] controls;
     
-    assign {RegWrite, ImmSrc, ALUSrc, MemWrite,
-            ResultSrc, BranchOp, ALUOp, WidthOp, PCBaseSrc} = controls;
+    assign {reg_write_o, imm_src_o, alu_src_o, mem_write_o,
+            result_src_o, branch_op_o, alu_op_o, width_op_o, pc_base_src_o} = controls;
     
     always @(*) begin
     

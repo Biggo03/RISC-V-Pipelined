@@ -30,19 +30,19 @@ module local_predictor_tb();
 
     logic       clk;
     logic       reset;
-    logic       PCSrcResE;
-    logic       Enable;
-    logic       PCSrcPred;
+    logic       pc_src_res_e;
+    logic       enable;
+    logic       pc_src_pred;
     logic [1:0] PCSrcPredExp;
 
     int error_cnt;
 
     local_predictor u_DUT (
-        .clk        (clk),
-        .reset      (reset),
-        .PCSrcResE  (PCSrcResE),
-        .Enable     (Enable),
-        .PCSrcPred  (PCSrcPred)
+        .clk_i                          (clk),
+        .reset_i                        (reset),
+        .pc_src_res_e_i                 (pc_src_res_e),
+        .enable_i                       (enable),
+        .pc_src_pred_o                  (pc_src_pred)
     );
     
     always begin
@@ -55,7 +55,7 @@ module local_predictor_tb();
         dump_setup;
         error_cnt = 0;
 
-        clk = 0; reset = 1; PCSrcResE = 0; Enable = 0; PCSrcPredExp = WU;
+        clk = 0; reset = 1; pc_src_res_e = 0; enable = 0; PCSrcPredExp = WU;
         
         #10;
     
@@ -63,45 +63,45 @@ module local_predictor_tb();
     
         #10;
     
-        `CHECK(PCSrcPred === 0, "[%t] Initialization Failed", $time)
+        `CHECK(pc_src_pred === 0, "[%t] Initialization Failed", $time)
         
         #10;
         
-        Enable = 1;
+        enable = 1;
     
          //Check switching states works correctly
         for (int i = 0; i < 32; i = i + 1) begin
-            `CHECK(PCSrcPred === PCSrcPredExp[1], "[%t] State change error", $time)
+            `CHECK(pc_src_pred === PCSrcPredExp[1], "[%t] State change error", $time)
             
             if (i % 4 == 0) begin
-                PCSrcResE = ~PCSrcResE;
+                pc_src_res_e = ~pc_src_res_e;
             end
             
             #10;
 
             //Change expected after assertion, as transition occurs on next clock edge
-            if (PCSrcResE == 1 && PCSrcPredExp < 3) PCSrcPredExp = PCSrcPredExp + 1;
-            else if (PCSrcResE == 0 && PCSrcPredExp > 0) PCSrcPredExp = PCSrcPredExp - 1;
+            if (pc_src_res_e == 1 && PCSrcPredExp < 3) PCSrcPredExp = PCSrcPredExp + 1;
+            else if (pc_src_res_e == 0 && PCSrcPredExp > 0) PCSrcPredExp = PCSrcPredExp - 1;
             
         end
         
-        Enable = 0;
+        enable = 0;
         
         for (int i = 0; i < 32; i = i + 1) begin
             if (i % 4 == 0) begin
-                PCSrcResE = ~PCSrcResE;
+                pc_src_res_e = ~pc_src_res_e;
             end
                     
             #10;
         
-            `CHECK(PCSrcPred === PCSrcPredExp, "[%t] Enable Error", $time)
+            `CHECK(pc_src_pred === PCSrcPredExp, "[%t] enable Error", $time)
         end
         
-        Enable = 1; reset = 1;
+        enable = 1; reset = 1;
         
         #50;
         
-        `CHECK(PCSrcPred === 0, "[%t] Taken Reset failed", $time)
+        `CHECK(pc_src_pred === 0, "[%t] Taken Reset failed", $time)
         
         if (error_cnt == 0) $display("TEST PASSED");
         else $display("TEST FAILED");

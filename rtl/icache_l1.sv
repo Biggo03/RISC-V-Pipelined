@@ -19,25 +19,25 @@ module icache_l1 #(
     parameter int E = 4,
     parameter int B = 64
 ) (
-    // Clock & Reset
-    input  logic        clk,
-    input  logic        reset,
+    // Clock & reset_i
+    input  logic        clk_i,
+    input  logic        reset_i,
 
     // Control inputs
     input  logic        RepReady,
-    input  logic [1:0]  PCSrcReg,
-    input  logic [1:0]  BranchOpE,
+    input  logic [1:0]  pc_src_reg_i,
+    input  logic [1:0]  branch_op_e_i,
 
     // Address & data inputs
-    input  logic [31:0] PCF,
+    input  logic [31:0] pc_f_i,
     input  logic [63:0] RepWord,
 
     // Data outputs
-    output logic [31:0] InstrF,
+    output logic [31:0] instr_f_o,
 
     // Status outputs
-    output logic        InstrMissF,
-    output logic        InstrCacheRepActive
+    output logic        instr_miss_f_o,
+    output logic        instr_cache_rep_active_o
 );
     
     // ----- Parameters -----
@@ -46,79 +46,79 @@ module icache_l1 #(
     localparam NumTagBits = 32 - s - b;
 
     // ----- Address fields -----
-    logic [b-1:0]        Block;
-    logic [s-1:0]        Set;
-    logic [NumTagBits-1:0] Tag;
+    logic [b-1:0]        block;
+    logic [s-1:0]        set;
+    logic [NumTagBits-1:0] tag;
 
-    // ----- Set information -----
-    logic [S-1:0]  ActiveArray;
-    logic [S-1:0]  MissArray;
-    logic [31:0]   DataArray [S-1:0];
+    // ----- set information -----
+    logic [S-1:0]  active_array;
+    logic [S-1:0]  miss_array;
+    logic [31:0]   data_array [S-1:0];
 
     // ----- Replacement control -----
-    logic RepEnable;
+    logic rep_enable;
 
-    assign Block = PCF[b-1:0];
-    assign Set = PCF[s+b-1:b]; 
-    assign Tag = PCF[31:s+b]; 
+    assign block = pc_f_i[b-1:0];
+    assign set = pc_f_i[s+b-1:b]; 
+    assign tag = pc_f_i[31:s+b]; 
     
-    assign RepEnable = InstrCacheRepActive & RepReady;
+    assign rep_enable = instr_cache_rep_active_o & RepReady;
     
     //Generate Sets
     genvar i;
     generate 
         for (i = 0; i < S; i = i + 1) begin
             instr_cache_set_multi #( // u_instr_cache_set_multi (
-                .B          (B),
-                .NumTagBits (NumTagBits),
-                .E          (E)
+                .B                              (B),
+                .NumTagBits                     (NumTagBits),
+                .E                              (E)
             ) u_instr_cache_set_multi (
-                // Clock & Reset
-                .clk        (clk),
-                .reset      (reset),
+                // Clock & reset_i
+                .clk_i                          (clk_i),
+                .reset_i                        (reset_i),
 
                 // Control inputs
-                .ActiveSet  (ActiveArray[i]),
-                .RepEnable  (RepEnable),
+                .ActiveSet                      (active_array[i]),
+                .rep_enable_i                   (rep_enable),
 
                 // Address inputs
-                .Block      (Block),
-                .Tag        (Tag),
+                .block_i                        (block),
+                .tag_i                          (tag),
 
                 // Replacement data input
-                .RepWord    (RepWord),
+                .RepWord                        (RepWord),
 
                 // Data outputs
-                .Data       (DataArray[i]),
+                .Data                           (data_array[i]),
 
                 // Status output
-                .CacheSetMiss  (MissArray[i])
+                .CacheSetMiss                   (miss_array[i])
             );
         end
     endgenerate
     
     //Cache Controller
     instr_cache_ctlr #( // u_instr_cache_ctlr ()
-        .S (S)
+        .S                              (S)
     ) u_instr_cache_ctlr (
-        // Clock & Reset
-        .clk                  (clk),
-        .reset                (reset),
+        // Clock & reset_i
+        .clk_i                          (clk_i),
+        .reset_i                        (reset_i),
 
         // Control inputs
-        .Set                  (Set),
-        .MissArray            (MissArray),
-        .PCSrcReg             (PCSrcReg),
-        .BranchOpE            (BranchOpE),
+        .set_i                          (set),
+        .miss_array_i                   (miss_array),
+        .pc_src_reg_i                   (pc_src_reg_i),
+        .branch_op_e_i                  (branch_op_e_i),
 
         // Control outputs
-        .ActiveArray          (ActiveArray),
-        .InstrMissF           (InstrMissF),
-        .InstrCacheRepActive  (InstrCacheRepActive)
+        .active_array_o                 (active_array),
+        .instr_miss_f_o                 (instr_miss_f_o),
+        .instr_cache_rep_active_o       (instr_cache_rep_active_o)
     );
     
     
     //Assign output
-    assign InstrF = DataArray[Set];
+    assign instr_f_o = data_array[set];
 
 endmodule

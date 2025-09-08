@@ -28,9 +28,9 @@ module write_decoder_tb();
     int          enExpected;
 
     write_decoder u_DUT (
-        .A  (A),
-        .WE (WE),
-        .en (en)
+        .A                              (A),
+        .WE                             (WE),
+        .en                             (en)
     );
     
     

@@ -14,63 +14,63 @@
 //==============================================================//
 
 module branch_predictor (
-    // Clock & Reset
-    input  logic        clk,
-    input  logic        reset,
+    // Clock & reset_i
+    input  logic        clk_i,
+    input  logic        reset_i,
 
     // Pipeline control inputs
-    input  logic        StallE,
+    input  logic        stall_e_i,
 
-    // PC inputs
-    input  logic [9:0]  PCF,
-    input  logic [9:0]  PCE,
-    input  logic [31:0] PCTargetE,
+    // pc inputs
+    input  logic [9:0]  pc_f_i,
+    input  logic [9:0]  pc_e_i,
+    input  logic [31:0] pc_target_e_i,
 
     // Branch resolution inputs
-    input  logic        PCSrcResE,
-    input  logic        TargetMatchE,
-    input  logic [1:0]  BranchOpE,
+    input  logic        pc_src_res_e_i,
+    input  logic        target_match_e_i,
+    input  logic [1:0]  branch_op_e_i,
 
     // Predictor outputs
-    output logic        PCSrcPredF,
-    output logic [31:0] PredPCTargetF
+    output logic        pc_src_pred_f_o,
+    output logic [31:0] pred_pc_target_f_o
 );
 
     // ---- Control signal ----
-    logic [1:0] LocalSrc;
+    logic [1:0] local_src;
     
     ghr u_ghr (
-        // Clock & Reset
-        .clk         (clk),
-        .reset       (reset),
+        // Clock & reset_i
+        .clk_i                          (clk_i),
+        .reset_i                        (reset_i),
 
         // Control inputs
-        .StallE      (StallE),
-        .BranchOpE   (BranchOpE),
-        .PCSrcResE   (PCSrcResE),
+        .stall_e_i                      (stall_e_i),
+        .branch_op_e_i                  (branch_op_e_i),
+        .pc_src_res_e_i                 (pc_src_res_e_i),
 
         // Control output
-        .LocalSrc    (LocalSrc)
+        .local_src_o                    (local_src)
     );
                 
 
     branching_buffer u_branching_buffer (
-        // Clock & Reset
-        .clk            (clk),
-        .reset          (reset),
+        // Clock & reset_i
+        .clk_i                          (clk_i),
+        .reset_i                        (reset_i),
 
-        // PC & control inputs
-        .PCTargetE      (PCTargetE),
-        .PCF            (PCF),
-        .PCE            (PCE),
-        .LocalSrc       (LocalSrc),
-        .PCSrcResE      (PCSrcResE),
-        .TargetMatch    (TargetMatchE),
-        .BranchOpE      (BranchOpE),
+        // pc & control inputs
+        .pc_target_e_i                  (pc_target_e_i),
+        .pc_f_i                         (pc_f_i),
+        .pc_e                           (pc_e_i),
+        .local_src_i                    (local_src),
+        .pc_src_res_e_i                 (pc_src_res_e_i),
+        .target_match_i                 (target_match_e_i),
+        .branch_op_e_i                  (branch_op_e_i),
 
         // Control outputs
-        .PCSrcPredF     (PCSrcPredF),
-        .PredPCTargetF  (PredPCTargetF)
+        .pc_src_pred_f_o                (pc_src_pred_f_o),
+        .pred_pc_target_f_o             (pred_pc_target_f_o)
     );
 
 endmodule

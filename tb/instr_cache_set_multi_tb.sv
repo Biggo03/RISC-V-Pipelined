@@ -9,30 +9,30 @@ module instr_cache_set_multi_tb();
     logic                  clk;
     logic                  reset;
     logic                  ActiveSet;
-    logic                  RepEnable;
-    logic [$clog2(B)-1:0]  Block;
-    logic [NumTagBits-1:0] Tag;
-    logic [NumTagBits-1:0] BlockTagsE [E-1:0];
+    logic                  rep_enable;
+    logic [$clog2(B)-1:0]  block;
+    logic [NumTagBits-1:0] tag;
+    logic [NumTagBits-1:0] block_tags_e [E-1:0];
     logic [(B*8)-1:0]      RepBlock;
     logic [63:0]           RepWord;
     logic [31:0]           Data;
     logic                  CacheSetMiss;
 
-    logic [1:0] LRUBitsE [3:0];
+    logic [1:0] lru_bits_e [3:0];
 
     integer cycles;
 
     // Device instantiation
     instr_cache_set_multi u_DUT (
-        .clk          (clk),
-        .reset        (reset),
-        .ActiveSet    (ActiveSet),
-        .RepEnable    (RepEnable),
-        .Block        (Block),
-        .Tag          (Tag),
-        .RepWord      (RepWord),
-        .Data         (Data),
-        .CacheSetMiss (CacheSetMiss)
+        .clk_i                          (clk),
+        .reset_i                        (reset),
+        .ActiveSet                      (ActiveSet),
+        .rep_enable_i                   (rep_enable),
+        .block_i                        (block),
+        .tag_i                          (tag),
+        .RepWord                        (RepWord),
+        .Data                           (Data),
+        .CacheSetMiss                   (CacheSetMiss)
     );
     
     //Task for assering Cache misses produce the expected outputs
@@ -40,10 +40,10 @@ module instr_cache_set_multi_tb();
         assert(CacheSetMiss === 1) else $fatal(1, "Incorrectly indicated cache hit\nData Output: %b", Data);
     endtask
     
-    //Task for checking LRUBits are as expected
-    task AssertLRUBits();
+    //Task for checking lru_bits are as expected
+    task Assertlru_bits();
         for (integer i = 0; i < E; i = i + 1) begin
-            assert(u_DUT.LRUBits[i] === LRUBitsE[i]) else $fatal(1, "Unexpected LRU ordering. Incorrect LRU index: %d\nActual: %d\nExpected: %d", i, u_DUT.LRUBits[i], LRUBitsE[i]);
+            assert(u_DUT.lru_bits[i] === lru_bits_e[i]) else $fatal(1, "Unexpected LRU ordering. Incorrect LRU index: %d\nActual: %d\nExpected: %d", i, u_DUT.lru_bits[i], lru_bits_e[i]);
         end
             
     endtask
@@ -58,7 +58,7 @@ module instr_cache_set_multi_tb();
         dump_setup;
         
         //Initialization
-        reset = 1; clk = 0; ActiveSet = 0; RepEnable = 0; Block = 0; Tag = 0;
+        reset = 1; clk = 0; ActiveSet = 0; rep_enable = 0; block = 0; tag = 0;
         RepBlock = 512'h55555555_44444444_FFEEAABB_00001111_BBBBBBBB_AAAAAAAA_FFFFFFFF_33333333_22222222_EEEEEEEE_CCCCCCCC_88888888_99999999_12345678_FEDCBA98_00AA00AA;
         #10; 
         reset = 0;
@@ -68,7 +68,7 @@ module instr_cache_set_multi_tb();
         //After initialized with no input, should output same as a miss
         AssertMiss();
         
-        ActiveSet = 1;  Block = 0; Tag = 500;
+        ActiveSet = 1;  block = 0; tag = 500;
         #10;
         AssertMiss();
         
@@ -76,9 +76,9 @@ module instr_cache_set_multi_tb();
         for (integer i = 0; i < E; i = i + 1) begin
             
             //Check data is ready one clock cycle after replacement indicated ready
-            RepEnable = 1;
+            rep_enable = 1;
             cycles = 0;
-            BlockTagsE[i] = Tag;
+            block_tags_e[i] = tag;
             for (integer n = 0; n < words/2; n = n + 1) begin
                 RepWord = RepBlock[n*64 +: 64];
                 $display("Currently Replacing word: %d, value is: %h", n, RepWord);
@@ -91,65 +91,65 @@ module instr_cache_set_multi_tb();
             assert(Data === RepBlock[31:0] && CacheSetMiss == 0) else $fatal(1, "Incorrect Data output on miss\nData:          %h\nExpected Data: %h", Data, RepBlock[31:0]);
             
             //Update tag
-            Tag =  Tag + 100;
-            RepEnable = 0;
+            tag =  tag + 100;
+            rep_enable = 0;
             #10;
             AssertMiss();
             
         end
         
         //Undo extra increment from previous loop
-        Tag = Tag - 100; 
+        tag = tag - 100; 
         
         //Ensure LRU bits as expected
         for (int i = 0; i < E; i = i + 1) begin
-            LRUBitsE[i] = (E-1-i);
+            lru_bits_e[i] = (E-1-i);
         end
-        AssertLRUBits();
+        Assertlru_bits();
         
         
         //Check that all data has been correctly stored, and have hits
         for (integer i = 0; i < E; i = i + 1) begin
-            Block = Block + 4;
+            block = block + 4;
             #10;
-            assert(Data === RepBlock[(Block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 1)\nData:          %h\nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
-            Tag = Tag - 100;
+            assert(Data === RepBlock[(block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 1)\nData:          %h\nExpected Data: %h", Data, RepBlock[(block*8) +: 32]);
+            tag = tag - 100;
         end
         
         //Ensure LRU bits as expected 
         for (integer i = 0; i < E; i = i + 1) begin
             //(reads started from block 3 and went down, so LRU matches index)
-            LRUBitsE[i] = i;
+            lru_bits_e[i] = i;
         end
-        AssertLRUBits();
+        Assertlru_bits();
         
         ActiveSet = 0; 
-        RepEnable = 1;
+        rep_enable = 1;
         
         //Ensure that cache remains stable when inactive
         for (int i = 0; i < 64; i = i + 1) begin
-            Tag = Tag + 100;
+            tag = tag + 100;
             #10;
             AssertMiss();
-            AssertLRUBits();
+            Assertlru_bits();
         end
         
         
         //Check if the LRU block was replaced
-        ActiveSet = 1; RepEnable = 0; Tag = 1000;
+        ActiveSet = 1; rep_enable = 0; tag = 1000;
         for (int i = 0; i < E; i = i + 1) begin
-            if (LRUBitsE[i] == E-1) BlockTagsE[i] = Tag;
+            if (lru_bits_e[i] == E-1) block_tags_e[i] = tag;
         end
         #10;
         AssertMiss();
         
         //Check replacement policy
         RepBlock = 512'hCCCCCCCC_EEEEEEEE_55555555_12345678_88888888_00AA00AA_BBBBBBBB_99999999_AAAAAAAA_FEDCBA98_FFFFFFFF_44444444_22222222_33333333_00001111_FFEEAABB;
-        RepEnable = 1; 
+        rep_enable = 1; 
         
         for (int i = 0; i < E; i = i + 1) begin
-            if (i == E-1) LRUBitsE[i] = 0;
-            else LRUBitsE[i] = LRUBitsE[i] + 1;
+            if (i == E-1) lru_bits_e[i] = 0;
+            else lru_bits_e[i] = lru_bits_e[i] + 1;
         end
         
         //Feed replacement words
@@ -160,18 +160,18 @@ module instr_cache_set_multi_tb();
         
         
         wait(CacheSetMiss == 0);
-        AssertLRUBits();
-        assert(Data === RepBlock[(Block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 2)\nData:          %h\nExpected Data: %h", Data, RepBlock[(Block*8) +: 32]);
+        Assertlru_bits();
+        assert(Data === RepBlock[(block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 2)\nData:          %h\nExpected Data: %h", Data, RepBlock[(block*8) +: 32]);
                                                                            
-        //Check that LRUBits update properly when a stored tag is accessed
-        RepEnable = 0; Tag = BlockTagsE[1]; //Block 1's tag
+        //Check that lru_bits update properly when a stored tag is accessed
+        rep_enable = 0; tag = block_tags_e[1]; //block 1's tag
         for (int i = 0; i < E; i = i + 1) begin
-            if (BlockTagsE[i] == Tag) LRUBitsE[i] = 0;
-            else if (LRUBitsE[i] != E-1) LRUBitsE[i] = LRUBitsE[i] + 1;
+            if (block_tags_e[i] == tag) lru_bits_e[i] = 0;
+            else if (lru_bits_e[i] != E-1) lru_bits_e[i] = lru_bits_e[i] + 1;
         end
         #10;
         
-        AssertLRUBits();
+        Assertlru_bits();
         
         $display("TEST PASSED");
         $finish;

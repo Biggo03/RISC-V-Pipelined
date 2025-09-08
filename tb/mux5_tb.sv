@@ -32,13 +32,13 @@ module mux5_tb();
     logic [2:0]  s;
 
     mux5 u_DUT (
-        .d0 (d0),
-        .d1 (d1),
-        .d2 (d2),
-        .d3 (d3),
-        .d4 (d4),
-        .s  (s),
-        .y  (y)
+        .d0                             (d0),
+        .d1                             (d1),
+        .d2                             (d2),
+        .d3                             (d3),
+        .d4                             (d4),
+        .s                              (s),
+        .y                              (y)
     );
     
     initial begin

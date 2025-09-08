@@ -14,17 +14,17 @@
 //==============================================================//
 
 module ghr (
-    // Clock & Reset
-    input  logic       clk,
-    input  logic       reset,
+    // Clock & reset_i
+    input  logic       clk_i,
+    input  logic       reset_i,
 
     // Control inputs
-    input  logic       StallE,
-    input  logic [1:0] BranchOpE,
-    input  logic       PCSrcResE,
+    input  logic       stall_e_i,
+    input  logic [1:0] branch_op_e_i,
+    input  logic       pc_src_res_e_i,
 
     // Control outputs
-    output logic [1:0] LocalSrc
+    output logic [1:0] local_src_o
 );
 
     // ----- State encoding -----
@@ -34,19 +34,19 @@ module ghr (
     localparam TT = 2'b11;
 
     // ----- State registers -----
-    logic [1:0] PresentState;
-    logic [1:0] NextState;
+    logic [1:0] present_state;
+    logic [1:0] next_state;
 
     //State transition logic
-    always @(posedge clk, posedge reset) begin
+    always @(posedge clk_i, posedge reset_i) begin
         
-        if (reset) begin
-        PresentState <= UT; // Arbitrary reset state
-        NextState <= UT; //Default stay in initialized state
-        LocalSrc <= UT;
+        if (reset_i) begin
+        present_state <= UT; // Arbitrary reset_i state
+        next_state <= UT; //Default stay in initialized state
+        local_src_o <= UT;
         end else begin
-            PresentState <= NextState;
-            LocalSrc <= NextState;
+            present_state <= next_state;
+            local_src_o <= next_state;
         end
         
     end
@@ -54,25 +54,25 @@ module ghr (
     //Next state logic
     always @(*) begin
         
-        if (BranchOpE[0] & ~StallE) begin
+        if (branch_op_e_i[0] & ~stall_e_i) begin
 
-            case (PresentState)
+            case (present_state)
                 
                 UU: begin
-                    if (PCSrcResE) NextState <= UT;
-                    else NextState <= UU;
+                    if (pc_src_res_e_i) next_state <= UT;
+                    else next_state <= UU;
                 end
                 UT: begin
-                    if (PCSrcResE) NextState <= TT;
-                    else NextState <= TU;
+                    if (pc_src_res_e_i) next_state <= TT;
+                    else next_state <= TU;
                 end
                 TU: begin
-                    if (PCSrcResE) NextState <= UT;
-                    else NextState <= UU;
+                    if (pc_src_res_e_i) next_state <= UT;
+                    else next_state <= UU;
                 end
                 TT: begin
-                    if (PCSrcResE) NextState <= TT;
-                    else NextState <= TU;
+                    if (pc_src_res_e_i) next_state <= TT;
+                    else next_state <= TU;
                 end
             
             endcase

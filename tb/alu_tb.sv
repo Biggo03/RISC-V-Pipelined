@@ -25,9 +25,9 @@ module alu_tb();
     // Stimulus and expected results
     logic [31:0] A;
     logic [31:0] B;
-    logic [31:0] ALUResult;
+    logic [31:0] alu_result;
     logic [31:0] ALUResultExpected;
-    logic [3:0]  ALUControl;
+    logic [3:0]  alu_control;
     logic        N;
     logic        Z;
     logic        C;
@@ -43,14 +43,14 @@ module alu_tb();
 
     // u_DUT instantiation
     alu u_DUT (
-        .ALUControl      (ALUControl),
-        .A               (A),
-        .B               (B),
-        .ALUResult       (ALUResult),
-        .N               (N),
-        .Z               (Z),
-        .C               (C),
-        .V               (V)
+        .alu_control_i                  (alu_control),
+        .A                              (A),
+        .B                              (B),
+        .alu_result_o                   (alu_result),
+        .N                              (N),
+        .Z                              (Z),
+        .C                              (C),
+        .V                              (V)
     );
     
     initial begin
@@ -69,13 +69,13 @@ module alu_tb();
         
         while (!$feof(file)) begin
             read = $fscanf(file, "%b %b %b %b %b %b %b %b\n", 
-                           ALUControl, A, B, ALUResultExpected, NExpected, ZExpected, CExpected, VExpected);
+                           alu_control, A, B, ALUResultExpected, NExpected, ZExpected, CExpected, VExpected);
             
             if (read == 8) begin
                 #5;
-                assert (ALUResult == ALUResultExpected & NExpected == N & ZExpected == Z & CExpected == C & VExpected == V) else begin
-                    $fatal(1, "Error: ALUControl = %b\nA = %b\nB = %b\nExpected Result: %b\nActual Result:   %b\nExpect Flags: N = %b Z = %b C = %b V = %b\nActual Flags: N = %b Z = %b C = %b V = %b", 
-                           ALUControl, A, B, ALUResultExpected, ALUResult, NExpected, ZExpected, CExpected, VExpected, N, Z, C, V);
+                assert (alu_result == ALUResultExpected & NExpected == N & ZExpected == Z & CExpected == C & VExpected == V) else begin
+                    $fatal(1, "Error: alu_control = %b\nA = %b\nB = %b\nExpected Result: %b\nActual Result:   %b\nExpect Flags: N = %b Z = %b C = %b V = %b\nActual Flags: N = %b Z = %b C = %b V = %b", 
+                           alu_control, A, B, ALUResultExpected, alu_result, NExpected, ZExpected, CExpected, VExpected, N, Z, C, V);
                 end
             
             end else begin

@@ -14,78 +14,78 @@
 //==============================================================//
 
 module writeback_stage (
-    // Clock & Reset
-    input  logic        clk,
-    input  logic        reset,
+    // Clock & reset_i
+    input  logic        clk_i,
+    input  logic        reset_i,
 
     // Data inputs
-    input  logic [31:0] ALUResultM,
-    input  logic [31:0] ReducedDataM,
-    input  logic [31:0] PCTargetM,
-    input  logic [31:0] PCPlus4M,
-    input  logic [31:0] ImmExtM,
-    input  logic [4:0]  RdM,
+    input  logic [31:0] alu_result_m_i,
+    input  logic [31:0] reduced_data_m_i,
+    input  logic [31:0] pc_target_m_i,
+    input  logic [31:0] pc_plus4_m_i,
+    input  logic [31:0] imm_ext_m_i,
+    input  logic [4:0]  rd_m_i,
 
     // Control inputs
-    input  logic [2:0]  ResultSrcM,
-    input  logic        RegWriteM,
-    input  logic        StallW,
+    input  logic [2:0]  result_src_m_i,
+    input  logic        reg_write_m_i,
+    input  logic        stall_w_i,
 
     // Data outputs
-    output logic [31:0] ResultW,
-    output logic [4:0]  RdW,
+    output logic [31:0] result_w_o,
+    output logic [4:0]  rd_w_o,
 
     // Control outputs
-    output logic        RegWriteW
+    output logic        reg_write_w_o
 );
 
     // ----- Parameters -----
     localparam REG_WIDTH = 169;
 
     // ----- Writeback pipeline register -----
-    logic [REG_WIDTH-1:0] WInputs;
-    logic [REG_WIDTH-1:0] WOutputs;
+    logic [REG_WIDTH-1:0] inputs_w;
+    logic [REG_WIDTH-1:0] outputs_w;
 
     // ----- Writeback stage outputs -----
-    logic [31:0] ImmExtW;
-    logic [31:0] PCPlus4W;
-    logic [31:0] PCTargetW;
-    logic [31:0] ReducedDataW;
-    logic [31:0] ALUResultW;
-    logic [2:0]  ResultSrcW;
+    logic [31:0] imm_ext_w;
+    logic [31:0] pc_plus4_w;
+    logic [31:0] pc_target_w;
+    logic [31:0] reduced_data_w;
+    logic [31:0] alu_result_w;
+    logic [2:0]  result_src_w;
     
-    assign WInputs = {ALUResultM, ReducedDataM, PCTargetM, PCPlus4M, ImmExtM, RdM, ResultSrcM, RegWriteM};
+    assign inputs_w = {alu_result_m_i, reduced_data_m_i, pc_target_m_i, pc_plus4_m_i, imm_ext_m_i, rd_m_i, result_src_m_i, reg_write_m_i};
     
     flop #(
-        .WIDTH (REG_WIDTH)
+        .WIDTH                          (REG_WIDTH)
     ) u_flop_writeback_reg (
-        // Clock & Reset
-        .clk   (clk),
-        .reset (reset),
-        .en    (~StallW),
+        // Clock & reset_i
+        .clk_i                          (clk_i),
+        .reset                          (reset_i),
+        .en                             (~stall_w_i),
 
         // Data input
-        .D     (WInputs),
+        .D                              (inputs_w),
 
         // Data output
-        .Q     (WOutputs)
+        .Q                              (outputs_w)
     );
     
-    assign {ALUResultW, ReducedDataW, PCTargetW, PCPlus4W, ImmExtW, RdW, ResultSrcW, RegWriteW} = WOutputs;
+    assign {alu_result_w, reduced_data_w, pc_target_w, pc_plus4_w, imm_ext_w, rd_w_o, result_src_w, reg_write_w_o} = outputs_w;
     
     mux5 u_mux5_result (
         // Data inputs
-        .d0 (ALUResultW),
-        .d1 (PCTargetW),
-        .d2 (PCPlus4W),
-        .d3 (ImmExtW),
-        .d4 (ReducedDataW),
+        .d0                             (alu_result_w),
+        .d1                             (pc_target_w),
+        .d2                             (pc_plus4_w),
+        .d3                             (imm_ext_w),
+        .d4                             (reduced_data_w),
 
         // Select input
-        .s  (ResultSrcW),
+        .s                              (result_src_w),
 
         // Data output
-        .y  (ResultW)
+        .y                              (result_w_o)
     );
 
 endmodule

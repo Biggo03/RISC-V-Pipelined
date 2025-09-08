@@ -10,16 +10,16 @@
 //
 //  Parameters:   WIDTH - Data width
 //
-//  Notes:        Can have variable width stores through control signal WidthSrc
+//  Notes:        Can have variable width stores through control signal width_src
 //==============================================================//
 
 module data_mem #(
     parameter int WIDTH = 32
 ) (
     // Clock & control inputs
-    input  logic             clk,
+    input  logic             clk_i,
     input  logic             WE,
-    input  logic [1:0]       WidthSrc,
+    input  logic [1:0]       width_src,
 
     // Address & write data inputs
     input  logic [WIDTH-1:0] A,
@@ -31,12 +31,12 @@ module data_mem #(
                
     (* ram_style = "block" *) logic [31:0] RAM[255:0];
 
-    always @(posedge clk) begin
+    always @(posedge clk_i) begin
         
         //Write logic
         if (WE) begin
         //Change last bit of A index to maintain word, and half-word alignment
-            case(WidthSrc)
+            case(width_src)
                 2'b00: RAM[A[31:2]] = WD; //Word
                 
                 //Half-word
@@ -65,7 +65,7 @@ module data_mem #(
     //Read logic
     always @(*) begin
     
-        case(WidthSrc)
+        case(width_src)
             2'b00: RD = RAM[A[31:2]]; //Word
             
             //Half-word

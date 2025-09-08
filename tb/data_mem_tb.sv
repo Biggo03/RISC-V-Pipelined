@@ -25,7 +25,7 @@ module data_mem_tb();
     // Stimulus and device outputs
     logic        clk;
     logic        WE;
-    logic [1:0]  WidthSrc;
+    logic [1:0]  width_src;
     logic [31:0] A;
     logic [31:0] WD;
     logic [31:0] RD;
@@ -37,12 +37,12 @@ module data_mem_tb();
 
     // Instantiate DUT
     data_mem u_DUT (
-        .clk      (clk),
-        .WE       (WE),
-        .WidthSrc (WidthSrc),
-        .A        (A),
-        .WD       (WD),
-        .RD       (RD)
+        .clk_i                          (clk),
+        .WE                             (WE),
+        .width_src                      (width_src),
+        .A                              (A),
+        .WD                             (WD),
+        .RD                             (RD)
     );
     
     //Clock generation
@@ -55,7 +55,7 @@ module data_mem_tb();
         dump_setup;
         
         //Initialize input signals 
-        clk = 0; WE = 1; WidthSrc = 2'b00;
+        clk = 0; WE = 1; width_src = 2'b00;
         
         //Populate memory with values using word storage
         for (int i = 0; i < 64; i++) begin
@@ -63,15 +63,15 @@ module data_mem_tb();
             A = (i * 4); WD = i; RDWExp[i] = i; #10;
             
             assert (RD === RDWExp[i]) 
-            else $fatal(1, "Error: WidthSrc: %b.\nAddress: %d\nExpected value: %b\nActual value:   %b", 
-                        WidthSrc, A, RDWExp[i], RD);
+            else $fatal(1, "Error: width_src: %b.\nAddress: %d\nExpected value: %b\nActual value:   %b", 
+                        width_src, A, RDWExp[i], RD);
             
         end
         
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
-        //Set storage mode to HW
-        WidthSrc = 2'b10;
+        //set storage mode to HW
+        width_src = 2'b10;
         
         //Populate halfword intervals with unique values
         for (int i = 0; i < 128; i++) begin
@@ -90,15 +90,15 @@ module data_mem_tb();
             A = (i * 2); #20;
             
             assert (RD[15:0] === RDHWExp[i]) 
-            else $fatal(1, "Error: WidthSrc: %b.\nAddress: %d\nExpected value: %b\nActual value:   %b", 
-                     WidthSrc, A, RDHWExp[i], RD[15:0]);
+            else $fatal(1, "Error: width_src: %b.\nAddress: %d\nExpected value: %b\nActual value:   %b", 
+                     width_src, A, RDHWExp[i], RD[15:0]);
             
         end
         
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
-        //Set storage mode to byte, enable writing
-        WidthSrc = 2'b01; WE = 1;
+        //set storage mode to byte, enable writing
+        width_src = 2'b01; WE = 1;
         
         //Populate byte intervals with unique values
         for (int i = 0; i < 256; i++) begin
@@ -115,8 +115,8 @@ module data_mem_tb();
             A = i; #20;
             
             assert(RD[7:0] === RDByteExp[i])
-            else $fatal(1, "Error: WidthSrc: %b.\nAddress: %d\nExpected byte: %b\nActual byte:   %b",
-                         WidthSrc, A, RDByteExp[i], RD[7:0]);
+            else $fatal(1, "Error: width_src: %b.\nAddress: %d\nExpected byte: %b\nActual byte:   %b",
+                         width_src, A, RDByteExp[i], RD[7:0]);
         
          
         end

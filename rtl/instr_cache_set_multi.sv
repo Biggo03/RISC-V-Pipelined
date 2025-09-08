@@ -21,17 +21,17 @@ module instr_cache_set_multi #(
     parameter int NumTagBits = 20,
     parameter int E          = 4
 ) (
-    // Clock & Reset
-    input  logic                  clk,
-    input  logic                  reset,
+    // Clock & reset_i
+    input  logic                  clk_i,
+    input  logic                  reset_i,
 
     // Control inputs
     input  logic                  ActiveSet,
-    input  logic                  RepEnable,
+    input  logic                  rep_enable_i,
 
     // Address & data inputs
-    input  logic [$clog2(B)-1:0]  Block,
-    input  logic [NumTagBits-1:0] Tag,
+    input  logic [$clog2(B)-1:0]  block_i,
+    input  logic [NumTagBits-1:0] tag_i,
     input  logic [63:0]           RepWord,
 
     // Data outputs
@@ -43,159 +43,159 @@ module instr_cache_set_multi #(
     localparam b      = $clog2(B);
     localparam words  = B/4;
 
-    // ----- Tag + validity -----
-    logic [NumTagBits-1:0] BlockTags   [E-1:0];
-    logic [E-1:0]          ValidBits;
-    logic [E-1:0]          MatchedBlock;
+    // ----- tag_i + validity -----
+    logic [NumTagBits-1:0] block_tags   [E-1:0];
+    logic [E-1:0]          valid_bits;
+    logic [E-1:0]          matched_block;
 
     // ----- Replacement policy -----
-    logic [$clog2(E)-1:0]  LRUBits      [E-1:0];
-    logic [$clog2(E)-1:0]  LastLRUStatus;
-    logic [$clog2(E)-1:0]  NextFill;
-    logic [$clog2(E)-1:0]  RemovedBlock;
-    logic [$clog2(words)-1:0] RepCounter; 
-    logic                  RepActive;
-    logic                  RepComplete;
-    logic                  RepBegin;
+    logic [$clog2(E)-1:0]  lru_bits      [E-1:0];
+    logic [$clog2(E)-1:0]  last_lru_status;
+    logic [$clog2(E)-1:0]  next_fill;
+    logic [$clog2(E)-1:0]  removed_block;
+    logic [$clog2(words)-1:0] rep_counter; 
+    logic                  rep_active;
+    logic                  rep_complete;
+    logic                  rep_begin;
 
     // ----- Data storage -----
     (* ram_style = "distributed" *)
-    reg [63:0] SetData [(words*E)/2-1:0];
+    logic [63:0] set_data [(words*E)/2-1:0];
 
-    // ----- Block addressing -----
-    logic [$clog2(words)-1:0] BlockOffset;
-    logic [$clog2(E)-1:0]     OutSet;
+    // ----- block_i addressing -----
+    logic [$clog2(words)-1:0] block_offset;
+    logic [$clog2(E)-1:0]     out_set;
 
     // ----- Looping constructs -----
     integer i;
     genvar n;
     
-    assign RepActive = CacheSetMiss && ActiveSet && RepEnable;
+    assign rep_active = CacheSetMiss && ActiveSet && rep_enable_i;
 
-    //Tag and valid comparison logic
+    //tag_i and valid comparison logic
     always @(*) begin
     
-        MatchedBlock = 0;
+        matched_block = 0;
         CacheSetMiss = 1;
-        LastLRUStatus = 0;
+        last_lru_status = 0;
         
         if (ActiveSet) begin
              //Determine if a block matches
             for (i = 0; i < E; i = i + 1) begin
-                if (ValidBits[i] == 1 && Tag == BlockTags[i]) begin
-                    MatchedBlock[i] = 1;
-                    LastLRUStatus = LRUBits[i];
+                if (valid_bits[i] == 1 && tag_i == block_tags[i]) begin
+                    matched_block[i] = 1;
+                    last_lru_status = lru_bits[i];
                 end else begin
-                    MatchedBlock[i] = 0;
+                    matched_block[i] = 0;
                 end
             end
         
             //Declare a miss
-            if (MatchedBlock == 0) CacheSetMiss = 1;
+            if (matched_block == 0) CacheSetMiss = 1;
             else CacheSetMiss = 0;
             
         end
     end
     
-    //Block to remove logic
-    always @(posedge clk) begin
-        if (CacheSetMiss && ActiveSet && ~RepBegin) begin
-            if (ValidBits == {E{1'b1}}) begin
+    //block_i to remove logic
+    always @(posedge clk_i) begin
+        if (CacheSetMiss && ActiveSet && ~rep_begin) begin
+            if (valid_bits == {E{1'b1}}) begin
                 for (i = 0; i < E; i = i + 1) begin
-                    if (LRUBits[i] == E-1) begin              
-                        RemovedBlock <= i;
+                    if (lru_bits[i] == E-1) begin              
+                        removed_block <= i;
                     end 
                 end
             end else begin
-                RemovedBlock <= NextFill;
+                removed_block <= next_fill;
             end
         end
     end
     
     //LRU and ValidBit updates
-    always @(posedge clk) begin
+    always @(posedge clk_i) begin
         
-        //Reset logic
-        if (reset) begin
-            ValidBits <= 0;
-            NextFill <= 0;
-            RepBegin <= 0;
+        //reset_i logic
+        if (reset_i) begin
+            valid_bits <= 0;
+            next_fill <= 0;
+            rep_begin <= 0;
             for (i = 0; i < E; i = i + 1) begin
-                LRUBits[i] <= 0;
+                lru_bits[i] <= 0;
             end
         
-        //Handle Block Replacement LRU and ValidBit updates
-        end else if (RepActive && ~RepBegin) begin
-            RepBegin <= 1;
+        //Handle block_i Replacement LRU and ValidBit updates
+        end else if (rep_active && ~rep_begin) begin
+            rep_begin <= 1;
             
             //Replace when sets full of valid data
-            if (ValidBits == {E{1'b1}}) begin
+            if (valid_bits == {E{1'b1}}) begin
                 for (i = 0; i < E; i = i + 1) begin
-                    if (LRUBits[i] == E-1) begin              
-                        LRUBits[RemovedBlock] <= 0;
+                    if (lru_bits[i] == E-1) begin              
+                        lru_bits[removed_block] <= 0;
                     end else begin
-                        LRUBits[i] <= LRUBits[i] + 1;
+                        lru_bits[i] <= lru_bits[i] + 1;
                     end
                 end
                 
             //Populate cache with data
             end else begin
-                LRUBits[RemovedBlock] <= 0;
-                ValidBits[RemovedBlock] <= 1;   
-                NextFill <= NextFill + 1;
+                lru_bits[removed_block] <= 0;
+                valid_bits[removed_block] <= 1;   
+                next_fill <= next_fill + 1;
                 for (i = 0; i < E; i = i + 1) begin
-                    if (i < NextFill) begin
-                        LRUBits[i] <= LRUBits[i] + 1;
+                    if (i < next_fill) begin
+                        lru_bits[i] <= lru_bits[i] + 1;
                     end
                 end
             end
         
         //Handle LRU updates on non-replacing accesses
         end else  if (ActiveSet && ~CacheSetMiss) begin
-            RepBegin <= 0;
+            rep_begin <= 0;
             for (i = 0; i < E; i = i + 1) begin
-                if (~MatchedBlock[i] && ValidBits[i] && LRUBits[i] < LastLRUStatus) begin
-                    LRUBits[i] <= LRUBits[i] + 1;
-                end else if (MatchedBlock[i]) begin
-                    LRUBits[i] <= 0;
+                if (~matched_block[i] && valid_bits[i] && lru_bits[i] < last_lru_status) begin
+                    lru_bits[i] <= lru_bits[i] + 1;
+                end else if (matched_block[i]) begin
+                    lru_bits[i] <= 0;
                 end
             end
-        end else if (RepComplete) begin
-            RepBegin <= 0;
+        end else if (rep_complete) begin
+            rep_begin <= 0;
         end
     end
     
-    assign RepComplete = RepCounter == (words/2)-1;
+    assign rep_complete = rep_counter == (words/2)-1;
     
     //Replacement logic
-    always @(posedge clk) begin
-        if (RepActive) begin
-            SetData[(RemovedBlock*words/2) + RepCounter] <= RepWord;
-            //Replace tag and reset counter when replacement complete
-            if (RepComplete) begin
-                RepCounter <= 0;
-                BlockTags[RemovedBlock] <= Tag;
+    always @(posedge clk_i) begin
+        if (rep_active) begin
+            set_data[(removed_block*words/2) + rep_counter] <= RepWord;
+            //Replace tag and reset_i counter when replacement complete
+            if (rep_complete) begin
+                rep_counter <= 0;
+                block_tags[removed_block] <= tag_i;
             end else begin
-                RepCounter <= RepCounter + 1;
+                rep_counter <= rep_counter + 1;
             end
         end else begin
-            RepCounter <= 0;
+            rep_counter <= 0;
         end
     end
     
     //Output logic
     always @(*) begin
-        if (MatchedBlock != 0) begin
+        if (matched_block != 0) begin
             for (i = 0; i < E; i = i + 1) begin
-                if (MatchedBlock[i]) OutSet = i;
+                if (matched_block[i]) out_set = i;
             end 
         end else begin
-            OutSet = 0;
+            out_set = 0;
         end
 
     end
 
-    assign BlockOffset = Block[b-1:3];
-    assign Data = Block[2] ? SetData[(OutSet*words)/2 + BlockOffset][63:32] : SetData[(OutSet*words)/2 + BlockOffset][31:0];
+    assign block_offset = block_i[b-1:3];
+    assign Data = block_i[2] ? set_data[(out_set*words)/2 + block_offset][63:32] : set_data[(out_set*words)/2 + block_offset][31:0];
     
 endmodule

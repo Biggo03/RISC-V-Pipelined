@@ -18,7 +18,7 @@ module flop #(
     parameter int WIDTH = 32
 ) (
     // Clock & control inputs
-    input  logic             clk,
+    input  logic             clk_i,
     input  logic             en,
     input  logic             reset,
 
@@ -29,7 +29,7 @@ module flop #(
     output logic [WIDTH-1:0] Q
 );
     
-    always @(posedge clk) begin
+    always @(posedge clk_i) begin
         if (reset) Q <= 0;
         else if (en) Q <= D;
     end

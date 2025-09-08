@@ -14,9 +14,9 @@
 //==============================================================//
 
 module branch_processing_unit (
-        // Clock & Reset
-        input  logic        clk,
-        input  logic        reset,
+        // Clock & reset_i
+        input  logic        clk_i,
+        input  logic        reset_i,
 
         // Status flag inputs
         input  logic        N,
@@ -25,102 +25,102 @@ module branch_processing_unit (
         input  logic        V,
 
         // Pipeline control inputs
-        input  logic        StallE,
-        input  logic        FlushE,
+        input  logic        stall_e_i,
+        input  logic        flush_e_i,
 
         // Instruction decode inputs
-        input  logic [2:0]  funct3E,
-        input  logic [1:0]  BranchOpE,
-        input  logic [31:0] InstrF,
+        input  logic [2:0]  funct3_e_i,
+        input  logic [1:0]  branch_op_e_i,
+        input  logic [31:0] instr_f_i,
 
-        // PC inputs
-        input  logic [9:0]  PCF,
-        input  logic [9:0]  PCE,
-        input  logic [31:0] PCTargetE,
+        // pc inputs
+        input  logic [9:0]  pc_f_i,
+        input  logic [9:0]  pc_e_i,
+        input  logic [31:0] pc_target_e_i,
 
         // Branch predictor inputs
-        input  logic        TargetMatchE,
-        input  logic        PCSrcPredE,
+        input  logic        target_match_e_i,
+        input  logic        pc_src_pred_e_i,
 
         // Control outputs
-        output logic [1:0]  PCSrc,
-        output logic [1:0]  PCSrcReg,
+        output logic [1:0]  pc_src_o,
+        output logic [1:0]  pc_src_reg_o,
 
         // Branch predictor outputs
-        output logic [31:0] PredPCTargetF,
-        output logic        PCSrcPredF
+        output logic [31:0] pred_pc_target_f_o,
+        output logic        pc_src_pred_f_o
     );
 
-    logic PCSrcResE;
+    logic pc_src_res_e;
     
     branch_resolution_unit u_branch_resolution_unit (
         // Instruction decode inputs
-        .funct3     (funct3E),
-        .BranchOp   (BranchOpE),
+        .funct3_i                       (funct3_e_i),
+        .branch_op_i                    (branch_op_e_i),
 
         // Status flag inputs
-        .N          (N),
-        .Z          (Z),
-        .C          (C),
-        .V          (V),
+        .N                              (N),
+        .Z                              (Z),
+        .C                              (C),
+        .V                              (V),
 
         // Resolution output
-        .PCSrcRes   (PCSrcResE)
+        .pc_src_res_o                   (pc_src_res_e)
     );
     
     branch_predictor u_branch_predictor (
-        // Clock & Reset
-        .clk            (clk),
-        .reset          (reset),
+        // Clock & reset_i
+        .clk_i                          (clk_i),
+        .reset_i                        (reset_i),
 
         // Pipeline control inputs
-        .StallE         (StallE),
+        .stall_e_i                      (stall_e_i),
 
-        // PC inputs
-        .PCF            (PCF),
-        .PCE            (PCE),
-        .PCTargetE      (PCTargetE),
+        // pc inputs
+        .pc_f_i                         (pc_f_i),
+        .pc_e_i                         (pc_e_i),
+        .pc_target_e_i                  (pc_target_e_i),
 
         // Branch resolution inputs
-        .PCSrcResE      (PCSrcResE),
-        .TargetMatchE   (TargetMatchE),
-        .BranchOpE      (BranchOpE),
+        .pc_src_res_e_i                 (pc_src_res_e),
+        .target_match_e_i               (target_match_e_i),
+        .branch_op_e_i                  (branch_op_e_i),
 
         // Predictor outputs
-        .PCSrcPredF     (PCSrcPredF),
-        .PredPCTargetF  (PredPCTargetF)
+        .pc_src_pred_f_o                (pc_src_pred_f_o),
+        .pred_pc_target_f_o             (pred_pc_target_f_o)
     );
 
     branch_control_unit u_branch_control_unit (
         // Instruction decode inputs
-        .OpF          (InstrF[6:5]),
+        .op_f_i                         (instr_f_i[6:5]),
 
         // Predictor inputs
-        .PCSrcPredF   (PCSrcPredF),
-        .PCSrcPredE   (PCSrcPredE),
+        .pc_src_pred_f_i                (pc_src_pred_f_o),
+        .pc_src_pred_e_i                (pc_src_pred_e_i),
 
         // Branch resolution inputs
-        .BranchOpE    (BranchOpE),
-        .TargetMatchE (TargetMatchE),
-        .PCSrcResE    (PCSrcResE),
+        .branch_op_e_i                  (branch_op_e_i),
+        .target_match_e_i               (target_match_e_i),
+        .pc_src_res_e_i                 (pc_src_res_e),
 
         // Control output
-        .PCSrc        (PCSrc)
+        .pc_src_o                       (pc_src_o)
     );
     
     flop #(
-        .WIDTH (2)
+        .WIDTH                          (2)
     ) u_src_reg (
-        // Clock & Reset
-        .clk    (clk),
-        .en     (1'b1),
-        .reset  (reset | FlushE),
+        // Clock & reset_i
+        .clk_i                          (clk_i),
+        .en                             (1'b1),
+        .reset                          (reset_i                          |                          flush_e_i),
 
         // Data input
-        .D      (PCSrc),
+        .D                              (pc_src_o),
 
         // Data output
-        .Q      (PCSrcReg)
+        .Q                              (pc_src_reg_o)
     );
 
 endmodule

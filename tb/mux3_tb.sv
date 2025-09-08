@@ -29,11 +29,11 @@ module mux3_tb();
     logic [1:0]  s;
 
     mux3 u_DUT (
-        .d0 (d0),
-        .d1 (d1),
-        .d2 (d2),
-        .s  (s),
-        .y  (y)
+        .d0                             (d0),
+        .d1                             (d1),
+        .d2                             (d2),
+        .s                              (s),
+        .y                              (y)
     );
     
     initial begin

@@ -29,17 +29,17 @@ module mux2_tb();
     logic        s;
 
     mux2 u_DUT (
-        .d0 (d0),
-        .d1 (d1),
-        .s  (s),
-        .y  (y)
+        .d0                             (d0),
+        .d1                             (d1),
+        .s                              (s),
+        .y                              (y)
     );
 
     initial begin
         
         dump_setup;
 
-        //Set initial values of inputs
+        //set initial values of inputs
         d0 = 4; d1 = 1;
         
         //Test all valid values of s

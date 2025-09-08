@@ -31,8 +31,8 @@ module instr_mem_tb();
 
     // Instantiate DUT
     instr_mem u_DUT (
-        .A  (A),
-        .RD (RD)
+        .A                              (A),
+        .RD                             (RD)
     );
     
     initial begin

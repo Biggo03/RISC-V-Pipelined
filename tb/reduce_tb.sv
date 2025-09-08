@@ -23,8 +23,8 @@
 module reduce_tb();
 
     logic [31:0] BaseResult;
-    logic [2:0]  WidthSrc;
-    logic [31:0] Result;
+    logic [2:0]  width_src;
+    logic [31:0] result;
     logic [31:0] ResultExpected;
 
     int file;
@@ -32,9 +32,9 @@ module reduce_tb();
     int test_num;
 
     reduce u_DUT (
-        .BaseResult (BaseResult),
-        .WidthSrc   (WidthSrc),
-        .Result     (Result)
+        .BaseResult                     (BaseResult),
+        .width_src_i                    (width_src),
+        .result_o                       (result)
     );
     
     initial begin
@@ -54,14 +54,14 @@ module reduce_tb();
         
         //Iterate through file
         while (!$feof(file)) begin
-            read = $fscanf(file, "%b %b %b\n", BaseResult, WidthSrc, ResultExpected);
+            read = $fscanf(file, "%b %b %b\n", BaseResult, width_src, ResultExpected);
             
             //Ensure file reads correct number of elements
             if (read == 3) begin
                 #1;
-                assert (Result == ResultExpected) else begin
-                    $fatal(1, "Error: WidthSrc = %b, BaseResult = %b\nExpected output: %b\nActual output:   %b", 
-                       WidthSrc, BaseResult, ResultExpected, Result);
+                assert (result == ResultExpected) else begin
+                    $fatal(1, "Error: width_src = %b, BaseResult = %b\nExpected output: %b\nActual output:   %b", 
+                       width_src, BaseResult, ResultExpected, result);
                 end
                 
             end else begin

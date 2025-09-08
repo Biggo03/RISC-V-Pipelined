@@ -15,26 +15,26 @@
 
 module width_decoder (
     // Instruction inputs
-    input  logic [2:0] funct3,
-    input  logic       WidthOp,
+    input  logic [2:0] funct3_i,
+    input  logic       width_op_i,
 
     // Decode outputs
-    output logic [2:0] WidthSrc
+    output logic [2:0] width_src_o
 );
     
     always @(*) begin
         
-        if (~WidthOp) WidthSrc = 3'b000; //Non-load/store instructions
+        if (~width_op_i) width_src_o = 3'b000; //Non-load/store instructions
         else begin
             
-            //Width dependant on funct3
-            case(funct3)
-                3'b010: WidthSrc = 3'b000;  //lw, sw
-                3'b001: WidthSrc = 3'b010;  //lh, sh
-                3'b000: WidthSrc = 3'b001;  //lb, sb
-                3'b101: WidthSrc = 3'b110;  //lhu
-                3'b100: WidthSrc = 3'b101;  //lbu
-                default: WidthSrc = 3'bxxx; //Unknown
+            //Width dependant on funct3_i
+            case(funct3_i)
+                3'b010: width_src_o = 3'b000;  //lw, sw
+                3'b001: width_src_o = 3'b010;  //lh, sh
+                3'b000: width_src_o = 3'b001;  //lb, sb
+                3'b101: width_src_o = 3'b110;  //lhu
+                3'b100: width_src_o = 3'b101;  //lbu
+                default: width_src_o = 3'bxxx; //Unknown
             endcase
             
         end

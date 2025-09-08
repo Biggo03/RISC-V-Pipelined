@@ -15,45 +15,45 @@
 
 module hazard_unit (
     // Fetch stage inputs
-    input  logic        InstrMissF,
+    input  logic        instr_miss_f_i,
 
     // Decode stage inputs
-    input  logic [4:0]  Rs1D,
-    input  logic [4:0]  Rs2D,
+    input  logic [4:0]  rs1_d_i,
+    input  logic [4:0]  rs2_d_i,
 
     // Execute stage inputs
-    input  logic [4:0]  Rs1E,
-    input  logic [4:0]  Rs2E,
-    input  logic [4:0]  RdE,
-    input  logic [2:0]  ResultSrcE,
-    input  logic [1:0]  PCSrc,
+    input  logic [4:0]  rs1_e_i,
+    input  logic [4:0]  rs2_e_i,
+    input  logic [4:0]  rd_e_i,
+    input  logic [2:0]  result_src_e_i,
+    input  logic [1:0]  pc_src_i,
 
     // Memory stage inputs
-    input  logic [4:0]  RdM,
-    input  logic        RegWriteM,
+    input  logic [4:0]  rd_m_i,
+    input  logic        reg_write_m_i,
 
     // Writeback stage inputs
-    input  logic [4:0]  RdW,
-    input  logic        RegWriteW,
+    input  logic [4:0]  rd_w_i,
+    input  logic        reg_write_w_i,
 
     // Branch predictor / cache inputs
-    input  logic [1:0]  PCSrcReg,
-    input  logic        InstrCacheRepActive,
+    input  logic [1:0]  pc_src_reg_i,
+    input  logic        instr_cache_rep_active_i,
 
-    // Stall outputs
-    output logic        StallF,
-    output logic        StallD,
-    output logic        StallE,
-    output logic        StallM,
-    output logic        StallW,
+    // stall outputs
+    output logic        stall_f_o,
+    output logic        stall_d_o,
+    output logic        stall_e_o,
+    output logic        stall_m_o,
+    output logic        stall_w_o,
 
-    // Flush outputs
-    output logic        FlushD,
-    output logic        FlushE,
+    // flush outputs
+    output logic        flush_d_o,
+    output logic        flush_e_o,
 
     // Forwarding outputs
-    output logic [1:0]  ForwardAE,
-    output logic [1:0]  ForwardBE
+    output logic [1:0]  forward_a_e_o,
+    output logic [1:0]  forward_b_e_o
 );
     
     // ----- Forwarding control -----
@@ -67,30 +67,30 @@ module hazard_unit (
     //Forward logic
     always @(*) begin
         
-        //ForwardAE
-        if (((Rs1E == RdM) & RegWriteM) & (Rs1E != 0)) ForwardAE = MEM_FORWARD;
-        else if (((Rs1E == RdW) & RegWriteW) & (Rs1E != 0)) ForwardAE = WB_FORWARD;
-        else ForwardAE = NO_FORWARD;
+        //forward_a_e_o
+        if (((rs1_e_i == rd_m_i) & reg_write_m_i) & (rs1_e_i != 0)) forward_a_e_o = MEM_FORWARD;
+        else if (((rs1_e_i == rd_w_i) & reg_write_w_i) & (rs1_e_i != 0)) forward_a_e_o = WB_FORWARD;
+        else forward_a_e_o = NO_FORWARD;
         
-        //ForwardBE
-        if (((Rs2E == RdM) & RegWriteM) & (Rs2E != 0)) ForwardBE = MEM_FORWARD;
-        else if (((Rs2E == RdW) & RegWriteW) & (Rs2E != 0)) ForwardBE = WB_FORWARD;
-        else ForwardBE = NO_FORWARD;
+        //forward_b_e_o
+        if (((rs2_e_i == rd_m_i) & reg_write_m_i) & (rs2_e_i != 0)) forward_b_e_o = MEM_FORWARD;
+        else if (((rs2_e_i == rd_w_i) & reg_write_w_i) & (rs2_e_i != 0)) forward_b_e_o = WB_FORWARD;
+        else forward_b_e_o = NO_FORWARD;
     
     end  
     
-    //Stall and flush logic
-    assign LoadStall = ResultSrcE[2] & ((Rs1D == RdE) | (Rs2D == RdE));
+    //stall and flush logic
+    assign LoadStall = result_src_e_i[2] & ((rs1_d_i == rd_e_i) | (rs2_d_i == rd_e_i));
     
     //Stalls
-    assign StallF = (LoadStall | InstrMissF) & ~PCSrcReg[1];
-    assign StallD = LoadStall | InstrMissF;
-    assign StallE = InstrMissF;
-    assign StallM = InstrMissF;
-    assign StallW = InstrMissF;
+    assign stall_f_o = (LoadStall | instr_miss_f_i) & ~pc_src_reg_i[1];
+    assign stall_d_o = LoadStall | instr_miss_f_i;
+    assign stall_e_o = instr_miss_f_i;
+    assign stall_m_o = instr_miss_f_i;
+    assign stall_w_o = instr_miss_f_i;
     
     //Flushes
-    assign FlushE = (PCSrc[1] & (InstrCacheRepActive | PCSrcReg[1])) | LoadStall;
-    assign FlushD = PCSrc[1];
+    assign flush_e_o = (pc_src_i[1] & (instr_cache_rep_active_i | pc_src_reg_i[1])) | LoadStall;
+    assign flush_d_o = pc_src_i[1];
 
 endmodule

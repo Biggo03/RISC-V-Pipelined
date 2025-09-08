@@ -14,99 +14,94 @@
 //==============================================================//
 
 module memory_stage (
-    // Clock & Reset
-    input  logic        clk,
-    input  logic        reset,
+    // Clock & reset_i
+    input  logic        clk_i,
+    input  logic        reset_i,
 
     // Data inputs
-    input  logic [31:0] ALUResultE,
-    input  logic [31:0] WriteDataE,
-    input  logic [31:0] PCTargetE,
-    input  logic [31:0] PCPlus4E,
-    input  logic [31:0] ImmExtE,
-    input  logic [31:0] ReadDataM,
-    input  logic [4:0]  RdE,
+    input  logic [31:0] alu_result_e_i,
+    input  logic [31:0] write_data_e_i,
+    input  logic [31:0] pc_target_e_i,
+    input  logic [31:0] pc_plus4_e_i,
+    input  logic [31:0] imm_ext_e_i,
+    input  logic [31:0] read_data_m_i,
+    input  logic [4:0]  rd_e_i,
 
     // Control inputs
-    input  logic [2:0]  WidthSrcE,
-    input  logic [2:0]  ResultSrcE,
-    input  logic        MemWriteE,
-    input  logic        RegWriteE,
-    input  logic        StallM,
+    input  logic [2:0]  width_src_e_i,
+    input  logic [2:0]  result_src_e_i,
+    input  logic        mem_write_e_i,
+    input  logic        reg_write_e_i,
+    input  logic        stall_m_i,
 
     // Data outputs
-    output logic [31:0] ReducedDataM,
-    output logic [31:0] ALUResultM,
-    output logic [31:0] WriteDataM,
-    output logic [31:0] PCTargetM,
-    output logic [31:0] PCPlus4M,
-    output logic [31:0] ImmExtM,
-    output logic [31:0] ForwardDataM,
-    output logic [4:0]  RdM,
+    output logic [31:0] reduced_data_m_o,
+    output logic [31:0] alu_result_m_o,
+    output logic [31:0] write_data_m_o,
+    output logic [31:0] pc_target_m_o,
+    output logic [31:0] pc_plus4_m_o,
+    output logic [31:0] imm_ext_m_o,
+    output logic [31:0] forward_data_m_o,
+    output logic [4:0]  rd_m_o,
 
     // Control outputs
-    output logic [2:0]  ResultSrcM,
-    output logic [1:0]  WidthSrcMOUT,
-    output logic        MemWriteM,
-    output logic        RegWriteM
+    output logic [2:0]  result_src_m_o,
+    output logic [2:0]  width_src_m_o,
+    output logic        mem_write_m_o,
+    output logic        reg_write_m_o
 );
     
     // ----- Parameters -----
     localparam REG_WIDTH = 173;
 
     // ----- Memory pipeline register -----
-    logic [REG_WIDTH-1:0] MInputs;
-    logic [REG_WIDTH-1:0] MOutputs;
-
-    // ----- Memory stage outputs -----
-    logic [2:0] WidthSrcM;
+    logic [REG_WIDTH-1:0] inputs_m;
+    logic [REG_WIDTH-1:0] outputs_m;
     
-    assign MInputs = {ALUResultE, WriteDataE, PCTargetE, PCPlus4E, ImmExtE, RdE, 
-                      WidthSrcE, ResultSrcE, MemWriteE, RegWriteE};
+    assign inputs_m = {alu_result_e_i, write_data_e_i, pc_target_e_i, pc_plus4_e_i, imm_ext_e_i, rd_e_i, 
+                      width_src_e_i, result_src_e_i, mem_write_e_i, reg_write_e_i};
     
     flop #(
-        .WIDTH (REG_WIDTH)
+        .WIDTH                          (REG_WIDTH)
     ) u_flop_memory_reg (
-        // Clock & Reset
-        .clk   (clk),
-        .reset (reset),
-        .en    (~StallM),
+        // Clock & reset_i
+        .clk_i                          (clk_i),
+        .reset                          (reset_i),
+        .en                             (~stall_m_i),
 
         // Data input
-        .D     (MInputs),
+        .D                              (inputs_m),
 
         // Data output
-        .Q     (MOutputs)
+        .Q                              (outputs_m)
     );
     
-    assign {ALUResultM, WriteDataM, PCTargetM, PCPlus4M, ImmExtM, RdM, 
-            WidthSrcM, ResultSrcM, MemWriteM, RegWriteM} = MOutputs;
-    
-    assign WidthSrcMOUT = WidthSrcM[1:0];
+    assign {alu_result_m_o, write_data_m_o, pc_target_m_o, pc_plus4_m_o, imm_ext_m_o, rd_m_o, 
+            width_src_m_o, result_src_m_o, mem_write_m_o, reg_write_m_o} = outputs_m;
     
     mux4 u_mux4_forward (
         // Data inputs
-        .d0 (ALUResultM),
-        .d1 (PCTargetM),
-        .d2 (PCPlus4M),
-        .d3 (ImmExtM),
+        .d0                             (alu_result_m_o),
+        .d1                             (pc_target_m_o),
+        .d2                             (pc_plus4_m_o),
+        .d3                             (imm_ext_m_o),
 
         // Select input
-        .s  (ResultSrcM[1:0]),
+        .s                              (result_src_m_o[1:0]),
 
         // Data output
-        .y  (ForwardDataM)
+        .y                              (forward_data_m_o)
     );
         
     reduce u_reduce_width_change (
         // Data input
-        .BaseResult (ReadDataM),
+        .BaseResult                     (read_data_m_i),
 
         // Control input
-        .WidthSrc   (WidthSrcM),
+        .width_src_i                    (width_src_m_o),
 
         // Data output
-        .Result     (ReducedDataM)
+        .result_o                       (reduced_data_m_o)
     );
     
 endmodule

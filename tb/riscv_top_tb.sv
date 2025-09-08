@@ -28,24 +28,24 @@
     logic [63:0] RepWord;
     
 
-    logic [31:0] WriteDataM;
-    logic [31:0] ALUResultM;
-    logic        MemWriteM;
+    logic [31:0] write_data_m;
+    logic [31:0] alu_result_m;
+    logic        mem_write_m;
     
     
     riscv_top u_riscv_top (
-        // Clock & Reset
-        .clk        (clk),
-        .reset      (reset),
+        // Clock & reset
+        .clk_i                          (clk),
+        .reset_i                        (reset),
 
         // Temporary L1 instruction cache inputs
-        .RepReady   (RepReady),
-        .RepWord    (RepWord),
+        .RepReady                       (RepReady),
+        .RepWord                        (RepWord),
 
         // Memory outputs
-        .WriteDataM (WriteDataM),
-        .ALUResultM (ALUResultM),
-        .MemWriteM  (MemWriteM)
+        .write_data_m_o                 (write_data_m),
+        .alu_result_m_o                 (alu_result_m),
+        .mem_write_m_o                  (mem_write_m)
     );
     
     initial begin
@@ -63,11 +63,11 @@
     
     always @(negedge clk) begin
         
-        if (MemWriteM & ALUResultM > 90 & ALUResultM < 120) begin
-            if (ALUResultM === 100 & WriteDataM === 25) begin
+        if (mem_write_m & alu_result_m > 90 & alu_result_m < 120) begin
+            if (alu_result_m === 100 & write_data_m === 25) begin
                 $display("TEST PASSED");
                 $finish;
-            end else if (ALUResultM !== 96) begin
+            end else if (alu_result_m !== 96) begin
             $display("Failed.");
             $finish;
             

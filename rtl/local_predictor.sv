@@ -14,16 +14,16 @@
 //==============================================================//
 
 module local_predictor (
-    // Clock & Reset
-    input  logic clk,
-    input  logic reset,
+    // Clock & reset_i
+    input  logic clk_i,
+    input  logic reset_i,
 
     // Control inputs
-    input  logic PCSrcResE,
-    input  logic Enable,
+    input  logic pc_src_res_e_i,
+    input  logic enable_i,
 
     // Predictor output
-    output logic PCSrcPred
+    output logic pc_src_pred_o
 );
 
     // ----- State encoding -----
@@ -33,16 +33,16 @@ module local_predictor (
     localparam SU = 2'b00;
 
     // ----- State registers -----
-    logic [1:0] PresentState;
-    logic [1:0] NextState;
+    logic [1:0] present_state;
+    logic [1:0] next_state;
     
     //State transition logic
-    always @(posedge clk, posedge reset) begin
+    always @(posedge clk_i, posedge reset_i) begin
         
-        if (reset) begin
-            PresentState <= WU;
-        end else if (Enable) begin
-            PresentState <= NextState;
+        if (reset_i) begin
+            present_state <= WU;
+        end else if (enable_i) begin
+            present_state <= next_state;
         end
         
     end             
@@ -50,25 +50,25 @@ module local_predictor (
     //Next state logic
     always @(*) begin
         
-        if (Enable) begin
+        if (enable_i) begin
             
-            case (PresentState)
+            case (present_state)
             
                 ST: begin
-                    if (PCSrcResE) NextState <= ST;
-                    else NextState <= WT;
+                    if (pc_src_res_e_i) next_state <= ST;
+                    else next_state <= WT;
                 end
                 WT: begin
-                    if (PCSrcResE) NextState <= ST;
-                    else NextState <= WU;
+                    if (pc_src_res_e_i) next_state <= ST;
+                    else next_state <= WU;
                 end
                 WU: begin
-                    if (PCSrcResE) NextState <= WT;
-                    else NextState <= SU;
+                    if (pc_src_res_e_i) next_state <= WT;
+                    else next_state <= SU;
                 end
                 SU: begin
-                    if (PCSrcResE) NextState <= WU;
-                    else NextState <= SU;
+                    if (pc_src_res_e_i) next_state <= WU;
+                    else next_state <= SU;
                 end
             
             endcase
@@ -78,6 +78,6 @@ module local_predictor (
     end
     
     //Assign output
-    assign PCSrcPred = PresentState[1];
+    assign pc_src_pred_o = present_state[1];
 
 endmodule

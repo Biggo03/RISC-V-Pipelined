@@ -25,13 +25,13 @@ module reg_file_tb();
     // Stimulus
     logic        clk;
     logic        reset;
-    logic        WE3;
-    logic [4:0]  A1;
-    logic [4:0]  A2;
-    logic [4:0]  A3;
-    logic [31:0] RD1;
-    logic [31:0] RD2;
-    logic [31:0] WD3;
+    logic        we3;
+    logic [4:0]  a1;
+    logic [4:0]  a2;
+    logic [4:0]  a3;
+    logic [31:0] rd1;
+    logic [31:0] rd2;
+    logic [31:0] wd3;
 
     // File reading signals
     int file;
@@ -39,15 +39,15 @@ module reg_file_tb();
 
     // u_DUT instantiation
     reg_file u_DUT (
-        .clk   (clk),
-        .reset (reset),
-        .A1    (A1),
-        .A2    (A2),
-        .A3    (A3),
-        .WD3   (WD3),
-        .WE3   (WE3),
-        .RD1   (RD1),
-        .RD2   (RD2)
+        .clk_i                          (clk),
+        .reset_i                        (reset),
+        .a1_i                           (a1),
+        .a2_i                           (a2),
+        .a3_i                           (a3),
+        .wd3_i                          (wd3),
+        .we3_i                          (we3),
+        .rd1_o                          (rd1),
+        .rd2_o                          (rd2)
     );
     
     always begin
@@ -58,15 +58,15 @@ module reg_file_tb();
 
         dump_setup;
         
-        //initialize clock registers, and set WE3
-        clk = 0; WE3 = 0; reset = 1; #10; reset = 0;
+        //initialize clock registers, and set we3
+        clk = 0; we3 = 0; reset = 1; #10; reset = 0;
         
         
         //Ensure reset worked properly, test both read ports
         for (int i = 0; i < 32; i++) begin
-            A1 = i; A2 = i; #10;
+            a1 = i; a2 = i; #10;
             
-            assert (RD1 == 0 & RD2 == 0) else $fatal(1, "Error: Initialization failed");
+            assert (rd1 == 0 & rd2 == 0) else $fatal(1, "Error: Initialization failed");
             
         end
         
@@ -76,23 +76,23 @@ module reg_file_tb();
             //Check register Writing
             if (i == 0) begin
                 
-                WE3 = 1;
+                we3 = 1;
                 
                 for (int i = 0; i < 32; i++) begin
-                    A1 = i; A2 = i; A3 = i; WD3 = i; #10;
+                    a1 = i; a2 = i; a3 = i; wd3 = i; #10;
             
-                    assert (RD1 == i & RD2 == i) else $fatal(1, "Error: Writing error");
+                    assert (rd1 == i & rd2 == i) else $fatal(1, "Error: Writing error");
             
                 end
                 
             end else begin
                 
-                WE3 = 0;
+                we3 = 0;
                 
                 for (int i = 0; i < 32; i++) begin
-                    A1 = i; A2 = i; A3 = i; WD3 = 100; #10;
+                    a1 = i; a2 = i; a3 = i; wd3 = 100; #10;
 
-                    assert (RD1 == i & RD2 == i) else $display("Error: Register written when WE3 = 0");
+                    assert (rd1 == i & rd2 == i) else $display("Error: Register written when we3 = 0");
             
                 end
             
@@ -101,8 +101,8 @@ module reg_file_tb();
         end
         
         //Ensure writing to 0 register not possible
-        WE3 = 1; A1 = 0; A2 = 0; A3 = 0; WD3 = 1; #10;
-        assert (RD1 == 0 & RD2 == 0) else $fatal(1, "Error: Zero register updated");
+        we3 = 1; a1 = 0; a2 = 0; a3 = 0; wd3 = 1; #10;
+        assert (rd1 == 0 & rd2 == 0) else $fatal(1, "Error: Zero register updated");
         
         $display("TEST PASSED");
         $finish;

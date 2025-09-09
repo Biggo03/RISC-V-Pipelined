@@ -28,14 +28,14 @@ module alu_tb();
     logic [31:0] alu_result;
     logic [31:0] ALUResultExpected;
     logic [3:0]  alu_control;
-    logic        N;
-    logic        Z;
-    logic        C;
-    logic        V;
-    logic        NExpected;
-    logic        ZExpected;
-    logic        CExpected;
-    logic        VExpected;
+    logic        neg_flag;
+    logic        zero_flag;
+    logic        carry_flag;
+    logic        v_flag;
+    logic        neg_flagExpected;
+    logic        zero_flagExpected;
+    logic        carry_flagExpected;
+    logic        v_flagExpected;
 
     // File reading signals
     int file;
@@ -47,10 +47,10 @@ module alu_tb();
         .A                              (A),
         .B                              (B),
         .alu_result_o                   (alu_result),
-        .N                              (N),
-        .Z                              (Z),
-        .C                              (C),
-        .V                              (V)
+        .neg_flag_o                     (neg_flag),
+        .zero_flag_o                    (zero_flag),
+        .carry_flag_o                   (carry_flag),
+        .v_flag_o                       (v_flag)
     );
     
     initial begin
@@ -69,13 +69,13 @@ module alu_tb();
         
         while (!$feof(file)) begin
             read = $fscanf(file, "%b %b %b %b %b %b %b %b\n", 
-                           alu_control, A, B, ALUResultExpected, NExpected, ZExpected, CExpected, VExpected);
+                           alu_control, A, B, ALUResultExpected, neg_flagExpected, zero_flagExpected, carry_flagExpected, v_flagExpected);
             
             if (read == 8) begin
                 #5;
-                assert (alu_result == ALUResultExpected & NExpected == N & ZExpected == Z & CExpected == C & VExpected == V) else begin
-                    $fatal(1, "Error: alu_control = %b\nA = %b\nB = %b\nExpected Result: %b\nActual Result:   %b\nExpect Flags: N = %b Z = %b C = %b V = %b\nActual Flags: N = %b Z = %b C = %b V = %b", 
-                           alu_control, A, B, ALUResultExpected, alu_result, NExpected, ZExpected, CExpected, VExpected, N, Z, C, V);
+                assert (alu_result == ALUResultExpected & neg_flagExpected == neg_flag & zero_flagExpected == zero_flag & carry_flagExpected == carry_flag & v_flagExpected == v_flag) else begin
+                    $fatal(1, "Error: alu_control = %b\nA = %b\nB = %b\nExpected result: %b\nActual result:   %b\nExpect Flags: neg_flag = %b zero_flag = %b carry_flag = %b v_flag = %b\nActual Flags: neg_flag = %b zero_flag = %b carry_flag = %b v_flag = %b", 
+                           alu_control, A, B, ALUResultExpected, alu_result, neg_flagExpected, zero_flagExpected, carry_flagExpected, v_flagExpected, neg_flag, zero_flag, carry_flag, v_flag);
                 end
             
             end else begin

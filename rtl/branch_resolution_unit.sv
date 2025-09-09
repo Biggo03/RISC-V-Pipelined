@@ -19,10 +19,10 @@ module branch_resolution_unit (
     input  logic [1:0] branch_op_i,
 
     // Status flag inputs
-    input  logic       N,
-    input  logic       Z,
-    input  logic       C,
-    input  logic       V,
+    input  logic       neg_flag_i,
+    input  logic       zero_flag_i,
+    input  logic       carry_flag_i,
+    input  logic       v_flag_i,
 
     // Resolution output
     output logic       pc_src_res_o
@@ -42,12 +42,12 @@ module branch_resolution_unit (
                 //Type of branch dependant on funct3_i
                 case(funct3_i)
                     
-                    3'b000: pc_src_res_o = Z;      //beq
-                    3'b001: pc_src_res_o = ~Z;     //bne
-                    3'b101: pc_src_res_o = ~(N^V); //bge
-                    3'b111: pc_src_res_o = C;      //bgeu
-                    3'b100: pc_src_res_o = N^V;    //blt
-                    3'b110: pc_src_res_o = ~C;     //bltu
+                    3'b000: pc_src_res_o = zero_flag_i;      //beq
+                    3'b001: pc_src_res_o = ~zero_flag_i;     //bne
+                    3'b101: pc_src_res_o = ~(neg_flag_i^v_flag_i); //bge
+                    3'b111: pc_src_res_o = carry_flag_i;      //bgeu
+                    3'b100: pc_src_res_o = neg_flag_i^v_flag_i;    //blt
+                    3'b110: pc_src_res_o = ~carry_flag_i;     //bltu
                     default: pc_src_res_o = 1'bx;   //Unknown branch condition
                 
                 endcase

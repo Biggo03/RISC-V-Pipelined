@@ -101,7 +101,7 @@ module local_predictor_tb();
         
         #50;
         
-        `CHECK(pc_src_pred === 0, "[%t] Taken Reset failed", $time)
+        `CHECK(pc_src_pred === 0, "[%t] Taken reset failed", $time)
         
         if (error_cnt == 0) $display("TEST PASSED");
         else $display("TEST FAILED");

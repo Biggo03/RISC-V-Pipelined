@@ -62,7 +62,7 @@ module branching_buffer (
                 .enable_i                       (enable[i]),
 
                 // Predictor output
-                .pc_src_pred_o                  (lp_outputs[i/4][i                  %                  4])
+                .pc_src_pred_o                  (lp_outputs[i/4][i % 4])
             );
         end
     endgenerate

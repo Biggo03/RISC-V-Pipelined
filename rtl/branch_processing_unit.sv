@@ -19,10 +19,10 @@ module branch_processing_unit (
         input  logic        reset_i,
 
         // Status flag inputs
-        input  logic        N,
-        input  logic        Z,
-        input  logic        C,
-        input  logic        V,
+        input  logic        neg_flag_i,
+        input  logic        zero_flag_i,
+        input  logic        carry_flag_i,
+        input  logic        v_flag_i,
 
         // Pipeline control inputs
         input  logic        stall_e_i,
@@ -59,10 +59,10 @@ module branch_processing_unit (
         .branch_op_i                    (branch_op_e_i),
 
         // Status flag inputs
-        .N                              (N),
-        .Z                              (Z),
-        .C                              (C),
-        .V                              (V),
+        .neg_flag_i                     (neg_flag_i),
+        .zero_flag_i                    (zero_flag_i),
+        .carry_flag_i                   (carry_flag_i),
+        .v_flag_i                       (v_flag_i),
 
         // Resolution output
         .pc_src_res_o                   (pc_src_res_e)
@@ -114,7 +114,7 @@ module branch_processing_unit (
         // Clock & reset_i
         .clk_i                          (clk_i),
         .en                             (1'b1),
-        .reset                          (reset_i                          |                          flush_e_i),
+        .reset                          (reset_i | flush_e_i),
 
         // Data input
         .D                              (pc_src_o),

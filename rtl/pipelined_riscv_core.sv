@@ -78,10 +78,10 @@ module pipelined_riscv_core (
     logic       flush_e;
 
     // ----- Branch processing unit inputs -----
-    logic        N;
-    logic        Z;
-    logic        C;
-    logic        V;
+    logic        neg_flag;
+    logic        zero_flag;
+    logic        carry_flag;
+    logic        v_flag;
     logic [2:0]  funct3_e;
     logic [31:0] pc_e; 
     logic [31:0] pc_target_e;
@@ -162,10 +162,10 @@ module pipelined_riscv_core (
         .reset_i                        (reset_i),
 
         // Status flag inputs
-        .N                              (N),
-        .Z                              (Z),
-        .C                              (C),
-        .V                              (V),
+        .neg_flag_i                     (neg_flag),
+        .zero_flag_i                    (zero_flag),
+        .carry_flag_i                   (carry_flag),
+        .v_flag_i                       (v_flag),
 
         // Pipeline control inputs
         .flush_e_i                      (flush_e),
@@ -240,10 +240,10 @@ module pipelined_riscv_core (
         .funct3_e_o                     (funct3_e),
         .funct7_d_o                     (funct7_d),
         .branch_op_e_o                  (branch_op_e_o),
-        .N                              (N),
-        .Z                              (Z),
-        .C                              (C),
-        .V                              (V),
+        .neg_flag_o                     (neg_flag),
+        .zero_flag_o                    (zero_flag),
+        .carry_flag_o                   (carry_flag),
+        .v_flag_o                       (v_flag),
         .pc_e_o                         (pc_e),
         .pc_target_e_o                  (pc_target_e),
         .pc_src_pred_e_o                (pc_src_pred_e),

@@ -1,15 +1,22 @@
 //////////////////////////////////////////////
 //                 OP CODES                 //
 //////////////////////////////////////////////
-`define R_TYPE_OP 7'b0110011
-`define I_TYPE_ALU_OP 7'b0010011
-`define I_TYPE_LOAD_OP 7'b0000011
-`define S_TYPE_OP 7'b0100011
-`define B_TYPE_OP 7'b1100011
-`define JAL_OP 7'b1101111
-`define JALR_OP 7'b1100111
-`define LUI_OP 7'b0110111
-`define AUIPC_OP 7'b0010111
+`define R_TYPE_OP       7'b0110011
+`define I_TYPE_ALU_OP   7'b0010011
+`define I_TYPE_LOAD_OP  7'b0000011
+`define S_TYPE_OP       7'b0100011
+`define B_TYPE_OP       7'b1100011
+`define JAL_OP          7'b1101111
+`define JALR_OP         7'b1100111
+`define LUI_OP          7'b0110111
+`define AUIPC_OP        7'b0010111
+
+//////////////////////////////////////////////
+//              FUNCT7 CODES                //
+//////////////////////////////////////////////
+
+`define FUNCT7_SUB_SRA 7'b0100000
+`define FUNCT7_ADD_SRL 7'b0000000
 
 //////////////////////////////////////////////
 //             CONTROL SIGNALS              //

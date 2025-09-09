@@ -58,10 +58,10 @@ module execute_stage (
     output logic [4:0]  rs2_e_o,
     output logic [4:0]  rd_e_o,
     output logic [2:0]  funct3_e_o,
-    output logic        N,
-    output logic        Z,
-    output logic        C,
-    output logic        V,
+    output logic        neg_flag_o,
+    output logic        zero_flag_o,
+    output logic        carry_flag_o,
+    output logic        v_flag_o,
 
     // Control outputs
     output logic [2:0]  width_src_e_o,
@@ -186,10 +186,10 @@ module execute_stage (
         .alu_result_o                   (alu_result_e_o),
 
         // Status flag outputs
-        .N                              (N),
-        .Z                              (Z),
-        .C                              (C),
-        .V                              (V)
+        .neg_flag_o                     (neg_flag_o),
+        .zero_flag_o                    (zero_flag_o),
+        .carry_flag_o                   (carry_flag_o),
+        .v_flag_o                       (v_flag_o)
     );
                 
     adder u_pc_target_adder (

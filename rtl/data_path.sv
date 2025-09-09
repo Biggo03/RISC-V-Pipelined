@@ -60,10 +60,10 @@ module data_path (
     output logic [2:0]  funct3_e_o,
     output logic [6:0]  funct7_d_o,
     output logic [1:0]  branch_op_e_o,
-    output logic        N,
-    output logic        Z,
-    output logic        C,
-    output logic        V,
+    output logic        neg_flag_o,
+    output logic        zero_flag_o,
+    output logic        carry_flag_o,
+    output logic        v_flag_o,
 
     // Branch processing outputs
     output logic [31:0] pc_e_o,
@@ -216,10 +216,10 @@ module data_path (
 
         // Control outputs
         .funct3_e_o                     (funct3_e_o),
-        .N                              (N),
-        .Z                              (Z),
-        .C                              (C),
-        .V                              (V),
+        .neg_flag_o                     (neg_flag_o),
+        .zero_flag_o                    (zero_flag_o),
+        .carry_flag_o                   (carry_flag_o),
+        .v_flag_o                       (v_flag_o),
         .width_src_e_o                  (width_src_e),
         .result_src_e_o                 (result_src_e_o),
         .branch_op_e_o                  (branch_op_e_o),

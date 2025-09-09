@@ -27,25 +27,25 @@ module alu #(
     output logic [WIDTH-1:0]   alu_result_o,
 
     // Status flag outputs
-    output logic               N,
-    output logic               Z,
-    output logic               C,
-    output logic               V
+    output logic        neg_flag_o,
+    output logic        zero_flag_o,
+    output logic        carry_flag_o,
+    output logic        v_flag_o
 );
 
     // ----- Intermediate signals -----
-    logic Cout;
-    logic VControl;
+    logic carry_out;
+    logic v_control;
     
     always @(*) begin
         
-        //set default value for Cout
-        Cout = 1'b0;
+        //set default value for carry_out
+        carry_out = 1'b0;
         
         //Operation Logic
         case(alu_control_i)
-            4'b1000: {Cout, alu_result_o} = A + B; //Addition
-            4'b1001: {Cout, alu_result_o} = A - B; //Subtraction
+            4'b1000: {carry_out, alu_result_o} = A + B; //Addition
+            4'b1001: {carry_out, alu_result_o} = A - B; //Subtraction
             4'b0010: alu_result_o = A & B; //AND
             4'b0011: alu_result_o = A | B; //OR
             4'b0100: alu_result_o = A ^ B; //XOR
@@ -56,11 +56,11 @@ module alu #(
             //SLT
             4'b0101: begin
                     alu_result_o = A - B;
-                    VControl = ~(alu_control_i[0] ^ A[WIDTH-1] ^ B[WIDTH-1]) & (A[WIDTH-1] ^ alu_result_o[WIDTH-1]);
+                    v_control = ~(alu_control_i[0] ^ A[WIDTH-1] ^ B[WIDTH-1]) & (A[WIDTH-1] ^ alu_result_o[WIDTH-1]);
                     
                     
                     //LT comparison for sgined numbers determined by V and N flags (V ^ N)
-                    if (VControl ^ alu_result_o[WIDTH-1]) alu_result_o = 1;
+                    if (v_control ^ alu_result_o[WIDTH-1]) alu_result_o = 1;
                     else alu_result_o = 0;
                 
             end
@@ -81,15 +81,15 @@ module alu #(
         //Overflow and Carry Flag logic
         if (alu_control_i[3] == 1'b1) begin
                       
-            //Carry flag is inverse of Cout if Subtracting
-            C = alu_control_i[0] ? ~Cout : Cout;
+            //Carry flag is inverse of carry_out if Subtracting
+            carry_flag_o = alu_control_i[0] ? ~carry_out : carry_out;
             
-            V = ~(alu_control_i[0] ^ A[WIDTH-1] ^ B[WIDTH-1]) & (A[WIDTH-1] ^ alu_result_o[WIDTH-1]);
+            v_flag_o = ~(alu_control_i[0] ^ A[WIDTH-1] ^ B[WIDTH-1]) & (A[WIDTH-1] ^ alu_result_o[WIDTH-1]);
             
         end else begin
             //Default values of C and V
-            C = 1'b0;
-            V = 1'b0;
+            carry_flag_o = 1'b0;
+            v_flag_o = 1'b0;
         end
         
     end
@@ -97,9 +97,9 @@ module alu #(
     //Flag Assignment
         
     //Negative Flag
-    assign N = alu_result_o[WIDTH-1];
+    assign neg_flag_o = alu_result_o[WIDTH-1];
     
     //Zero Flag
-    assign Z = &(~alu_result_o);
+    assign zero_flag_o = &(~alu_result_o);
 
 endmodule

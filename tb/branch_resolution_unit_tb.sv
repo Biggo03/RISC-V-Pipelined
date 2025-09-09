@@ -25,10 +25,10 @@ module branch_resolution_unit_tb();
     // Stimulus and expected outputs
     logic [2:0] funct3;
     logic [1:0] branch_op;
-    logic       N;
-    logic       Z;
-    logic       C;
-    logic       V;
+    logic       neg_flag;
+    logic       zero_flag;
+    logic       carry_flag;
+    logic       v_flag;
     logic       pc_src_res;
     logic       PCSrcResExp;
 
@@ -42,10 +42,10 @@ module branch_resolution_unit_tb();
     branch_resolution_unit u_DUT (
         .funct3_i                       (funct3),
         .branch_op_i                    (branch_op),
-        .N                              (N),
-        .Z                              (Z),
-        .C                              (C),
-        .V                              (V),
+        .neg_flag_i                     (neg_flag),
+        .zero_flag_i                    (zero_flag),
+        .carry_flag_i                   (carry_flag),
+        .v_flag_i                       (v_flag),
         .pc_src_res_o                   (pc_src_res)
     );
     
@@ -53,7 +53,7 @@ module branch_resolution_unit_tb();
     task AssertCorrect();
         
         assert (pc_src_res === PCSrcResExp) else
-        $fatal(1, "Error: branch_op: %b, funct3: %b\nN: %b, Z: %b, C: %b, V: %b\nExpected Output: %b\nActual Output:   %b", branch_op, funct3, N, Z, C, V, PCSrcResExp, pc_src_res);
+        $fatal(1, "Error: branch_op: %b, funct3: %b\nN: %b, Z: %b, C: %b, V: %b\nExpected Output: %b\nActual Output:   %b", branch_op, funct3, neg_flag, zero_flag, carry_flag, v_flag, PCSrcResExp, pc_src_res);
     
     endtask
 
@@ -90,19 +90,19 @@ module branch_resolution_unit_tb();
             for (int j = 0; j < 32; j++) begin
                 
                 //set Flag values
-                N = Flags[j][0];
-                Z = Flags[j][1];
-                C = Flags[j][2];
-                V = Flags[j][3];
+                neg_flag = Flags[j][0];
+                neg_flag = Flags[j][1];
+                neg_flag = Flags[j][2];
+                neg_flag = Flags[j][3];
                 
                 //Determine correct output
                 case (funct3Val[i])
-                    3'b000: PCSrcResExp = Z;
-                    3'b001: PCSrcResExp = ~Z;
-                    3'b101: PCSrcResExp = ~(N ^ V);
-                    3'b111: PCSrcResExp = C;
-                    3'b100: PCSrcResExp = N ^ V;
-                    3'b110: PCSrcResExp = ~C;
+                    3'b000: PCSrcResExp = zero_flag;
+                    3'b001: PCSrcResExp = ~zero_flag;
+                    3'b101: PCSrcResExp = ~(neg_flag ^ v_flag);
+                    3'b111: PCSrcResExp = carry_flag;
+                    3'b100: PCSrcResExp = neg_flag ^ v_flag;
+                    3'b110: PCSrcResExp = ~carry_flag;
                     default: PCSrcResExp = 1'bx;
                 endcase
                 

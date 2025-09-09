@@ -27,7 +27,7 @@ def load_rename_map(csv_path):
 #                            CORE FUNCTIONS                              #
 ##########################################################################
 
-def rename_parse_module(module_path, rename_map):
+def parse_module(module_path, rename_map):
     input_pattern = re.compile(r"\binput\b")
     output_pattern = re.compile(r"\boutput\b")
     old_name_patterns = {}
@@ -35,7 +35,7 @@ def rename_parse_module(module_path, rename_map):
     module_rename_map = {}
 
     for old_name in rename_map.keys():
-        old_name_patterns[old_name] = re.compile(rf"\b{re.escape(old_name)}([FDEMW])?\b")
+        old_name_patterns[old_name] = re.compile(rf"\b{re.escape(old_name)}([FDEMW])?(?:_i|_o)?\b")
 
     #Pass to determine new names
     with open(module_path, "r") as f:
@@ -51,7 +51,7 @@ def rename_parse_module(module_path, rename_map):
                         old_suffix = ""
                         suffix = ""
 
-                    if ((old_name + old_suffix) in module_rename_map):
+                    if ((old_name + old_suffix) in module_rename_map.keys()):
                         break
 
                     new_base = rename_map[old_name]
@@ -67,7 +67,7 @@ def rename_parse_module(module_path, rename_map):
                 
     return module_rename_map
 
-def rename_parse_directory(rtl_path, tb_path, csv_path):
+def parse_directory(rtl_path, tb_path, csv_path):
 
     signal_map = load_rename_map(csv_path)
     files = {}
@@ -86,7 +86,7 @@ def rename_parse_directory(rtl_path, tb_path, csv_path):
             module = module.removesuffix(".sv")
             module_rename_maps[module] = {}
             module_rename_maps[module]["path"] = file_path
-            module_rename_maps[module]["rename_map"] = rename_parse_module(file_path, signal_map) 
+            module_rename_maps[module]["rename_map"] = parse_module(file_path, signal_map) 
             
     return module_rename_maps
 
@@ -156,7 +156,7 @@ def module_start(line, module_db):
 
     return None
 
-def pad_ports(line, padding_base=24):
+def pad_ports(line, padding_base=32):
     if ("//" in line or "." not in line):
         return line
 
@@ -169,7 +169,7 @@ def pad_ports(line, padding_base=24):
         return line  # blank or comment line, leave unchanged
 
     padding = padding_base - len(tokens[0])
-    rebuilt = (" " * padding).join(tokens)
+    rebuilt = tokens[0] +  (" " * padding) + (" ").join(tokens[1:])#(" " * padding).join(tokens)
     return indent + rebuilt + "\n"
 
 ##########################################################################
@@ -178,5 +178,7 @@ def pad_ports(line, padding_base=24):
 
 if __name__ == "__main__":
 
-    module_rename_maps = rename_parse_directory("../archive/old_rtl", "../archive/old_tb", "./signal_change_list.csv")
+    
+
+    module_rename_maps = parse_directory("../rtl", "../tb", "./signal_change_list.csv")
     rename_apply(module_rename_maps, "../rtl", "../tb")

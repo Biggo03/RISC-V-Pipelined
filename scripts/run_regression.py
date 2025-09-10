@@ -144,11 +144,12 @@ def get_module_paths(rtl_dir, module_path, module_paths=None):
     if module_paths is None:
         module_paths = []
 
-    pattern = re.compile(r"u_[^\s]+\s\(")
+    module_pattern = re.compile(r"u_[^\s]+\s\(")
+    package_pattern = re.compile(r"^\s*import")
 
     with open(module_path, "r") as f:
         for line in f:
-            if (re.search(pattern, line)):
+            if (re.search(module_pattern, line)):
                 module = line.split()[0]
                 sub_module_path = rtl_dir.joinpath(f"{module}.sv")
 
@@ -202,7 +203,8 @@ def run_test(test, tb_file, test_out_dir, result_info):
     # Write filelist for RTL modules
     module_paths = get_module_paths(rtl_dir, tb_path)
     filelist = filelist_dir / f"{test}.f"
-    filelist.write_text("\n".join(map(str, module_paths)) + "\n")
+    with open (filelist, "w") as f:
+        f.write("\n".join(map(str, module_paths)) + "\n")
 
     # Add filelist, sources, and output
     run_cmd.extend([

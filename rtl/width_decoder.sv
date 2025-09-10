@@ -12,6 +12,9 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "instr_macros.sv"
+`include "control_macros.sv"
+
 
 module width_decoder (
     // Instruction inputs
@@ -21,24 +24,20 @@ module width_decoder (
     // Decode outputs
     output logic [2:0] width_src_o
 );
-    
-    always @(*) begin
-        
-        if (~width_op_i) width_src_o = 3'b000; //Non-load/store instructions
-        else begin
-            
-            //Width dependant on funct3_i
-            case(funct3_i)
-                3'b010: width_src_o = 3'b000;  //lw, sw
-                3'b001: width_src_o = 3'b010;  //lh, sh
-                3'b000: width_src_o = 3'b001;  //lb, sb
-                3'b101: width_src_o = 3'b110;  //lhu
-                3'b100: width_src_o = 3'b101;  //lbu
-                default: width_src_o = 3'bxxx; //Unknown
+
+    always_comb begin
+        if (~width_op_i) begin
+            width_src_o = `WIDTH_32;  // default
+        end else begin
+            case (funct3_i)
+                `F3_WORD: width_src_o   = `WIDTH_32;   // lw, sw
+                `F3_HALF: width_src_o   = `WIDTH_16S;  // lh, sh
+                `F3_BYTE: width_src_o   = `WIDTH_8S;   // lb, sb
+                `F3_HALF_U: width_src_o = `WIDTH_16U;  // lhu
+                `F3_BYTE_U: width_src_o = `WIDTH_8U;   // lbu
+                default: width_src_o   = `WIDTH_32;  // default val
             endcase
-            
         end
-    
     end
 
 endmodule

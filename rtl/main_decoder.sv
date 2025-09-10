@@ -12,7 +12,8 @@
 //
 //  Notes:        N/A
 //==============================================================//
-`include "InstrMacros.vh"
+`include "instr_macros.sv"
+`include "control_macros.sv"
 
 module main_decoder (
     // Instruction opcode input
@@ -29,31 +30,66 @@ module main_decoder (
     output logic       reg_write_o,
     output logic       mem_write_o
 );
-
-    // ---- Intermediate signal ----
+    
     logic [14:0] controls;
-    
+
     assign {reg_write_o, imm_src_o, alu_src_o, mem_write_o,
-            result_src_o, branch_op_o, alu_op_o, width_op_o, pc_base_src_o} = controls;
-    
+        result_src_o, branch_op_o, alu_op_o, width_op_o, pc_base_src_o} = controls;
+
     always @(*) begin
     
-        case(op)
-        //RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_BranchOp_ALUOp_WidthOp_PCBaseSrc
-            
-            `R_TYPE_OP: controls = {`WRITE_REG, `DONT_CARE_EXT, `ALU_SRC_WD, `NO_WRITE_MEM, `RESULT_ALU, `NON_BRANCH, `ALU_OP_PROCESS, `WIDTH_CONST, `PC_BASE_DONT_CARE};
-            `I_TYPE_ALU_OP: controls = {`WRITE_REG, `I_EXT, `ALU_SRC_IMM, `NO_WRITE_MEM, `RESULT_ALU, `NON_BRANCH, `ALU_OP_PROCESS, `WIDTH_CONST, `PC_BASE_DONT_CARE}; //I-Type ALU Instructions
-            `I_TYPE_LOAD_OP: controls = {`WRITE_REG, `I_EXT, `ALU_SRC_IMM, `NO_WRITE_MEM, `RESULT_MEM_DATA, `NON_BRANCH, `ALU_OP_ADD, `WIDTH_PROCESS, `PC_BASE_DONT_CARE}; //I-Type Load Instructions
-            `S_TYPE_OP: controls = {`NO_WRITE_REG, `S_EXT, `ALU_SRC_IMM, `WRITE_MEM, `RESULT_NA, `NON_BRANCH, `ALU_OP_ADD, `WIDTH_PROCESS, `PC_BASE_DONT_CARE}; //S-Type Instructions
-            `B_TYPE_OP: controls = {`NO_WRITE_REG, `B_EXT, `ALU_SRC_WD, `NO_WRITE_MEM, `RESULT_NA, `BRANCH, `ALU_OP_SUB, `WIDTH_DONT_CARE, `PC_BASE_PC}; //B-Type Instructions
-            `JAL_OP: controls = {`WRITE_REG, `J_EXT, `ALU_SRC_DONT_CARE, `NO_WRITE_MEM, `RESULT_PCPLUS4, `JUMP, `ALU_OP_DONT_CARE, `WIDTH_CONST, `PC_BASE_PC}; //jal
-            `JALR_OP: controls = {`WRITE_REG, `I_EXT, `ALU_SRC_DONT_CARE, `NO_WRITE_MEM, `RESULT_PCPLUS4, `JUMP, `ALU_OP_DONT_CARE, `WIDTH_CONST, `PC_BASE_SRCA}; //jalr
-            `LUI_OP: controls = {`WRITE_REG, `U_EXT, `ALU_SRC_DONT_CARE, `NO_WRITE_MEM, `RESULT_IM_EXT, `NON_BRANCH, `ALU_OP_DONT_CARE, `WIDTH_CONST, `PC_BASE_DONT_CARE}; //lui
-            `AUIPC_OP: controls = {`WRITE_REG, `U_EXT, `ALU_SRC_DONT_CARE, `NO_WRITE_MEM, `RESULT_PCTARGET, `NON_BRANCH, `ALU_OP_DONT_CARE, `WIDTH_CONST, `PC_BASE_PC}; //auipc
-            default: controls = 15'b0; //Unknown opcode
-            
-        endcase
-    
-    end                   
+    case (op)
+
+        `R_TYPE_OP: controls = {
+            `WRITE_REG, `NA_EXT, `ALU_SRC_WD, `NO_WRITE_MEM,
+            `RESULT_ALU, `NON_BRANCH, `ALU_OP_PROCESS, `WIDTH_CONST, `PC_BASE_NA
+        };
+
+        `I_TYPE_ALU_OP: controls = {
+            `WRITE_REG, `I_EXT, `ALU_SRC_IMM, `NO_WRITE_MEM,
+            `RESULT_ALU, `NON_BRANCH, `ALU_OP_PROCESS, `WIDTH_CONST, `PC_BASE_NA
+        };
+
+        `I_TYPE_LOAD_OP: controls = {
+            `WRITE_REG, `I_EXT, `ALU_SRC_IMM, `NO_WRITE_MEM,
+            `RESULT_MEM_DATA, `NON_BRANCH, `ALU_OP_ADD, `WIDTH_PROCESS, `PC_BASE_NA
+        };
+
+        `S_TYPE_OP: controls = {
+            `NO_WRITE_REG, `S_EXT, `ALU_SRC_IMM, `WRITE_MEM,
+            `RESULT_ALU, `NON_BRANCH, `ALU_OP_ADD, `WIDTH_PROCESS, `PC_BASE_NA
+        };
+
+        `B_TYPE_OP: controls = {
+            `NO_WRITE_REG, `B_EXT, `ALU_SRC_WD, `NO_WRITE_MEM,
+            `RESULT_ALU, `BRANCH, `ALU_OP_SUB, `WIDTH_CONST, `PC_BASE_PC
+        };
+
+        `JAL_OP: controls = {
+            `WRITE_REG, `J_EXT, `ALU_SRC_NA, `NO_WRITE_MEM,
+            `RESULT_PCPLUS4, `JUMP, `ALU_OP_NA, `WIDTH_CONST, `PC_BASE_PC
+        };
+
+        `JALR_OP: controls = {
+            `WRITE_REG, `I_EXT, `ALU_SRC_NA, `NO_WRITE_MEM,
+            `RESULT_PCPLUS4, `JUMP, `ALU_OP_NA, `WIDTH_CONST, `PC_BASE_SRCA
+        };
+
+        `LUI_OP: controls = {
+            `WRITE_REG, `U_EXT, `ALU_SRC_NA, `NO_WRITE_MEM,
+            `RESULT_IM_EXT, `NON_BRANCH, `ALU_OP_NA, `WIDTH_CONST, `PC_BASE_NA
+        };
+
+        `AUIPC_OP: controls = {
+            `WRITE_REG, `U_EXT, `ALU_SRC_NA, `NO_WRITE_MEM,
+            `RESULT_PCTARGET, `NON_BRANCH, `ALU_OP_NA, `WIDTH_CONST, `PC_BASE_PC
+        };
+
+        default: controls = 15'b0;
+
+    endcase
+
+
+    end                 
 
 endmodule

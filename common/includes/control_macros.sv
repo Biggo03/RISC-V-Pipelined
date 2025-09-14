@@ -1,11 +1,11 @@
 //////////////////////////////////////////////
-//               RegWrite                   //
+//                reg_write                 //
 //////////////////////////////////////////////
 `define WRITE_REG       1'b1
 `define NO_WRITE_REG    1'b0
 
 //////////////////////////////////////////////
-//                ImmSrc                    //
+//                  imm_src                  //
 //////////////////////////////////////////////
 `define I_EXT           3'b000
 `define S_EXT           3'b001
@@ -15,37 +15,43 @@
 `define NA_EXT          3'b000  // fallback
 
 //////////////////////////////////////////////
-//                ALUSrc                    //
+//                 alu_src                  //
 //////////////////////////////////////////////
 `define ALU_SRC_WD      1'b0
 `define ALU_SRC_IMM     1'b1
 `define ALU_SRC_NA      1'b0    // fallback
 
 //////////////////////////////////////////////
-//               MemWrite                   //
+//                mem_write                 //
 //////////////////////////////////////////////
 `define WRITE_MEM       1'b1
 `define NO_WRITE_MEM    1'b0
 
 //////////////////////////////////////////////
-//              ResultSrc                   //
+//               result_src                 //
 //////////////////////////////////////////////
 `define RESULT_ALU      3'b000
 `define RESULT_PCTARGET 3'b001
 `define RESULT_PCPLUS4  3'b010
-`define RESULT_IM_EXT   3'b011
+`define RESULT_IMM_EXT  3'b011
 `define RESULT_MEM_DATA 3'b100
 `define RESULT_NA       3'b000   // fallback
 
 //////////////////////////////////////////////
-//              BranchOp                    //
+//                branch_op                 //
 //////////////////////////////////////////////
 `define NON_BRANCH      2'b00
 `define JUMP            2'b01
 `define BRANCH          2'b11
 
 //////////////////////////////////////////////
-//                ALUOp                     //
+//                 width_op                  //
+//////////////////////////////////////////////
+`define WIDTH_CONST     1'b0
+`define WIDTH_PROCESS   1'b1
+
+//////////////////////////////////////////////
+//                  alu_op                   //
 //////////////////////////////////////////////
 `define ALU_OP_ADD      2'b00
 `define ALU_OP_SUB      2'b01
@@ -53,7 +59,7 @@
 `define ALU_OP_NA       2'b00
 
 //////////////////////////////////////////////
-//              ALUControl                  //
+//               alu_control                //
 //////////////////////////////////////////////
 `define ALU_SRL         4'b0000
 `define ALU_SRA         4'b0001
@@ -67,13 +73,7 @@
 `define ALU_SUB         4'b1001
 
 //////////////////////////////////////////////
-//               WidthOp                    //
-//////////////////////////////////////////////
-`define WIDTH_CONST     1'b0
-`define WIDTH_PROCESS   1'b1
-
-//////////////////////////////////////////////
-//               WidthSrc                   //
+//                width_src                 //
 //////////////////////////////////////////////
 `define WIDTH_32        3'b000
 `define WIDTH_16S       3'b010
@@ -82,9 +82,16 @@
 `define WIDTH_8U        3'b101
 
 //////////////////////////////////////////////
-//              PCBaseSrc                   //
+//                pc_src                    //
+//////////////////////////////////////////////
+`define PC_SRC_SEQ_F        2'b00
+`define PC_SRC_PRED_F       2'b01
+`define PC_SRC_SEQ_E        2'b10
+`define PC_SRC_TARGET_E     2'b11
+
+//////////////////////////////////////////////
+//             pc_base_src                  //
 //////////////////////////////////////////////
 `define PC_BASE_PC      1'b0
 `define PC_BASE_SRCA    1'b1
 `define PC_BASE_NA      1'b0 // fallback
-

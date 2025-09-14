@@ -26,34 +26,31 @@ module local_predictor (
     output logic pc_src_pred_o
 );
 
-    // ----- State encoding -----
-    localparam ST = 2'b11;
-    localparam WT = 2'b10;
-    localparam WU = 2'b01;
-    localparam SU = 2'b00;
+    // ----- Branch predictor states -----
+    typedef enum logic [1:0] {
+        ST = 2'b11,
+        WT = 2'b10,
+        WU = 2'b01,
+        SU = 2'b00
+    } pred_state_t;
 
     // ----- State registers -----
-    logic [1:0] present_state;
-    logic [1:0] next_state;
+    pred_state_t present_state;
+    pred_state_t next_state;
     
-    //State transition logic
+    // State transition logic
     always @(posedge clk_i, posedge reset_i) begin
-        
         if (reset_i) begin
             present_state <= WU;
         end else if (enable_i) begin
             present_state <= next_state;
         end
-        
     end             
     
-    //Next state logic
+    // Next state logic
     always @(*) begin
-        
         if (enable_i) begin
-            
             case (present_state)
-            
                 ST: begin
                     if (pc_src_res_e_i) next_state <= ST;
                     else next_state <= WT;
@@ -70,14 +67,11 @@ module local_predictor (
                     if (pc_src_res_e_i) next_state <= WU;
                     else next_state <= SU;
                 end
-            
             endcase
-            
         end
-        
     end
     
-    //Assign output
+    // Assign output
     assign pc_src_pred_o = present_state[1];
 
 endmodule

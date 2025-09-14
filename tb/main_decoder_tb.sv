@@ -94,55 +94,55 @@ module main_decoder_tb();
         
         //R-Type Instructions
         op = 7'b0110011; 
-        SetExpected(1'b1, 3'bx, 1'b0, 1'b0, 3'b000, 2'b00, 2'b10, 1'b0, 1'bx);
+        SetExpected(1'b1, 3'b000, 1'b0, 1'b0, 3'b000, 2'b00, 2'b10, 1'b0, 1'b0);
         #10;
         CheckOutput();
         
         //I-Type ALU Instructions
         op = 7'b0010011;
-        SetExpected(1'b1, 3'b000, 1'b1, 1'b0, 3'b000, 2'b00, 2'b10, 1'b0, 1'bx);
+        SetExpected(1'b1, 3'b000, 1'b1, 1'b0, 3'b000, 2'b00, 2'b10, 1'b0, 1'b0);
         #10;
         CheckOutput();
         
         //I-Type Load Instructions
         op = 7'b0000011; 
-        SetExpected(1'b1, 3'b000, 1'b1, 1'b0, 3'b100, 2'b00, 2'b00, 1'b1, 1'bx);
+        SetExpected(1'b1, 3'b000, 1'b1, 1'b0, 3'b100, 2'b00, 2'b00, 1'b1, 1'b0);
         #10;
         CheckOutput();
         
         //S-Type Instructions
         op = 7'b0100011; 
-        SetExpected(1'b0, 3'b001, 1'b1, 1'b1, 3'b0xx, 2'b00, 2'b00, 1'b1, 1'bx);
+        SetExpected(1'b0, 3'b001, 1'b1, 1'b1, 3'b000, 2'b00, 2'b00, 1'b1, 1'b0);
         #10;
         CheckOutput();
         
         //B-type Instructions
         op = 7'b1100011;
-        SetExpected(1'b0, 3'b010, 1'b0, 1'b0, 3'b0xx, 2'b11, 2'b01, 1'bx, 1'b0);
+        SetExpected(1'b0, 3'b010, 1'b0, 1'b0, 3'b000, 2'b11, 2'b01, 1'b0, 1'b0);
         #10;
         CheckOutput();
         
         //jal
         op = 7'b1101111;
-        SetExpected(1'b1, 3'b011, 1'bx, 1'b0, 3'b010, 2'b01, 2'bx, 1'b0, 1'b0);
+        SetExpected(1'b1, 3'b011, 1'b0, 1'b0, 3'b010, 2'b01, 2'b00, 1'b0, 1'b0);
         #10;
         CheckOutput();
         
         //jalr
         op = 7'b1100111;
-        SetExpected(1'b1, 3'b000, 1'bx, 1'b0, 3'b010, 2'b01, 2'bx, 1'b0, 1'b1);
+        SetExpected(1'b1, 3'b000, 1'b0, 1'b0, 3'b010, 2'b01, 2'b00, 1'b0, 1'b1);
         #10;
         CheckOutput();
         
         //lui
         op = 7'b0110111;
-        SetExpected(1'b1, 3'b100, 1'bx, 1'b0, 3'b011, 2'b00, 2'bxx, 1'b0, 1'bx);
+        SetExpected(1'b1, 3'b100, 1'b0, 1'b0, 3'b011, 2'b00, 2'b00, 1'b0, 1'b0);
         #10;
         CheckOutput();
         
         //auipc
         op = 7'b0010111;
-        SetExpected(1'b1, 3'b100, 1'bx, 1'b0, 3'b001, 2'b00, 2'bx, 1'b0, 1'b0);
+        SetExpected(1'b1, 3'b100, 1'b0, 1'b0, 3'b001, 2'b00, 2'b00, 1'b0, 1'b0);
         #10;
         CheckOutput();
         

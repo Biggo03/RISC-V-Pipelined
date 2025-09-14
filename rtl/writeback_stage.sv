@@ -12,6 +12,7 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "control_macros.sv"
 
 module writeback_stage (
     // Clock & reset_i
@@ -73,19 +74,16 @@ module writeback_stage (
     
     assign {alu_result_w, reduced_data_w, pc_target_w, pc_plus4_w, imm_ext_w, rd_w_o, result_src_w, reg_write_w_o} = outputs_w;
     
-    mux5 u_mux5_result (
-        // Data inputs
-        .d0                             (alu_result_w),
-        .d1                             (pc_target_w),
-        .d2                             (pc_plus4_w),
-        .d3                             (imm_ext_w),
-        .d4                             (reduced_data_w),
-
-        // Select input
-        .s                              (result_src_w),
-
-        // Data output
-        .y                              (result_w_o)
-    );
+    // Result mux
+    always_comb begin
+        case (result_src_w)
+            `RESULT_ALU:      result_w_o = alu_result_w;
+            `RESULT_PCTARGET: result_w_o = pc_target_w;
+            `RESULT_PCPLUS4:  result_w_o = pc_plus4_w;
+            `RESULT_IMM_EXT:  result_w_o = imm_ext_w;
+            `RESULT_MEM_DATA: result_w_o = reduced_data_w;
+            default:          result_w_o = '0;
+        endcase
+    end
 
 endmodule

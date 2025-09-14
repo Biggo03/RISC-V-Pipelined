@@ -12,6 +12,7 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "control_macros.sv"
 
 module fetch_stage (
     // Clock & reset_i
@@ -33,22 +34,18 @@ module fetch_stage (
 );
 
     // ---- Intermediate signal ----
-    logic [31:0] PCNextF;
+    logic [31:0] pc_next_f;
     
     //pc Register logic
-    mux4 u_mux4_pc (
-        // Data inputs
-        .d0                             (pc_plus4_f_o),
-        .d1                             (pred_pc_target_f_i),
-        .d2                             (pc_plus4_e_i),
-        .d3                             (pc_target_e_i),
-
-        // Select input
-        .s                              (pc_src_i),
-
-        // Data output
-        .y                              (PCNextF)
-    );
+    always_comb begin
+        case(pc_src_i)
+            `PC_SRC_SEQ_F:    pc_next_f = pc_plus4_f_o;
+            `PC_SRC_PRED_F:   pc_next_f = pred_pc_target_f_i;
+            `PC_SRC_SEQ_E:    pc_next_f = pc_plus4_e_i;
+            `PC_SRC_TARGET_E: pc_next_f = pc_target_e_i;
+            default:          pc_next_f = '0;
+        endcase
+    end
         
     flop u_pc_reg (
         // Clock & reset_i
@@ -57,7 +54,7 @@ module fetch_stage (
         .en                             (~stall_f_i),
 
         // Data input
-        .D                              (PCNextF),
+        .D                              (pc_next_f),
 
         // Data output
         .Q                              (pc_f_o)

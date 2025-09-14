@@ -12,6 +12,8 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "control_macros.sv"
+`include "instr_macros.sv"
 
 module branch_resolution_unit (
     // Instruction decode inputs
@@ -28,34 +30,23 @@ module branch_resolution_unit (
     output logic       pc_src_res_o
 );
 
-    //Branch signal computation
     always @(*) begin
         
         case(branch_op_i)
-            
-            2'b00: pc_src_res_o = 1'b0; //Non-branching instructions
-            2'b01: pc_src_res_o = 1'b1; //Jumping instructions
-            
-            //B-type instructions
-            2'b11: begin
-                
-                //Type of branch dependant on funct3_i
+            `NON_BRANCH: pc_src_res_o = 1'b0;
+            `JUMP:       pc_src_res_o = 1'b1;
+            `BRANCH: begin
                 case(funct3_i)
-                    
-                    3'b000: pc_src_res_o = zero_flag_i;      //beq
-                    3'b001: pc_src_res_o = ~zero_flag_i;     //bne
-                    3'b101: pc_src_res_o = ~(neg_flag_i^v_flag_i); //bge
-                    3'b111: pc_src_res_o = carry_flag_i;      //bgeu
-                    3'b100: pc_src_res_o = neg_flag_i^v_flag_i;    //blt
-                    3'b110: pc_src_res_o = ~carry_flag_i;     //bltu
-                    default: pc_src_res_o = 1'bx;   //Unknown branch condition
-                
+                    `F3_BEQ:  pc_src_res_o = zero_flag_i;
+                    `F3_BNE:  pc_src_res_o = ~zero_flag_i;
+                    `F3_BGE:  pc_src_res_o = ~(neg_flag_i^v_flag_i);
+                    `F3_BGEU: pc_src_res_o = carry_flag_i;
+                    `F3_BLT:  pc_src_res_o = neg_flag_i^v_flag_i;
+                    `F3_BLTU: pc_src_res_o = ~carry_flag_i;
+                    default:  pc_src_res_o = 1'b0;
                 endcase
-                
             end
-            
-            default: pc_src_res_o = 1'bx; //Unknown branch_op_i
-            
+            default: pc_src_res_o = 1'b0; //Unknown branch_op_i
         endcase
     
     end

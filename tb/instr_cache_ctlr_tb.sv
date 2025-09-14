@@ -72,17 +72,17 @@ module instr_cache_ctlr_tb();
         //Normal operation hit
         branch_op_e[0] = 0; miss_array = 0; pc_src_reg[1] = 0;
         #10;
-        assert(u_DUT.delay_applied === 0 & instr_cache_rep_active === 1) else $fatal(1, "Normal operation hit fail");
+        assert(u_DUT.present_state === 0 & instr_cache_rep_active === 1) else $fatal(1, "Normal operation hit fail");
         
         //Normal operation miss
         miss_array = '1;
         #10;
-        assert(u_DUT.delay_applied === 0 & instr_cache_rep_active === 1) else $fatal(1, "Normal operation miss fail");
+        assert(u_DUT.present_state === 0 & instr_cache_rep_active === 1) else $fatal(1, "Normal operation miss fail");
         
         //Correct branch hit
         miss_array = 0; branch_op_e[0] = 1;
         #10;
-        assert(u_DUT.delay_applied === 0 & instr_cache_rep_active === 1) else $fatal(1, "Correct branch hit step 1 failed");
+        assert(u_DUT.present_state === 0 & instr_cache_rep_active === 1) else $fatal(1, "Correct branch hit step 1 failed");
         
         branch_op_e[0] = 0;
         #10;
@@ -91,30 +91,30 @@ module instr_cache_ctlr_tb();
         miss_array = {64{1'b1}} ; branch_op_e[0] = 1;
         #5;
         //instr_cache_rep_active goes low
-        assert(instr_cache_rep_active === 0 && u_DUT.delay_applied === 0) else $fatal(1, "Correct branch miss instr_cache_rep_active error");
+        assert(instr_cache_rep_active === 0 && u_DUT.present_state === 0) else $fatal(1, "Correct branch miss instr_cache_rep_active error");
         #6;
         branch_op_e[0] = 0;
-        //instr_cache_rep_active goes high based on delay_applied
-        assert(u_DUT.delay_applied === 1 && instr_cache_rep_active === 1) else $fatal(1, "Correct branch miss state transition failed");
+        //instr_cache_rep_active goes high based on present_state
+        assert(u_DUT.present_state === 1 && instr_cache_rep_active === 1) else $fatal(1, "Correct branch miss state transition failed");
         #9;
         
         //Misprediction hit
         miss_array = 0; branch_op_e[0] = 1;
         #10;
-        assert(u_DUT.delay_applied === 0 && instr_cache_rep_active === 1) else $fatal(1, "Misprediction hit error");
+        assert(u_DUT.present_state === 0 && instr_cache_rep_active === 1) else $fatal(1, "Misprediction hit error");
         #10;
         
         //Misprediction miss;
         miss_array = {64{1'b1}}; branch_op_e[0] = 1;
         #5;
-        assert(instr_cache_rep_active === 0 && u_DUT.delay_applied === 0) else $fatal(1, "Misprediction miss instr_cache_rep_active error");
+        assert(instr_cache_rep_active === 0 && u_DUT.present_state === 0) else $fatal(1, "Misprediction miss instr_cache_rep_active error");
         #5;
         
         //At clk edge, indicate a miss
         pc_src_reg[1] = 1;
         #1;
         
-        assert(instr_cache_rep_active === 0 && u_DUT.delay_applied === 1) else $fatal(1, "Misprediction miss state transition error");
+        assert(instr_cache_rep_active === 0 && u_DUT.present_state === 1) else $fatal(1, "Misprediction miss state transition error");
         
         #9;
         branch_op_e[0] = 0; 
@@ -123,7 +123,7 @@ module instr_cache_ctlr_tb();
         #1;
         pc_src_reg[1] = 0;
         #1;
-        assert(instr_cache_rep_active === 1 && u_DUT.delay_applied === 0) else $fatal(1, "Misprediction miss state transition error (2)");
+        assert(instr_cache_rep_active === 1 && u_DUT.present_state === 0) else $fatal(1, "Misprediction miss state transition error (2)");
         
         $display("TEST PASSED");
         $finish;

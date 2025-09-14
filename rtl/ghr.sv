@@ -27,58 +27,53 @@ module ghr (
     output logic [1:0] local_src_o
 );
 
-    // ----- State encoding -----
-    localparam UU = 2'b00;
-    localparam UT = 2'b01;
-    localparam TU = 2'b10;
-    localparam TT = 2'b11;
+    // ----- ghr states -----
+    typedef enum logic [1:0] {
+        UU = 2'b00,
+        UT = 2'b01,
+        TU = 2'b10,
+        TT = 2'b11
+    } ghr_state_t;
 
     // ----- State registers -----
-    logic [1:0] present_state;
-    logic [1:0] next_state;
+    ghr_state_t present_state;
+    ghr_state_t next_state;
 
-    //State transition logic
+    // State transition logic
     always @(posedge clk_i, posedge reset_i) begin
-        
         if (reset_i) begin
-        present_state <= UT; // Arbitrary reset_i state
-        next_state <= UT; //Default stay in initialized state
-        local_src_o <= UT;
+            present_state <= UT;
+            next_state <= UT;
         end else begin
             present_state <= next_state;
-            local_src_o <= next_state;
         end
-        
     end
 
-    //Next state logic
-    always @(*) begin
-        
+    // Next state logic
+    always_comb begin
         if (branch_op_e_i[0] & ~stall_e_i) begin
-
             case (present_state)
-                
                 UU: begin
-                    if (pc_src_res_e_i) next_state <= UT;
-                    else next_state <= UU;
+                    if (pc_src_res_e_i) next_state = UT;
+                    else                next_state = UU;
                 end
                 UT: begin
-                    if (pc_src_res_e_i) next_state <= TT;
-                    else next_state <= TU;
+                    if (pc_src_res_e_i) next_state = TT;
+                    else                next_state = TU;
                 end
                 TU: begin
-                    if (pc_src_res_e_i) next_state <= UT;
-                    else next_state <= UU;
+                    if (pc_src_res_e_i) next_state = UT;
+                    else                next_state = UU;
                 end
                 TT: begin
-                    if (pc_src_res_e_i) next_state <= TT;
-                    else next_state <= TU;
+                    if (pc_src_res_e_i) next_state = TT;
+                    else                next_state = TU;
                 end
-            
             endcase
-        
         end
-        
     end
+
+    // Output assignment
+    assign local_src_o = present_state;
 
 endmodule

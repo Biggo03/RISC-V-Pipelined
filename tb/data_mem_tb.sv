@@ -25,7 +25,7 @@ module data_mem_tb();
     // Stimulus and device outputs
     logic        clk;
     logic        WE;
-    logic [1:0]  width_src;
+    logic [2:0]  width_src;
     logic [31:0] A;
     logic [31:0] WD;
     logic [31:0] RD;
@@ -55,7 +55,7 @@ module data_mem_tb();
         dump_setup;
         
         //Initialize input signals 
-        clk = 0; WE = 1; width_src = 2'b00;
+        clk = 0; WE = 1; width_src = `WIDTH_32;
         
         //Populate memory with values using word storage
         for (int i = 0; i < 64; i++) begin
@@ -71,7 +71,7 @@ module data_mem_tb();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
         //set storage mode to HW
-        width_src = 2'b10;
+        width_src = `WIDTH_16S;
         
         //Populate halfword intervals with unique values
         for (int i = 0; i < 128; i++) begin
@@ -98,7 +98,7 @@ module data_mem_tb();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
         //set storage mode to byte, enable writing
-        width_src = 2'b01; WE = 1;
+        width_src = `WIDTH_8S; WE = 1;
         
         //Populate byte intervals with unique values
         for (int i = 0; i < 256; i++) begin

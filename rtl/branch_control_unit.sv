@@ -12,6 +12,7 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "control_macros.sv"
 
 module branch_control_unit (
     // Control inputs
@@ -26,12 +27,6 @@ module branch_control_unit (
     output logic [1:0] pc_src_o
 );
 
-    // ----- Branch resolution select encodings -----
-    localparam pc_plus4_f     = 2'b00;
-    localparam pred_pc_target_f = 2'b01;
-    localparam pc_plus4_e     = 2'b10;
-    localparam pc_target_e    = 2'b11;
-
     // ----- Branch resolution intermediates -----
     logic [1:0] first_stage_out;
     logic [3:0] second_stage_in;
@@ -40,24 +35,18 @@ module branch_control_unit (
     
     //Prediction logic
     always @(*) begin
-        
-        if (op_f_i == 2'b11 & pc_src_pred_f_i) first_stage_out = pred_pc_target_f;
-        else first_stage_out = pc_plus4_f;
-        
+        if (op_f_i == 2'b11 & pc_src_pred_f_i) first_stage_out = `PC_SRC_PRED_F;
+        else                                   first_stage_out = `PC_SRC_SEQ_F;
     end
     
     //Rollback logic
     always @(*) begin
-        
         casez (second_stage_in)
-        
-            4'b0111: pc_src_o = pc_target_e;
-            4'b?110: pc_src_o = pc_plus4_e;
-            4'b?101: pc_src_o = pc_target_e;
+            4'b0111: pc_src_o = `PC_SRC_TARGET_E;
+            4'b?110: pc_src_o = `PC_SRC_SEQ_E;
+            4'b?101: pc_src_o = `PC_SRC_TARGET_E;
             default: pc_src_o = first_stage_out;
-        
         endcase
-        
     end
 
 endmodule

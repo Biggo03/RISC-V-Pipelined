@@ -12,6 +12,7 @@
 //
 //  Notes:        Uses pc_e for corrections, and local predictor updates, uses pc_f_i for fetching predictions
 //==============================================================//
+`include "control_macros.sv"
 
 module branching_buffer (
     // Clock & reset_i
@@ -46,7 +47,7 @@ module branching_buffer (
     genvar i;
     
     //Every group of 4 bits corrosponds to a given pc_e index
-    assign enable = branch_op_e_i[0] ? 1'b1 << {pc_e, local_src_i} : 0;
+    assign enable = (branch_op_e_i != `NON_BRANCH) ? 1'b1 << {pc_e, local_src_i} : 0;
     
     generate
         for (i = 0; i < 4096; i = i + 1) begin
@@ -71,9 +72,9 @@ module branching_buffer (
     always @(posedge clk_i) begin
         if (reset_i) begin
             local_reset <= {4096{1'b1}};
-        end else if (~target_match_i && branch_op_e_i[0]) begin
+        end else if (~target_match_i && (branch_op_e_i != `NON_BRANCH)) begin
             buffer_entry[pc_e][31:0] <= pc_target_e_i;
-            local_reset <= 0; //Initizlize to 0 to ensure only current branch stays reset_i
+            local_reset <= 0; //Initilize to 0 to ensure only current branch stays reset_i
             local_reset[pc_e] <= 1'b1;
         end else begin
             local_reset <= 0; //Ensures all local predictors are ready after a reset_i

@@ -12,6 +12,7 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "control_macros.sv"
 
 module memory_stage (
     // Clock & reset_i
@@ -79,19 +80,16 @@ module memory_stage (
     assign {alu_result_m_o, write_data_m_o, pc_target_m_o, pc_plus4_m_o, imm_ext_m_o, rd_m_o, 
             width_src_m_o, result_src_m_o, mem_write_m_o, reg_write_m_o} = outputs_m;
     
-    mux4 u_mux4_forward (
-        // Data inputs
-        .d0                             (alu_result_m_o),
-        .d1                             (pc_target_m_o),
-        .d2                             (pc_plus4_m_o),
-        .d3                             (imm_ext_m_o),
-
-        // Select input
-        .s                              (result_src_m_o[1:0]),
-
-        // Data output
-        .y                              (forward_data_m_o)
-    );
+    // Forwarding mux
+    always_comb begin
+        case (result_src_m_o)
+            `RESULT_ALU:      forward_data_m_o = alu_result_m_o;
+            `RESULT_PCTARGET: forward_data_m_o = pc_target_m_o;
+            `RESULT_PCPLUS4:  forward_data_m_o = pc_plus4_m_o;
+            `RESULT_ALU:      forward_data_m_o = imm_ext_m_o;
+            default:          forward_data_m_o = '0;
+        endcase
+    end
         
     reduce u_reduce_width_change (
         // Data input

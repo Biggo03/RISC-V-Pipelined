@@ -12,7 +12,7 @@
 //
 //  Notes:        N/A
 //==============================================================//
-
+`include "control_macros.sv"
 
 module instr_cache_ctlr #(
     parameter int S = 64
@@ -32,27 +32,37 @@ module instr_cache_ctlr #(
     output logic                  instr_miss_f_o,
     output logic                  instr_cache_rep_active_o
 );
-    
-    // ---- Control signal ----
-    logic delay_applied;
-    
-    //Decoding input set
+
+    // ----- Delay FSM states -----
+    typedef enum logic [0:0] {
+        READY_TO_DELAY = 1'b0,
+        DELAYING       = 1'b1
+    } delay_state_t;
+
+    // ----- State registers -----
+    delay_state_t present_state;
+    delay_state_t next_state;
+
+    // Decode input set
     assign active_array_o = 1'b1 << set_i;
     assign instr_miss_f_o = miss_array_i[set_i];
     
-    //Signal determining if replacement active
-    assign instr_cache_rep_active_o = ~(branch_op_e_i[0] & instr_miss_f_o & (~delay_applied)) & ~pc_src_reg_i[1];
+    // Determines if signal active
+    assign instr_cache_rep_active_o = ((branch_op_e_i == `NON_BRANCH) | ~instr_miss_f_o | present_state) & ~pc_src_reg_i[1];
     
-    //Replacement state machine logic
-    //delay_applied = 0 indicates in ReadyToDelay state
-    always @(posedge clk_i) begin
-        if (reset_i) begin
-            delay_applied <= 0; 
-        end else if (~delay_applied & ~instr_cache_rep_active_o) begin
-            delay_applied <= 1'b1;
-        end else if (delay_applied & (~instr_miss_f_o | pc_src_reg_i[1])) begin
-            delay_applied <= 0;
-        end
+    // State update logic
+    always_ff @(posedge clk_i) begin
+        if (reset_i) present_state <= READY_TO_DELAY;
+        else         present_state <= next_state;
+    end
+
+    // Next state logic
+    always_comb begin
+        next_state = present_state;
+        case (present_state)
+            READY_TO_DELAY: if (~instr_cache_rep_active_o)         next_state = DELAYING;
+            DELAYING: if (~instr_miss_f_o | pc_src_reg_i[1])       next_state = READY_TO_DELAY;
+        endcase
     end
   
 endmodule

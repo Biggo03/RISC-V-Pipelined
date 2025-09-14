@@ -12,6 +12,7 @@
 //
 //  Notes:        Supports addition, subtraction, AND, OR, XOR, SLT, SLTU, logical shift left, logical shift right, and arithmetic shift right
 //==============================================================//
+`include "control_macros.sv"
 
 module alu #(
     parameter int WIDTH = 32
@@ -44,38 +45,30 @@ module alu #(
         
         //Operation Logic
         case(alu_control_i)
-            4'b1000: {carry_out, alu_result_o} = A + B; //Addition
-            4'b1001: {carry_out, alu_result_o} = A - B; //Subtraction
-            4'b0010: alu_result_o = A & B; //AND
-            4'b0011: alu_result_o = A | B; //OR
-            4'b0100: alu_result_o = A ^ B; //XOR
-            4'b0111: alu_result_o = A << B; //Shift Left Logical
-            4'b0000: alu_result_o = A >> B; //Shift Right Logical
-            4'b0001: alu_result_o = $signed(A) >>> B; //Shift Right Arithmetic
+            `ALU_ADD: {carry_out, alu_result_o} = A + B;
+            `ALU_SUB: {carry_out, alu_result_o} = A - B;
+            `ALU_AND: alu_result_o = A & B;
+            `ALU_OR:  alu_result_o = A | B;
+            `ALU_XOR: alu_result_o = A ^ B;
+            `ALU_SLL: alu_result_o = A << B;
+            `ALU_SRL: alu_result_o = A >> B;
+            `ALU_SRA: alu_result_o = $signed(A) >>> B;
                 
-            //SLT
-            4'b0101: begin
+            `ALU_SLT: begin
                     alu_result_o = A - B;
                     v_control = ~(alu_control_i[0] ^ A[WIDTH-1] ^ B[WIDTH-1]) & (A[WIDTH-1] ^ alu_result_o[WIDTH-1]);
                     
-                    
                     //LT comparison for sgined numbers determined by V and N flags (V ^ N)
-                    if (v_control ^ alu_result_o[WIDTH-1]) alu_result_o = 1;
-                    else alu_result_o = 0;
-                
+                    if (v_control ^ alu_result_o[WIDTH-1]) alu_result_o = 1'b1;
+                    else                                   alu_result_o = 1'b0;
             end
             
-            //SLTU
-            4'b0110: begin
-                
-                //Assumed unsigned representation
+            `ALU_SLTU: begin
                 if (A < B) alu_result_o = 1;
-                else alu_result_o = 0;
-                
+                else       alu_result_o = 0;
             end
             
             default: alu_result_o = {(WIDTH + 1){1'bx}}; //Undefined case
-        
         endcase
         
         //Overflow and Carry Flag logic
@@ -89,17 +82,13 @@ module alu #(
         end else begin
             //Default values of C and V
             carry_flag_o = 1'b0;
-            v_flag_o = 1'b0;
+            v_flag_o     = 1'b0;
         end
         
     end
     
     //Flag Assignment
-        
-    //Negative Flag
-    assign neg_flag_o = alu_result_o[WIDTH-1];
-    
-    //Zero Flag
+    assign neg_flag_o  = alu_result_o[WIDTH-1];
     assign zero_flag_o = &(~alu_result_o);
 
 endmodule

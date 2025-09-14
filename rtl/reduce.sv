@@ -12,6 +12,7 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "control_macros.sv"
 
 module reduce (
     // Data inputs
@@ -26,25 +27,12 @@ module reduce (
     
     always @(*) begin
         case(width_src_i)
-        
-            //32-bit
-            3'b000: result_o = BaseResult;
-        
-            //16-bit signed
-            3'b010: result_o = {{16{BaseResult[15]}}, BaseResult[15:0]};
-        
-            //16-bit unsigned
-            3'b110: result_o = {16'b0, BaseResult[15:0]};
-        
-            //8-bit signed
-            3'b001: result_o = {{24{BaseResult[7]}}, BaseResult[7:0]};
-        
-            //8-bit unsigned
-            3'b101: result_o = {24'b0, BaseResult[7:0]};
-        
-            //Undefined
-            default: result_o = 32'bx;
-        
+            `WIDTH_32:  result_o = BaseResult;
+            `WIDTH_16S: result_o = {{16{BaseResult[15]}}, BaseResult[15:0]};
+            `WIDTH_16U: result_o = {16'b0, BaseResult[15:0]};
+            `WIDTH_8S:  result_o = {{24{BaseResult[7]}}, BaseResult[7:0]};
+            `WIDTH_8U:  result_o = {24'b0, BaseResult[7:0]};
+            default:    result_o = 32'bx;
         endcase
     
     end

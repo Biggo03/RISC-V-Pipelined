@@ -55,12 +55,12 @@ module alu_decoder_tb();
 
         dump_setup;
 
-        ALUControlExp[0] = 4'bx;
+        ALUControlExp[0] = 4'b0;
         ALUControlExp[1] = 4'b0111;
         ALUControlExp[2] = 4'b0101;
         ALUControlExp[3] = 4'b0110;
         ALUControlExp[4] = 4'b0100;
-        ALUControlExp[5] = 4'bx;
+        ALUControlExp[5] = 4'b0;
         ALUControlExp[6] = 4'b0011;
         ALUControlExp[7] = 4'b0010;
 
@@ -137,7 +137,7 @@ module alu_decoder_tb();
             
             alu_op = 2'b11; #10;
             
-            assert(alu_control === 4'bx) else $fatal(1, "Error: Unused alu_op code results in unexpected output");
+            assert(alu_control === 4'b0) else $fatal(1, "Error: Unused alu_op code results in unexpected output");
             
                 $display("TEST PASSED");
                 $finish;

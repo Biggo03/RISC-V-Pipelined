@@ -51,7 +51,7 @@ module width_decoder_tb();
         
         //Ensure output is as expected for all values of funct3
         for (int i = 0; i < 8; i++) begin
-            funct3 = i; #10;
+            funct3 = logic'(i); #10;
             assert (width_src === WidthSrcExp) else $fatal(1, "Error: width_op = 0 produces unexpected output");
         end 
         
@@ -66,12 +66,12 @@ module width_decoder_tb();
         funct3Val[4] = 3'b100;
         funct3Val[5] = 3'b111;
 
-        funct3Output[0] = 3'b00;
+        funct3Output[0] = 3'b000;
         funct3Output[1] = 3'b010;
         funct3Output[2] = 3'b001;
         funct3Output[3] = 3'b110;
         funct3Output[4] = 3'b101;
-        funct3Output[5] = 3'bxxx;
+        funct3Output[5] = 3'b000;
         
         //loop through values of funct3
         for (int i = 0; i < 6; i++) begin

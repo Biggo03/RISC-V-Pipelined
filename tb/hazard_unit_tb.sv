@@ -256,14 +256,14 @@ module hazard_unit_tb();
     endtask
 
     task drive_load_hazard_rs1();
-        result_src_e = 3'b111;
+        result_src_e = 3'b100;
         rs1_d = 1;
         rd_e = rs1_d;
         #5;
     endtask
 
     task drive_load_hazard_rs2();
-        result_src_e = 3'b111;
+        result_src_e = 3'b100;
         rs2_d = 2;
         rd_e = rs2_d;
         #5;

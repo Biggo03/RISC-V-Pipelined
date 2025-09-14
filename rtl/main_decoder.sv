@@ -77,7 +77,7 @@ module main_decoder (
 
         `LUI_OP: controls = {
             `WRITE_REG, `U_EXT, `ALU_SRC_NA, `NO_WRITE_MEM,
-            `RESULT_IM_EXT, `NON_BRANCH, `ALU_OP_NA, `WIDTH_CONST, `PC_BASE_NA
+            `RESULT_IMM_EXT, `NON_BRANCH, `ALU_OP_NA, `WIDTH_CONST, `PC_BASE_NA
         };
 
         `AUIPC_OP: controls = {

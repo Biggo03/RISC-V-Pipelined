@@ -26,7 +26,7 @@ module width_decoder (
 );
 
     always_comb begin
-        if (~width_op_i) begin
+        if (width_op_i == `WIDTH_CONST) begin
             width_src_o = `WIDTH_32;  // default
         end else begin
             case (funct3_i)
@@ -35,7 +35,7 @@ module width_decoder (
                 `F3_BYTE: width_src_o   = `WIDTH_8S;   // lb, sb
                 `F3_HALF_U: width_src_o = `WIDTH_16U;  // lhu
                 `F3_BYTE_U: width_src_o = `WIDTH_8U;   // lbu
-                default: width_src_o   = `WIDTH_32;  // default val
+                default: width_src_o    = `WIDTH_32;  // default val
             endcase
         end
     end

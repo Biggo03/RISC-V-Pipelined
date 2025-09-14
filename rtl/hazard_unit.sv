@@ -12,6 +12,7 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "control_macros.sv"
 
 module hazard_unit (
     // Fetch stage inputs
@@ -80,7 +81,7 @@ module hazard_unit (
     end  
     
     //stall and flush logic
-    assign LoadStall = result_src_e_i[2] & ((rs1_d_i == rd_e_i) | (rs2_d_i == rd_e_i));
+    assign LoadStall = (result_src_e_i == `RESULT_MEM_DATA) & ((rs1_d_i == rd_e_i) | (rs2_d_i == rd_e_i));
     
     //Stalls
     assign stall_f_o = (LoadStall | instr_miss_f_i) & ~pc_src_reg_i[1];

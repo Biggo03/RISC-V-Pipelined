@@ -119,7 +119,7 @@ module execute_stage (
    //Test Branch Prediction
     always @(*) begin
         if (pc_target_e_o == pred_pc_target_e) target_match_e_o = 1;
-        else target_match_e_o = 0;
+        else                                   target_match_e_o = 0;
     end
    
     //Stage multiplexers:

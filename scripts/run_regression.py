@@ -145,7 +145,6 @@ def get_module_paths(rtl_dir, module_path, module_paths=None):
         module_paths = []
 
     module_pattern = re.compile(r"u_[^\s]+\s\(")
-    package_pattern = re.compile(r"^\s*import")
 
     with open(module_path, "r") as f:
         for line in f:
@@ -162,7 +161,7 @@ def get_module_paths(rtl_dir, module_path, module_paths=None):
 
     return module_paths
 
-def run_test(test, tb_file, test_out_dir, result_info):
+def run_test(test, config, test_out_dir, result_info, test_program=None):
     """
     Runs a specific testbench using Icarus Verilog
 
@@ -171,6 +170,10 @@ def run_test(test, tb_file, test_out_dir, result_info):
         tb_file: Name of the testbench file
         test_out_dir: Where the outputs of the test are placed
     """
+    # Get info from config
+    tb_file = config["tb"]
+    defines = config["defines"]
+
     regression_logger = logging.getLogger("regression_logger")
     # --- Project directories ---
     proj_dir     = Path(__file__).resolve().parent.parent
@@ -183,11 +186,19 @@ def run_test(test, tb_file, test_out_dir, result_info):
 
     os.makedirs(filelist_dir, exist_ok=True)
 
+
+    if test_program:
+        test = f"{test}_{test_program.removesuffix('.txt')}"
+        test_program = str(proj_dir / 'test_inputs' / 'riscvprograms' / test_program)
+        defines.append(f"TEST_FILE=\"{test_program}\"")
+
     # --- Source files ---
     source_files = [tb_path, *common_tb]
 
     # --- Defines ---
-    defines = [f'DUMP_PATH="{test_out_dir}/{test}.vcd"']
+    defines.append(f'DUMP_PATH="{test_out_dir}/{test}.vcd"')
+
+
 
     # --- Build compile command ---
     run_cmd = [
@@ -268,7 +279,15 @@ def main():
         test_out_dir = top_out_dir / test
         test_out_dir.mkdir(parents=True, exist_ok=True)
         subprocess.run(f"rm -rf {test_out_dir}/*", shell=True)
-        run_test(test, config["tb"], test_out_dir, result_info)
+
+        if ("system" in config["tags"]):
+            test_programs = test_data["RISCV_PROGRAMS"]
+
+            for program in test_programs:
+                run_test(test, config, test_out_dir, result_info, program)
+        else:
+            run_test(test, config, test_out_dir, result_info)
+
 
     # Report results
     passed_tests = result_info["PASSED_TESTS"]

@@ -24,31 +24,31 @@ module icache_l1 #(
     input  logic        reset_i,
 
     // Control inputs
-    input  logic        RepReady,
+    input  logic        rep_ready_i,
     input  logic [1:0]  pc_src_reg_i,
     input  logic [1:0]  branch_op_e_i,
 
     // Address & data inputs
     input  logic [31:0] pc_f_i,
-    input  logic [63:0] RepWord,
+    input  logic [63:0] rep_word_i,
 
     // Data outputs
     output logic [31:0] instr_f_o,
 
     // Status outputs
     output logic        instr_miss_f_o,
-    output logic        instr_cache_rep_active_o
+    output logic        instr_cache_rep_en_o
 );
     
     // ----- Parameters -----
-    localparam b          = $clog2(B);
-    localparam s          = $clog2(S);
-    localparam NumTagBits = 32 - s - b;
+    localparam b            = $clog2(B);
+    localparam s            = $clog2(S);
+    localparam num_tag_bits = 32 - s - b;
 
     // ----- Address fields -----
-    logic [b-1:0]        block;
-    logic [s-1:0]        set;
-    logic [NumTagBits-1:0] tag;
+    logic [b-1:0]            block;
+    logic [s-1:0]            set;
+    logic [num_tag_bits-1:0] tag;
 
     // ----- set information -----
     logic [S-1:0]  active_array;
@@ -56,13 +56,13 @@ module icache_l1 #(
     logic [31:0]   data_array [S-1:0];
 
     // ----- Replacement control -----
-    logic rep_enable;
+    logic rep_active;
 
     assign block = pc_f_i[b-1:0];
     assign set = pc_f_i[s+b-1:b]; 
     assign tag = pc_f_i[31:s+b]; 
     
-    assign rep_enable = instr_cache_rep_active_o & RepReady;
+    assign rep_active = instr_cache_rep_en_o & rep_ready_i;
     
     //Generate Sets
     genvar i;
@@ -70,7 +70,7 @@ module icache_l1 #(
         for (i = 0; i < S; i = i + 1) begin
             instr_cache_set_multi #( // u_instr_cache_set_multi (
                 .B                              (B),
-                .NumTagBits                     (NumTagBits),
+                .num_tag_bits                   (num_tag_bits),
                 .E                              (E)
             ) u_instr_cache_set_multi (
                 // Clock & reset_i
@@ -79,14 +79,14 @@ module icache_l1 #(
 
                 // Control inputs
                 .ActiveSet                      (active_array[i]),
-                .rep_enable_i                   (rep_enable),
+                .rep_active_i                   (rep_active),
 
                 // Address inputs
                 .block_i                        (block),
                 .tag_i                          (tag),
 
                 // Replacement data input
-                .RepWord                        (RepWord),
+                .rep_word_i                     (rep_word_i),
 
                 // Data outputs
                 .Data                           (data_array[i]),
@@ -114,9 +114,8 @@ module icache_l1 #(
         // Control outputs
         .active_array_o                 (active_array),
         .instr_miss_f_o                 (instr_miss_f_o),
-        .instr_cache_rep_active_o       (instr_cache_rep_active_o)
+        .instr_cache_rep_en_o           (instr_cache_rep_en_o)
     );
-    
     
     //Assign output
     assign instr_f_o = data_array[set];

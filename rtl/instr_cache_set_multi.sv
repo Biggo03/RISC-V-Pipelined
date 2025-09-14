@@ -10,7 +10,7 @@
 //  Repository:   https://github.com/Biggo03/RISC-V-Pipelined
 //
 //  Parameters:   B: Size of block in bytes
-//                NumTagBits: Number of tag bits
+//                num_tag_bits: Number of tag bits
 //                E: Associativity
 //
 //  Notes:        This module assumes the L2 cache can't provide data in the same cycle as a miss
@@ -18,7 +18,7 @@
 
 module instr_cache_set_multi #(
     parameter int B          = 64,
-    parameter int NumTagBits = 20,
+    parameter int num_tag_bits = 20,
     parameter int E          = 4
 ) (
     // Clock & reset_i
@@ -27,12 +27,12 @@ module instr_cache_set_multi #(
 
     // Control inputs
     input  logic                  ActiveSet,
-    input  logic                  rep_enable_i,
+    input  logic                  rep_active_i,
 
     // Address & data inputs
     input  logic [$clog2(B)-1:0]  block_i,
-    input  logic [NumTagBits-1:0] tag_i,
-    input  logic [63:0]           RepWord,
+    input  logic [num_tag_bits-1:0] tag_i,
+    input  logic [63:0]           rep_word_i,
 
     // Data outputs
     output logic [31:0]           Data,
@@ -44,7 +44,7 @@ module instr_cache_set_multi #(
     localparam words  = B/4;
 
     // ----- tag_i + validity -----
-    logic [NumTagBits-1:0] block_tags   [E-1:0];
+    logic [num_tag_bits-1:0] block_tags   [E-1:0];
     logic [E-1:0]          valid_bits;
     logic [E-1:0]          matched_block;
 
@@ -70,7 +70,7 @@ module instr_cache_set_multi #(
     integer i;
     genvar n;
     
-    assign rep_active = CacheSetMiss && ActiveSet && rep_enable_i;
+    assign rep_active = CacheSetMiss && ActiveSet && rep_active_i;
 
     //tag_i and valid comparison logic
     always @(*) begin
@@ -170,7 +170,7 @@ module instr_cache_set_multi #(
     //Replacement logic
     always @(posedge clk_i) begin
         if (rep_active) begin
-            set_data[(removed_block*words/2) + rep_counter] <= RepWord;
+            set_data[(removed_block*words/2) + rep_counter] <= rep_word_i;
             //Replace tag and reset_i counter when replacement complete
             if (rep_complete) begin
                 rep_counter <= 0;

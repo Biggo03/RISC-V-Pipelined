@@ -1,7 +1,7 @@
 module instr_cache_set_multi_tb();
 
     localparam B          = 64;
-    localparam NumTagBits = 26;
+    localparam num_tag_bits = 26;
     localparam E          = 4;
     localparam words      = B/4;
 
@@ -9,12 +9,12 @@ module instr_cache_set_multi_tb();
     logic                  clk;
     logic                  reset;
     logic                  ActiveSet;
-    logic                  rep_enable;
+    logic                  rep_active;
     logic [$clog2(B)-1:0]  block;
-    logic [NumTagBits-1:0] tag;
-    logic [NumTagBits-1:0] block_tags_e [E-1:0];
+    logic [num_tag_bits-1:0] tag;
+    logic [num_tag_bits-1:0] block_tags_e [E-1:0];
     logic [(B*8)-1:0]      RepBlock;
-    logic [63:0]           RepWord;
+    logic [63:0]           rep_word;
     logic [31:0]           Data;
     logic                  CacheSetMiss;
 
@@ -27,10 +27,10 @@ module instr_cache_set_multi_tb();
         .clk_i                          (clk),
         .reset_i                        (reset),
         .ActiveSet                      (ActiveSet),
-        .rep_enable_i                   (rep_enable),
+        .rep_active_i                   (rep_active),
         .block_i                        (block),
         .tag_i                          (tag),
-        .RepWord                        (RepWord),
+        .rep_word_i                     (rep_word),
         .Data                           (Data),
         .CacheSetMiss                   (CacheSetMiss)
     );
@@ -58,7 +58,7 @@ module instr_cache_set_multi_tb();
         dump_setup;
         
         //Initialization
-        reset = 1; clk = 0; ActiveSet = 0; rep_enable = 0; block = 0; tag = 0;
+        reset = 1; clk = 0; ActiveSet = 0; rep_active = 0; block = 0; tag = 0;
         RepBlock = 512'h55555555_44444444_FFEEAABB_00001111_BBBBBBBB_AAAAAAAA_FFFFFFFF_33333333_22222222_EEEEEEEE_CCCCCCCC_88888888_99999999_12345678_FEDCBA98_00AA00AA;
         #10; 
         reset = 0;
@@ -76,12 +76,12 @@ module instr_cache_set_multi_tb();
         for (integer i = 0; i < E; i = i + 1) begin
             
             //Check data is ready one clock cycle after replacement indicated ready
-            rep_enable = 1;
+            rep_active = 1;
             cycles = 0;
             block_tags_e[i] = tag;
             for (integer n = 0; n < words/2; n = n + 1) begin
-                RepWord = RepBlock[n*64 +: 64];
-                $display("Currently Replacing word: %d, value is: %h", n, RepWord);
+                rep_word = RepBlock[n*64 +: 64];
+                $display("Currently Replacing word: %d, value is: %h", n, rep_word);
                 cycles = cycles + 1;
                 #10;
             end
@@ -92,7 +92,7 @@ module instr_cache_set_multi_tb();
             
             //Update tag
             tag =  tag + 100;
-            rep_enable = 0;
+            rep_active = 0;
             #10;
             AssertMiss();
             
@@ -124,7 +124,7 @@ module instr_cache_set_multi_tb();
         Assertlru_bits();
         
         ActiveSet = 0; 
-        rep_enable = 1;
+        rep_active = 1;
         
         //Ensure that cache remains stable when inactive
         for (int i = 0; i < 64; i = i + 1) begin
@@ -136,7 +136,7 @@ module instr_cache_set_multi_tb();
         
         
         //Check if the LRU block was replaced
-        ActiveSet = 1; rep_enable = 0; tag = 1000;
+        ActiveSet = 1; rep_active = 0; tag = 1000;
         for (int i = 0; i < E; i = i + 1) begin
             if (lru_bits_e[i] == E-1) block_tags_e[i] = tag;
         end
@@ -145,7 +145,7 @@ module instr_cache_set_multi_tb();
         
         //Check replacement policy
         RepBlock = 512'hCCCCCCCC_EEEEEEEE_55555555_12345678_88888888_00AA00AA_BBBBBBBB_99999999_AAAAAAAA_FEDCBA98_FFFFFFFF_44444444_22222222_33333333_00001111_FFEEAABB;
-        rep_enable = 1; 
+        rep_active = 1; 
         
         for (int i = 0; i < E; i = i + 1) begin
             if (i == E-1) lru_bits_e[i] = 0;
@@ -154,7 +154,7 @@ module instr_cache_set_multi_tb();
         
         //Feed replacement words
         for (int i = 0; i < words/2; i = i + 1) begin
-            RepWord = RepBlock[i*64 +: 64];
+            rep_word = RepBlock[i*64 +: 64];
             #10;
         end
         
@@ -164,7 +164,7 @@ module instr_cache_set_multi_tb();
         assert(Data === RepBlock[(block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 2)\nData:          %h\nExpected Data: %h", Data, RepBlock[(block*8) +: 32]);
                                                                            
         //Check that lru_bits update properly when a stored tag is accessed
-        rep_enable = 0; tag = block_tags_e[1]; //block 1's tag
+        rep_active = 0; tag = block_tags_e[1]; //block 1's tag
         for (int i = 0; i < E; i = i + 1) begin
             if (block_tags_e[i] == tag) lru_bits_e[i] = 0;
             else if (lru_bits_e[i] != E-1) lru_bits_e[i] = lru_bits_e[i] + 1;

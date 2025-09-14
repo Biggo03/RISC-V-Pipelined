@@ -24,13 +24,15 @@
     logic        clk;
     logic        reset;
 
-    logic RepReady;
-    logic [63:0] RepWord;
+    logic rep_ready;
+    logic [63:0] rep_word;
     
 
     logic [31:0] write_data_m;
     logic [31:0] alu_result_m;
     logic        mem_write_m;
+
+    int cycle_cnt;
     
     
     riscv_top u_riscv_top (
@@ -39,8 +41,8 @@
         .reset_i                        (reset),
 
         // Temporary L1 instruction cache inputs
-        .RepReady                       (RepReady),
-        .RepWord                        (RepWord),
+        .rep_ready_i                    (rep_ready),
+        .rep_word_i                     (rep_word),
 
         // Memory outputs
         .write_data_m_o                 (write_data_m),
@@ -52,16 +54,21 @@
 
         dump_setup;
 
-        clk = 0; reset = 1; #20; reset = 0;
+        cycle_cnt = 0;
+        clk = 0; 
+        reset = 1; #20; reset = 0;
 
-        $finish;
     end
     
     always begin
-        clk = ~clk; #5;
+        clk = ~clk; 
+        #5;
+        cycle_cnt = cycle_cnt + 1;
     end
     
     always @(negedge clk) begin
+
+        if (cycle_cnt > 10000) $finish;
         
         if (mem_write_m & alu_result_m > 90 & alu_result_m < 120) begin
             if (alu_result_m === 100 & write_data_m === 25) begin

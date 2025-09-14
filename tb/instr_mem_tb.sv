@@ -23,16 +23,23 @@
 module instr_mem_tb();
     
     // Stimulus, output
-    logic [31:0] A;
-    logic [31:0] RD;
+    logic [31:0] pc_f;
+    logic [31:0] instr_f;
 
     // Copy of memory to compare against
-    logic [31:0] RAM [63:0];
+    logic [31:0] RAM [127:0];
 
     // Instantiate DUT
     instr_mem u_DUT (
-        .A                              (A),
-        .RD                             (RD)
+        // Address & data inputs
+        .addr                         (pc_f),
+
+        // Data outputs
+        .rd_o                         (instr_f),
+
+        // Status outputs
+        .instr_miss_f_o               (instr_miss_f),
+        .instr_cache_rep_en_o         (instr_cache_rep_en)
     );
     
     initial begin
@@ -40,12 +47,14 @@ module instr_mem_tb();
         dump_setup;
         
         //Read file containing expected contents
-        $readmemh("riscvprogram.txt", RAM);
+        $readmemh("test_inputs/riscvprograms/riscvprogram_7.txt", RAM);
         
         for (int i = 0; i < 64; i++) begin
-            A = (i * 4); #10;
+            pc_f = (i * 4); #10;
             
-            assert (RD === RAM[i]) else $fatal(1, "Error");
+            assert (instr_f === RAM[i]) else $fatal(1, "Error");
+            assert (instr_miss_f === 1'b0) else $fatal(1, "Error");
+            assert (instr_cache_rep_en === 1'b1) else $fatal(1, "Error");
             
         end
         

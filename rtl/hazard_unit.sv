@@ -39,7 +39,7 @@ module hazard_unit (
 
     // Branch predictor / cache inputs
     input  logic [1:0]  pc_src_reg_i,
-    input  logic        instr_cache_rep_active_i,
+    input  logic        instr_cache_rep_en_i,
 
     // stall outputs
     output logic        stall_f_o,
@@ -91,7 +91,7 @@ module hazard_unit (
     assign stall_w_o = instr_miss_f_i;
     
     //Flushes
-    assign flush_e_o = (pc_src_i[1] & (instr_cache_rep_active_i | pc_src_reg_i[1])) | LoadStall;
+    assign flush_e_o = (pc_src_i[1] & (instr_cache_rep_en_i | pc_src_reg_i[1])) | LoadStall;
     assign flush_d_o = pc_src_i[1];
 
 endmodule

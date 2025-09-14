@@ -37,17 +37,17 @@ module data_mem #(
         //Write logic
         if (WE) begin
         //Change last bit of A index to maintain word, and half-word alignment
-            case(width_src)
-                `WIDTH_32: RAM[A[31:2]] = WD; //Word
+            case(width_src[1:0])
+                2'b00: RAM[A[31:2]] = WD; //Word
                 
                 //Half-word
-                `WIDTH_16S: begin
+                2'b10: begin
                     if (A[1]) RAM[A[31:2]][31:16] = WD[15:0]; //Upper HW
                     else RAM[A[31:2]][15:0] = WD[15:0];       //Lower HW
                 end
                 
                 //Byte
-                `WIDTH_8S: begin
+                2'b01: begin
                     case(A[1:0])
                         2'b00: RAM[A[31:2]][7:0] = WD[7:0];
                         2'b01: RAM[A[31:2]][15:8] = WD[7:0];  
@@ -66,17 +66,17 @@ module data_mem #(
     //Read logic
     always @(*) begin
     
-        case(width_src)
-            `WIDTH_32: RD = RAM[A[31:2]]; //Word
+        case(width_src[1:0])
+            2'b00: RD = RAM[A[31:2]]; //Word
             
             //Half-word
-            `WIDTH_16S: begin
+            2'b10: begin
                 if (A[1]) RD = RAM[A[31:2]][31:16]; //Upper HW
                 else RD = RAM[A[31:2]][15:0];       //Lower HW
             end
             
             //Byte
-            `WIDTH_8S: begin
+            2'b01: begin
                 case(A[1:0])
                     2'b00: RD = RAM[A[31:2]][7:0];    //Byte 0
                     2'b01: RD = RAM[A[31:2]][15:8];   //Byte 1

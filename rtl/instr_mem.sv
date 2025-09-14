@@ -21,11 +21,15 @@
 
 
 module instr_mem (
-    // Address input
-    input  logic [31:0] A,
+    // Address & data inputs
+    input  logic [31:0] addr,
 
-    // Data output
-    output logic [31:0] RD
+    // Data outputs
+    output logic [31:0] rd_o,
+
+    // Status outputs
+    output logic        instr_miss_f_o,
+    output logic        instr_cache_rep_en_o
 );
     
     //Initialize a RAM array (32-bit words, store 64 words)
@@ -33,12 +37,13 @@ module instr_mem (
     
     //Initialize instruction memory with given file
     initial begin
-    
-       $readmemh("riscvprogram_7.txt", RAM);
- 
+       $readmemh(`TEST_FILE, RAM);
     end
     
     //[31:2] as to maintain word alignment
-    assign RD = RAM[A[31:2]];
+    assign rd_o = RAM[addr[31:2]];
+
+    assign instr_miss_f_o = 1'b0;
+    assign instr_cache_rep_en_o = 1'b1;
 
 endmodule

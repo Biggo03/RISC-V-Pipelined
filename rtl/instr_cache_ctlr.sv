@@ -30,7 +30,7 @@ module instr_cache_ctlr #(
     // Control outputs
     output logic [S-1:0]          active_array_o,
     output logic                  instr_miss_f_o,
-    output logic                  instr_cache_rep_active_o
+    output logic                  instr_cache_rep_en_o
 );
 
     // ----- Delay FSM states -----
@@ -48,7 +48,7 @@ module instr_cache_ctlr #(
     assign instr_miss_f_o = miss_array_i[set_i];
     
     // Determines if signal active
-    assign instr_cache_rep_active_o = ((branch_op_e_i == `NON_BRANCH) | ~instr_miss_f_o | present_state) & ~pc_src_reg_i[1];
+    assign instr_cache_rep_en_o = ((branch_op_e_i == `NON_BRANCH) | ~instr_miss_f_o | present_state) & ~pc_src_reg_i[1];
     
     // State update logic
     always_ff @(posedge clk_i) begin
@@ -60,7 +60,7 @@ module instr_cache_ctlr #(
     always_comb begin
         next_state = present_state;
         case (present_state)
-            READY_TO_DELAY: if (~instr_cache_rep_active_o)         next_state = DELAYING;
+            READY_TO_DELAY: if (~instr_cache_rep_en_o)         next_state = DELAYING;
             DELAYING: if (~instr_miss_f_o | pc_src_reg_i[1])       next_state = READY_TO_DELAY;
         endcase
     end

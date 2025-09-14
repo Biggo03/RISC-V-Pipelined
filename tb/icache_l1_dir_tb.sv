@@ -31,19 +31,19 @@ module icache_l1_dir_tb();
 
     localparam s          = $clog2(S);
     localparam b          = $clog2(B);
-    localparam NumTagBits = 32-s-b;
+    localparam num_tag_bits = 32-s-b;
 
     // DUT signals
     logic        clk;
     logic        reset;
-    logic        RepReady;
+    logic        rep_ready;
     logic [31:0] pc_f;
     logic [31:0] instr_f;
-    logic [63:0] RepWord;
+    logic [63:0] rep_word;
     logic [1:0]  pc_src_reg;
     logic [1:0]  branch_op_e;
     logic        instr_miss_f;
-    logic        instr_cache_rep_active;
+    logic        instr_cache_rep_en;
 
     // Signals to make addressing more intuitive
     logic [b-1:0] ByteAddr;
@@ -53,7 +53,7 @@ module icache_l1_dir_tb();
     logic [(B*8)-1:0] RepBlocks [S-1:0][E-1:0];
 
     // Stores tag of each block
-    logic [NumTagBits-1:0] Tags [S-1:0][E-1:0];
+    logic [num_tag_bits-1:0] Tags [S-1:0][E-1:0];
 
     int error_cnt;
 
@@ -64,14 +64,14 @@ module icache_l1_dir_tb();
     ) u_DUT (
         .clk_i                          (clk),
         .reset_i                        (reset),
-        .RepReady                       (RepReady),
+        .rep_ready_i                    (rep_ready),
         .pc_f_i                         (pc_f),
-        .RepWord                        (RepWord),
+        .rep_word_i                     (rep_word),
         .pc_src_reg_i                   (pc_src_reg),
         .branch_op_e_i                  (branch_op_e),
         .instr_f_o                      (instr_f),
         .instr_miss_f_o                 (instr_miss_f),
-        .instr_cache_rep_active_o       (instr_cache_rep_active)
+        .instr_cache_rep_en_o           (instr_cache_rep_en)
     );
 
     always begin
@@ -95,22 +95,22 @@ module icache_l1_dir_tb();
                 pc_f[31:s+b] = (i * 8) + n**3;
                 Tags[i][n] = pc_f[31:s+b];
                 #10;
-                RepReady = 1;
+                rep_ready = 1;
                 
                 //Do replacement
                 for (int k = 0; k < RepCycles; k = k + 1) begin
                     if (i == 0) begin
-                        RepWord[31:0] = k;
-                        RepWord[63:32] = k**2;
+                        rep_word[31:0] = k;
+                        rep_word[63:32] = k**2;
                     end else begin
-                        RepWord[31:0] = (i * 1111) * k**2 + i**2;
-                        RepWord[63:32] = (i * 2222) * k**2 + i**2;
+                        rep_word[31:0] = (i * 1111) * k**2 + i**2;
+                        rep_word[63:32] = (i * 2222) * k**2 + i**2;
                     end 
                     
-                    RepBlocks[i][n][k*64 +: 64] = RepWord;
+                    RepBlocks[i][n][k*64 +: 64] = rep_word;
                     #10;
                 end
-                RepReady = 0;
+                rep_ready = 0;
                 
                 //Check 
                 for (int k = 0; k < words; k = k + 1) begin

@@ -24,6 +24,14 @@ TEST_GROUPS:
   control:
     modules: [control]
 
+RISCV_PROGRAMS:
+  - riscvprogram_2.txt
+  - riscvprogram_3.txt
+  - riscvprogram_4.txt
+  - riscvprogram_5.txt
+  - riscvprogram_6.txt
+  - riscvprogram_7.txt
+
 #Contains each possible test
 TESTS:
 # Tagging Rules
@@ -33,114 +41,145 @@ TESTS:
 
   integration:
 
-    riscv_top:
+    riscv_top_simple_mem:
       tb: riscv_top_tb.sv
+      defines: [NO_ICACHE]
+      tags: [system, slow]
+
+    riscv_top_icache:
+      tb: riscv_top_tb.sv
+      defines: [ICACHE]
       tags: [system, slow]
 
   control:
 
     main_decoder:
       tb: main_decoder_tb.sv
+      defines: []
       tags: [unit, fast]
 
     alu_decoder:
       tb: alu_decoder_tb.sv
+      defines: []
       tags: [unit, fast]
     
     width_decoder:
       tb: width_decoder_tb.sv
+      defines: []
       tags: [unit, fast]
     
     write_decoder:
       tb: write_decoder_tb.sv
+      defines: []
       tags: [unit, fast]
     
     hazard_unit:
       tb: hazard_unit_tb.sv
+      defines: []
       tags: [unit, fast]
 
   branching:
 
     branching_buffer:
       tb: branching_buffer_tb.sv
-      tags: [subsystem, fast]
+      defines: []
+      tags: [subsystem, slow]
 
     branch_resolution_unit:
       tb: branch_resolution_unit_tb.sv
+      defines: []
       tags: [unit, fast]
     
     ghr:
       tb: ghr_tb.sv
+      defines: []
       tags: [unit, sequential, fast]
     
     local_predictor:
       tb: local_predictor_tb.sv
+      defines: []
       tags: [unit, sequential, fast]
     
     branch_control_unit:
       tb: branch_control_unit_tb.sv
+      defines: []
       tags: [unit, fast]
 
   memory:
 
     icache_l1:
       tb: icache_l1_dir_tb.sv
+      defines: []
       tags: [subsystem, fast]
 
     instr_mem:
       tb: instr_mem_tb.sv
+      defines: []
       tags: [unit, fast]
     
     data_mem:
       tb: data_mem_tb.sv
+      defines: []
       tags: [unit, fast]
 
     instr_cache_ctlr:
       tb: instr_cache_ctlr_tb.sv
+      defines: []
       tags: [unit, sequential, fast]
     
     instr_cache_set_multi_tb:
       tb: instr_cache_set_multi_tb.sv
+      defines: []
       tags: [unit, sequential, fast]
 
   building_blocks:
 
     alu:
       tb: alu_tb.sv
+      defines: []
       tags: [unit, fast] 
 
     adder:
       tb: adder_tb.sv
+      defines: []
       tags: [unit, fast]
 
     flop:
       tb: flop_tb.sv
+      defines: []
       tags: [unit, sequential, fast]
 
     reduce:
       tb: reduce_tb.sv
+      defines: []
       tags: [unit, fast]
     
     imm_extend:
       tb: imm_extend_tb.sv
+      defines: []
       tags: [unit, fast]
     
     reg_file:
       tb: reg_file_tb.sv
+      defines: []
       tags: [unit, sequential, fast]
     
     mux2:
       tb: mux2_tb.sv
+      defines: []
       tags: [unit, fast]
     
     mux3:
       tb: mux3_tb.sv
+      defines: []
       tags: [unit, fast]
 
     mux4:
       tb: mux4_tb.sv
+      defines: []
       tags: [unit, fast]
 
     mux5:
       tb: mux5_tb.sv
+      defines: []
       tags: [unit, fast]

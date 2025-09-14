@@ -35,7 +35,7 @@ def parse_module(module_path, rename_map):
     module_rename_map = {}
 
     for old_name in rename_map.keys():
-        old_name_patterns[old_name] = re.compile(rf"\b{re.escape(old_name)}([FDEMW])?(?:_i|_o)?\b")
+        old_name_patterns[old_name] = re.compile(rf"\b{re.escape(old_name)}((?:[FDEMW])|(?:_[fdemw]))?(?:_i|_o)?\b")
 
     #Pass to determine new names
     with open(module_path, "r") as f:
@@ -46,7 +46,10 @@ def parse_module(module_path, rename_map):
                     # preserve suffix if present
                     if match.group(1):
                         old_suffix = match.group(1)
-                        suffix = f"_{match.group(1).lower()}"
+                        if ("_" in old_suffix):
+                            suffix = f"{match.group(1).lower()}"
+                        else:
+                            suffix = f"_{match.group(1).lower()}"
                     else:
                         old_suffix = ""
                         suffix = ""
@@ -57,8 +60,10 @@ def parse_module(module_path, rename_map):
                     new_base = rename_map[old_name]
                     if input_pattern.search(line):
                         new_name = f"{new_base}{suffix}_i"
+                        old_suffix += "_i"
                     elif output_pattern.search(line):
                         new_name = f"{new_base}{suffix}_o"
+                        old_suffix += "_o"
                     else:
                         new_name = f"{new_base}{suffix}"
 
@@ -177,8 +182,6 @@ def pad_ports(line, padding_base=32):
 ##########################################################################
 
 if __name__ == "__main__":
-
-    
 
     module_rename_maps = parse_directory("../rtl", "../tb", "./signal_change_list.csv")
     rename_apply(module_rename_maps, "../rtl", "../tb")

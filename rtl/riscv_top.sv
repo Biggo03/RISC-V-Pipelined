@@ -19,8 +19,8 @@ module riscv_top (
     input  logic        reset_i,
 
     // Temporary L1 instruction cache inputs
-    input  logic        RepReady,
-    input  logic [63:0] RepWord,
+    input  logic        rep_ready_i,
+    input  logic [63:0] rep_word_i,
 
     // Memory outputs
     output logic [31:0] write_data_m_o,
@@ -36,7 +36,7 @@ module riscv_top (
 
     // ----- Cache control -----
     logic        instr_miss_f;
-    logic        instr_cache_rep_active;
+    logic        instr_cache_rep_en;
 
     // ----- Branch/control -----
     logic [1:0]  pc_src_reg;
@@ -51,7 +51,7 @@ module riscv_top (
         // Instruction fetch inputs
         .instr_f_i                      (instr_f),
         .instr_miss_f_i                 (instr_miss_f),
-        .instr_cache_rep_active_i       (instr_cache_rep_active),
+        .instr_cache_rep_en_i           (instr_cache_rep_en),
 
         // Memory inputs
         .read_data_m_i                  (read_data_m),
@@ -70,6 +70,7 @@ module riscv_top (
         .mem_write_m_o                  (mem_write_m_o)
     );
 
+`ifndef NO_ICACHE
     icache_l1 #( // u_icache_l1 (
         .S                              (32),
         .E                              (4),
@@ -80,21 +81,34 @@ module riscv_top (
         .reset_i                        (reset_i),
 
         // Control inputs
-        .RepReady                       (RepReady),
+        .rep_ready_i                    (rep_ready_i),
         .pc_src_reg_i                   (pc_src_reg),
         .branch_op_e_i                  (branch_op_e),
 
         // Address & data inputs
         .pc_f_i                         (pc_f),
-        .RepWord                        (RepWord),
+        .rep_word_i                     (rep_word_i),
 
         // Data outputs
         .instr_f_o                      (instr_f),
 
         // Status outputs
         .instr_miss_f_o                 (instr_miss_f),
-        .instr_cache_rep_active_o       (instr_cache_rep_active)
+        .instr_cache_rep_en_o           (instr_cache_rep_en)
     );
+`else
+    instr_mem u_instr_mem (
+        // Address & data inputs
+        .addr                           (pc_f),
+
+        // Data outputs
+        .rd_o                           (instr_f),
+
+        // Status outputs
+        .instr_miss_f_o                 (instr_miss_f),
+        .instr_cache_rep_en_o           (instr_cache_rep_en)
+    );
+`endif
         
     data_mem u_data_mem (
         // Clock & control inputs

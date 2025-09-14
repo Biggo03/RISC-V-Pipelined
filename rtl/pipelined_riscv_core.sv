@@ -21,7 +21,7 @@ module pipelined_riscv_core (
     // Instruction fetch inputs
     input  logic [31:0] instr_f_i,
     input  logic        instr_miss_f_i,
-    input  logic        instr_cache_rep_active_i,
+    input  logic        instr_cache_rep_en_i,
 
     // Memory data inputs
     input  logic [31:0] read_data_m_i,
@@ -138,7 +138,7 @@ module pipelined_riscv_core (
 
         // Branch predictor / cache inputs
         .pc_src_reg_i                   (pc_src_reg_o),
-        .instr_cache_rep_active_i       (instr_cache_rep_active_i),
+        .instr_cache_rep_en_i           (instr_cache_rep_en_i),
 
         // stall outputs
         .stall_f_o                      (stall_f),

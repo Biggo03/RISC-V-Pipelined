@@ -49,7 +49,7 @@ module hazard_unit_tb();
 
     // Branch predictor / cache inputs
     logic [1:0]  pc_src_reg;
-    logic        instr_cache_rep_active;
+    logic        instr_cache_rep_en;
 
     // stall outputs
     logic       stall_f;
@@ -102,7 +102,7 @@ module hazard_unit_tb();
 
         // Branch predictor / cache inputs
         .pc_src_reg_i                   (pc_src_reg),
-        .instr_cache_rep_active_i       (instr_cache_rep_active),
+        .instr_cache_rep_en_i           (instr_cache_rep_en),
 
         // stall outputs
         .stall_f_o                      (stall_f),
@@ -156,7 +156,7 @@ module hazard_unit_tb();
         rd_m = 0;
         reg_write_m = 0;
         pc_src_reg = 0;
-        instr_cache_rep_active = 0;
+        instr_cache_rep_en = 0;
 
         #10;
         
@@ -251,7 +251,7 @@ module hazard_unit_tb();
         instr_miss_f = 0;
         pc_src = 0;
         pc_src_reg = 0;
-        instr_cache_rep_active = 0;
+        instr_cache_rep_en = 0;
         #5;
     endtask
 
@@ -271,13 +271,13 @@ module hazard_unit_tb();
 
     task drive_cache_miss();
         instr_miss_f = 1;
-        instr_cache_rep_active = 1; //No branching instruction
+        instr_cache_rep_en = 1; //No branching instruction
         #5;
     endtask
 
     task drive_cache_hit_branch_miss();
         instr_miss_f = 0;
-        instr_cache_rep_active = 1;
+        instr_cache_rep_en = 1;
         pc_src = 2'b11;
         pc_src_reg = 0;
         #5;
@@ -286,20 +286,20 @@ module hazard_unit_tb();
     //Scenario tasks
     task scenario_cache_miss_branch_miss(logic next_miss);
         instr_miss_f = 1;
-        instr_cache_rep_active = 0;
+        instr_cache_rep_en = 0;
         pc_src_reg = 0;
         pc_src = 2'b11;
         #10;
 
         instr_miss_f = 1;
-        instr_cache_rep_active = 0;
+        instr_cache_rep_en = 0;
         pc_src_reg = 2'b11;
         pc_src = 2'b11;
         #10;
 
         if (next_miss == 1) instr_miss_f = 1;
         else instr_miss_f = 0;
-        instr_cache_rep_active = 1;
+        instr_cache_rep_en = 1;
         pc_src_reg = 0;
         pc_src = 0;
 
@@ -307,14 +307,14 @@ module hazard_unit_tb();
 
     task scenario_cache_miss_branch_hit();
         instr_miss_f = 1;
-        instr_cache_rep_active = 0;
+        instr_cache_rep_en = 0;
         pc_src = 2'b01;
         pc_src_reg = 0;
 
         #10;
 
         instr_miss_f = 1;
-        instr_cache_rep_active = 1;
+        instr_cache_rep_en = 1;
         pc_src = 2'b01;
         pc_src_reg = 0;
         

@@ -248,6 +248,7 @@ module data_path (
         .result_src_e_i                 (result_src_e_o),
         .mem_write_e_i                  (mem_write_e),
         .reg_write_e_i                  (reg_write_e),
+        .stall_m_i                      (stall_m_i),
 
         // Data outputs
         .reduced_data_m_o               (reduced_data_m),
@@ -282,6 +283,7 @@ module data_path (
         // Control inputs
         .result_src_m_i                 (result_src_m),
         .reg_write_m_i                  (reg_write_m_o),
+        .stall_w_i                      (stall_w_i),
 
         // Data outputs
         .result_w_o                     (result_w),

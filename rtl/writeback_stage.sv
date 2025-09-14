@@ -74,7 +74,7 @@ module writeback_stage (
     
     assign {alu_result_w, reduced_data_w, pc_target_w, pc_plus4_w, imm_ext_w, rd_w_o, result_src_w, reg_write_w_o} = outputs_w;
     
-    // Result mux
+    // result mux
     always_comb begin
         case (result_src_w)
             `RESULT_ALU:      result_w_o = alu_result_w;

@@ -18,7 +18,7 @@ module execute_stage (
     input  logic        clk_i,
     input  logic        reset_i,
 
-    // Data inputs
+    // data inputs
     input  logic [31:0] rd1_d_i,
     input  logic [31:0] rd2_d_i,
     input  logic [31:0] result_w_i,
@@ -47,7 +47,7 @@ module execute_stage (
     input  logic        stall_e_i,
     input  logic        pc_src_pred_d_i,
 
-    // Data outputs
+    // data outputs
     output logic [31:0] alu_result_e_o,
     output logic [31:0] write_data_e_o,
     output logic [31:0] pc_target_e_o,
@@ -106,10 +106,10 @@ module execute_stage (
         .en                             (~stall_e_i),
         .reset                          (reset_e),
 
-        // Data input
+        // data input
         .D                              (inputs_e),
 
-        // Data output
+        // data output
         .Q                              (outputs_e)
     );
     
@@ -124,7 +124,7 @@ module execute_stage (
    
     //Stage multiplexers:
     mux3 u_forward_mux_a (
-        // Data inputs
+        // data inputs
         .d0                             (rd1_e),
         .d1                             (result_w_i),
         .d2                             (forward_data_m_i),
@@ -132,12 +132,12 @@ module execute_stage (
         // Select input
         .s                              (forward_a_e_i),
 
-        // Data output
+        // data output
         .y                              (src_a_e)
     );
         
     mux3 u_forward_mux_b (
-        // Data inputs
+        // data inputs
         .d0                             (rd2_e),
         .d1                             (result_w_i),
         .d2                             (forward_data_m_i),
@@ -145,31 +145,31 @@ module execute_stage (
         // Select input
         .s                              (forward_b_e_i),
 
-        // Data output
+        // data output
         .y                              (write_data_e_o)
     );
         
     mux2 u_src_b_mux (
-        // Data inputs
+        // data inputs
         .d0                             (write_data_e_o),
         .d1                             (imm_ext_e_o),
 
         // Select input
         .s                              (alu_src_e),
 
-        // Data output
+        // data output
         .y                              (src_b_e)
     );
         
     mux2 u_pc_target_mux (
-        // Data inputs
+        // data inputs
         .d0                             (pc_e_o),
         .d1                             (src_a_e),
 
         // Select input
         .s                              (pc_base_src_e),
 
-        // Data output
+        // data output
         .y                              (pc_base_e)
     );
         
@@ -178,11 +178,11 @@ module execute_stage (
         // Control inputs
         .alu_control_i                  (alu_control_e),
 
-        // Data inputs
+        // data inputs
         .A                              (src_a_e),
         .B                              (src_b_e),
 
-        // Data outputs
+        // data outputs
         .alu_result_o                   (alu_result_e_o),
 
         // Status flag outputs
@@ -193,11 +193,11 @@ module execute_stage (
     );
                 
     adder u_pc_target_adder (
-        // Data inputs
+        // data inputs
         .a                              (pc_base_e),
         .b                              (imm_ext_e_o),
 
-        // Data output
+        // data output
         .y                              (pc_target_e_o)
     );
 

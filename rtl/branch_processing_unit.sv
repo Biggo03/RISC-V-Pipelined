@@ -116,10 +116,10 @@ module branch_processing_unit (
         .en                             (1'b1),
         .reset                          (reset_i | flush_e_i),
 
-        // Data input
+        // data_i input
         .D                              (pc_src_o),
 
-        // Data output
+        // data_i output
         .Q                              (pc_src_reg_o)
     );
 

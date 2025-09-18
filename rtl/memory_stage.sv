@@ -19,7 +19,7 @@ module memory_stage (
     input  logic        clk_i,
     input  logic        reset_i,
 
-    // Data inputs
+    // data inputs
     input  logic [31:0] alu_result_e_i,
     input  logic [31:0] write_data_e_i,
     input  logic [31:0] pc_target_e_i,
@@ -35,7 +35,7 @@ module memory_stage (
     input  logic        reg_write_e_i,
     input  logic        stall_m_i,
 
-    // Data outputs
+    // data outputs
     output logic [31:0] reduced_data_m_o,
     output logic [31:0] alu_result_m_o,
     output logic [31:0] write_data_m_o,
@@ -70,10 +70,10 @@ module memory_stage (
         .reset                          (reset_i),
         .en                             (~stall_m_i),
 
-        // Data input
+        // data input
         .D                              (inputs_m),
 
-        // Data output
+        // data output
         .Q                              (outputs_m)
     );
     
@@ -92,13 +92,13 @@ module memory_stage (
     end
         
     reduce u_reduce_width_change (
-        // Data input
+        // data input
         .BaseResult                     (read_data_m_i),
 
         // Control input
         .width_src_i                    (width_src_m_o),
 
-        // Data output
+        // data output
         .result_o                       (reduced_data_m_o)
     );
     

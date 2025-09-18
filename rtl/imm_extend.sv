@@ -22,7 +22,7 @@ module imm_extend (
     // Control input
     input  logic [2:0]  imm_src_i,
 
-    // Data output
+    // data_o output
     output logic [31:0] imm_ext_o
 );
     

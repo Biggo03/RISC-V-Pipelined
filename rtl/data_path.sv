@@ -18,7 +18,7 @@ module data_path (
     input  logic        clk_i,
     input  logic        reset_i,
 
-    // Data inputs
+    // data inputs
     input  logic [31:0] instr_f_i,
     input  logic [31:0] read_data_m_i,
     input  logic [31:0] pred_pc_target_f_i,
@@ -155,7 +155,7 @@ module data_path (
         .stall_d_i                      (stall_d_i),
         .flush_d_i                      (flush_d_i),
 
-        // Data outputs
+        // data outputs
         .imm_ext_d_o                    (imm_ext_d),
         .pred_pc_target_d_o             (pred_pc_target_d),
         .pc_d_o                         (pc_d),
@@ -174,7 +174,7 @@ module data_path (
         .clk_i                          (clk_i),
         .reset_i                        (reset_i),
 
-        // Data inputs
+        // data inputs
         .rd1_d_i                        (rd1_d),
         .rd2_d_i                        (rd2_d),
         .result_w_i                     (result_w),
@@ -203,7 +203,7 @@ module data_path (
         .stall_e_i                      (stall_e_i),
         .pc_src_pred_d_i                (pc_src_pred_d),
 
-        // Data outputs
+        // data outputs
         .alu_result_e_o                 (alu_result_e),
         .write_data_e_o                 (write_data_e),
         .pc_target_e_o                  (pc_target_e_o),
@@ -234,7 +234,7 @@ module data_path (
         .clk_i                          (clk_i),
         .reset_i                        (reset_i),
 
-        // Data inputs
+        // data inputs
         .alu_result_e_i                 (alu_result_e),
         .write_data_e_i                 (write_data_e),
         .pc_target_e_i                  (pc_target_e_o),
@@ -250,7 +250,7 @@ module data_path (
         .reg_write_e_i                  (reg_write_e),
         .stall_m_i                      (stall_m_i),
 
-        // Data outputs
+        // data outputs
         .reduced_data_m_o               (reduced_data_m),
         .alu_result_m_o                 (alu_result_m_o),
         .write_data_m_o                 (write_data_m_o),
@@ -272,7 +272,7 @@ module data_path (
         .clk_i                          (clk_i),
         .reset_i                        (reset_i),
 
-        // Data inputs
+        // data inputs
         .alu_result_m_i                 (alu_result_m_o),
         .reduced_data_m_i               (reduced_data_m),
         .pc_target_m_i                  (pc_target_m),
@@ -285,7 +285,7 @@ module data_path (
         .reg_write_m_i                  (reg_write_m_o),
         .stall_w_i                      (stall_w_i),
 
-        // Data outputs
+        // data outputs
         .result_w_o                     (result_w),
         .rd_w_o                         (rd_w_o),
 

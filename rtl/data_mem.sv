@@ -8,7 +8,7 @@
 //  Project:      RISC-V Processor
 //  Repository:   https://github.com/Biggo03/RISC-V-Pipelined
 //
-//  Parameters:   WIDTH - Data width
+//  Parameters:   WIDTH - data width
 //
 //  Notes:        Can have variable width stores through control signal width_src
 //==============================================================//

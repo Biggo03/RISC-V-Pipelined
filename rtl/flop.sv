@@ -22,10 +22,10 @@ module flop #(
     input  logic             en,
     input  logic             reset,
 
-    // Data input
+    // data_i input
     input  logic [WIDTH-1:0] D,
 
-    // Data output
+    // data_i output
     output logic [WIDTH-1:0] Q
 );
     

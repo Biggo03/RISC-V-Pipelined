@@ -197,6 +197,7 @@ def run_test(test, config, test_out_dir, result_info, test_program=None):
 
     # --- Defines ---
     defines.append(f'DUMP_PATH="{test_out_dir}/{test}.vcd"')
+    defines.append(f'SIM')
 
 
 

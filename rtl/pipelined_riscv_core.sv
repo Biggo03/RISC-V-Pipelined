@@ -227,7 +227,7 @@ module pipelined_riscv_core (
         .stall_m_i                      (stall_m),
         .stall_w_i                      (stall_w),
 
-        // Data outputs
+        // data outputs
         .alu_result_m_o                 (alu_result_m_o),
         .write_data_m_o                 (write_data_m_o),
         .pc_f_o                         (pc_f_o),

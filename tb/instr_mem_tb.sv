@@ -32,14 +32,14 @@ module instr_mem_tb();
     // Instantiate DUT
     instr_mem u_DUT (
         // Address & data inputs
-        .addr                         (pc_f),
+        .addr                           (pc_f),
 
-        // Data outputs
-        .rd_o                         (instr_f),
+        // data outputs
+        .rd_o                           (instr_f),
 
         // Status outputs
-        .instr_miss_f_o               (instr_miss_f),
-        .instr_cache_rep_en_o         (instr_cache_rep_en)
+        .instr_miss_f_o                 (instr_miss_f),
+        .instr_cache_rep_en_o           (instr_cache_rep_en)
     );
     
     initial begin
@@ -50,7 +50,9 @@ module instr_mem_tb();
         $readmemh("test_inputs/riscvprograms/riscvprogram_7.txt", RAM);
         
         for (int i = 0; i < 64; i++) begin
-            pc_f = (i * 4); #10;
+            pc_f = (i * 4); 
+            
+            #10;
             
             assert (instr_f === RAM[i]) else $fatal(1, "Error");
             assert (instr_miss_f === 1'b0) else $fatal(1, "Error");

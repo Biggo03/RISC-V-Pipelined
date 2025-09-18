@@ -60,10 +60,10 @@ def parse_module(module_path, rename_map):
                     new_base = rename_map[old_name]
                     if input_pattern.search(line):
                         new_name = f"{new_base}{suffix}_i"
-                        old_suffix += "_i"
+                        #old_suffix += "_i"
                     elif output_pattern.search(line):
                         new_name = f"{new_base}{suffix}_o"
-                        old_suffix += "_o"
+                        #old_suffix += "_o"
                     else:
                         new_name = f"{new_base}{suffix}"
 

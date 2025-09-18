@@ -32,7 +32,7 @@ module icache_l1 #(
     input  logic [31:0] pc_f_i,
     input  logic [63:0] rep_word_i,
 
-    // Data outputs
+    // data outputs
     output logic [31:0] instr_f_o,
 
     // Status outputs
@@ -78,7 +78,7 @@ module icache_l1 #(
                 .reset_i                        (reset_i),
 
                 // Control inputs
-                .ActiveSet                      (active_array[i]),
+                .active_set_i                   (active_array[i]),
                 .rep_active_i                   (rep_active),
 
                 // Address inputs
@@ -88,11 +88,11 @@ module icache_l1 #(
                 // Replacement data input
                 .rep_word_i                     (rep_word_i),
 
-                // Data outputs
-                .Data                           (data_array[i]),
+                // data outputs
+                .data_o                         (data_array[i]),
 
                 // Status output
-                .CacheSetMiss                   (miss_array[i])
+                .cache_set_miss_o               (miss_array[i])
             );
         end
     endgenerate

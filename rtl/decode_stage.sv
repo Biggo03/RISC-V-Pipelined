@@ -18,7 +18,7 @@ module decode_stage (
     input  logic        clk_i,
     input  logic        reset_i,
 
-    // Data inputs
+    // data inputs
     input  logic [31:0] instr_f_i,
     input  logic [31:0] pc_f_i,
     input  logic [31:0] pc_plus4_f_i,
@@ -30,7 +30,7 @@ module decode_stage (
     input  logic        stall_d_i,
     input  logic        flush_d_i,
 
-    // Data outputs
+    // data outputs
     output logic [31:0] imm_ext_d_o,
     output logic [31:0] pc_d_o,
     output logic [31:0] pc_plus4_d_o,
@@ -66,10 +66,10 @@ module decode_stage (
         .reset                          (reset_d),
         .en                             (~stall_d_i),
 
-        // Data input
+        // data input
         .D                              (inputs_d),
 
-        // Data output
+        // data output
         .Q                              (outputs_d)
     );
     
@@ -92,7 +92,7 @@ module decode_stage (
         // Control input
         .imm_src_i                      (imm_src_d_i),
 
-        // Data output
+        // data output
         .imm_ext_o                      (imm_ext_d_o)
     );
     

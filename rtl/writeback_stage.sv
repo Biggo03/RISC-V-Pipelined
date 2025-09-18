@@ -19,7 +19,7 @@ module writeback_stage (
     input  logic        clk_i,
     input  logic        reset_i,
 
-    // Data inputs
+    // data inputs
     input  logic [31:0] alu_result_m_i,
     input  logic [31:0] reduced_data_m_i,
     input  logic [31:0] pc_target_m_i,
@@ -32,7 +32,7 @@ module writeback_stage (
     input  logic        reg_write_m_i,
     input  logic        stall_w_i,
 
-    // Data outputs
+    // data outputs
     output logic [31:0] result_w_o,
     output logic [4:0]  rd_w_o,
 
@@ -65,10 +65,10 @@ module writeback_stage (
         .reset                          (reset_i),
         .en                             (~stall_w_i),
 
-        // Data input
+        // data input
         .D                              (inputs_w),
 
-        // Data output
+        // data output
         .Q                              (outputs_w)
     );
     

@@ -15,13 +15,13 @@
 `include "control_macros.sv"
 
 module reduce (
-    // Data inputs
+    // data inputs
     input  logic [31:0] BaseResult,
 
     // Control inputs
     input  logic [2:0]  width_src_i,
 
-    // Data outputs
+    // data outputs
     output logic [31:0] result_o
 );
     

@@ -53,19 +53,19 @@ module fetch_stage (
         .reset                          (reset_i),
         .en                             (~stall_f_i),
 
-        // Data input
+        // data_i input
         .D                              (pc_next_f),
 
-        // Data output
+        // data_i output
         .Q                              (pc_f_o)
     );
 
     adder u_adder_pc_plus4 (
-        // Data inputs
+        // data_i inputs
         .a                              (pc_f_o),
         .b                              (4),
 
-        // Data output
+        // data_i output
         .y                              (pc_plus4_f_o)
     );
 

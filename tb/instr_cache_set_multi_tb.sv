@@ -8,15 +8,15 @@ module instr_cache_set_multi_tb();
     // Used Signals
     logic                  clk;
     logic                  reset;
-    logic                  ActiveSet;
+    logic                  active_set;
     logic                  rep_active;
     logic [$clog2(B)-1:0]  block;
     logic [num_tag_bits-1:0] tag;
     logic [num_tag_bits-1:0] block_tags_e [E-1:0];
     logic [(B*8)-1:0]      RepBlock;
     logic [63:0]           rep_word;
-    logic [31:0]           Data;
-    logic                  CacheSetMiss;
+    logic [31:0]           data_o;
+    logic                  cache_set_miss;
 
     logic [1:0] lru_bits_e [3:0];
 
@@ -26,18 +26,18 @@ module instr_cache_set_multi_tb();
     instr_cache_set_multi u_DUT (
         .clk_i                          (clk),
         .reset_i                        (reset),
-        .ActiveSet                      (ActiveSet),
+        .active_set_i                   (active_set),
         .rep_active_i                   (rep_active),
         .block_i                        (block),
         .tag_i                          (tag),
         .rep_word_i                     (rep_word),
-        .Data                           (Data),
-        .CacheSetMiss                   (CacheSetMiss)
+        .data_o                         (data_o),
+        .cache_set_miss_o               (cache_set_miss)
     );
     
     //Task for assering Cache misses produce the expected outputs
     task AssertMiss();
-        assert(CacheSetMiss === 1) else $fatal(1, "Incorrectly indicated cache hit\nData Output: %b", Data);
+        assert(cache_set_miss === 1) else $fatal(1, "Incorrectly indicated cache hit\nData Output: %b", data_o);
     endtask
     
     //Task for checking lru_bits are as expected
@@ -58,7 +58,7 @@ module instr_cache_set_multi_tb();
         dump_setup;
         
         //Initialization
-        reset = 1; clk = 0; ActiveSet = 0; rep_active = 0; block = 0; tag = 0;
+        reset = 1; clk = 0; active_set = 0; rep_active = 0; block = 0; tag = 0;
         RepBlock = 512'h55555555_44444444_FFEEAABB_00001111_BBBBBBBB_AAAAAAAA_FFFFFFFF_33333333_22222222_EEEEEEEE_CCCCCCCC_88888888_99999999_12345678_FEDCBA98_00AA00AA;
         #10; 
         reset = 0;
@@ -68,7 +68,7 @@ module instr_cache_set_multi_tb();
         //After initialized with no input, should output same as a miss
         AssertMiss();
         
-        ActiveSet = 1;  block = 0; tag = 500;
+        active_set = 1;  block = 0; tag = 500;
         #10;
         AssertMiss();
         
@@ -86,9 +86,9 @@ module instr_cache_set_multi_tb();
                 #10;
             end
             $display("Number of cycles for replacement: %d", cycles);
-            //wait(CacheSetMiss == 0);
+            //wait(cache_set_miss == 0);
             
-            assert(Data === RepBlock[31:0] && CacheSetMiss == 0) else $fatal(1, "Incorrect Data output on miss\nData:          %h\nExpected Data: %h", Data, RepBlock[31:0]);
+            assert(data_o === RepBlock[31:0] && cache_set_miss == 0) else $fatal(1, "Incorrect data output on miss\nData:          %h\nExpected data: %h", data_o, RepBlock[31:0]);
             
             //Update tag
             tag =  tag + 100;
@@ -112,7 +112,7 @@ module instr_cache_set_multi_tb();
         for (integer i = 0; i < E; i = i + 1) begin
             block = block + 4;
             #10;
-            assert(Data === RepBlock[(block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 1)\nData:          %h\nExpected Data: %h", Data, RepBlock[(block*8) +: 32]);
+            assert(data_o === RepBlock[(block*8) +: 32] && cache_set_miss === 0) else $fatal(1, "Incorrectly reading data on hit (test 1)\nData:          %h\nExpected data: %h", data_o, RepBlock[(block*8) +: 32]);
             tag = tag - 100;
         end
         
@@ -123,7 +123,7 @@ module instr_cache_set_multi_tb();
         end
         Assertlru_bits();
         
-        ActiveSet = 0; 
+        active_set = 0; 
         rep_active = 1;
         
         //Ensure that cache remains stable when inactive
@@ -136,7 +136,7 @@ module instr_cache_set_multi_tb();
         
         
         //Check if the LRU block was replaced
-        ActiveSet = 1; rep_active = 0; tag = 1000;
+        active_set = 1; rep_active = 0; tag = 1000;
         for (int i = 0; i < E; i = i + 1) begin
             if (lru_bits_e[i] == E-1) block_tags_e[i] = tag;
         end
@@ -159,9 +159,9 @@ module instr_cache_set_multi_tb();
         end
         
         
-        wait(CacheSetMiss == 0);
+        wait(cache_set_miss == 0);
         Assertlru_bits();
-        assert(Data === RepBlock[(block*8) +: 32] && CacheSetMiss === 0) else $fatal(1, "Incorrectly reading data on hit (test 2)\nData:          %h\nExpected Data: %h", Data, RepBlock[(block*8) +: 32]);
+        assert(data_o === RepBlock[(block*8) +: 32] && cache_set_miss === 0) else $fatal(1, "Incorrectly reading data on hit (test 2)\nData:          %h\nExpected data: %h", data_o, RepBlock[(block*8) +: 32]);
                                                                            
         //Check that lru_bits update properly when a stored tag is accessed
         rep_active = 0; tag = block_tags_e[1]; //block 1's tag

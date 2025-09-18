@@ -16,11 +16,11 @@
 module adder #(
     parameter int WIDTH = 32
 ) (
-    // Data inputs
+    // data inputs
     input  logic [WIDTH-1:0] a,
     input  logic [WIDTH-1:0] b,
 
-    // Data outputs
+    // data outputs
     output logic [WIDTH-1:0] y
 );
     

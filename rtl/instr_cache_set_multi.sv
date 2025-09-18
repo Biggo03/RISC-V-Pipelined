@@ -22,21 +22,21 @@ module instr_cache_set_multi #(
     parameter int E          = 4
 ) (
     // Clock & reset_i
-    input  logic                  clk_i,
-    input  logic                  reset_i,
+    input  logic                    clk_i,
+    input  logic                    reset_i,
 
     // Control inputs
-    input  logic                  ActiveSet,
-    input  logic                  rep_active_i,
+    input  logic                    active_set_i,
+    input  logic                    rep_active_i,
 
     // Address & data inputs
-    input  logic [$clog2(B)-1:0]  block_i,
+    input  logic [$clog2(B)-1:0]    block_i,
     input  logic [num_tag_bits-1:0] tag_i,
-    input  logic [63:0]           rep_word_i,
+    input  logic [63:0]             rep_word_i,
 
-    // Data outputs
-    output logic [31:0]           Data,
-    output logic                  CacheSetMiss
+    // data outputs
+    output logic [31:0]             data_o,
+    output logic                    cache_set_miss_o
 );
     
     // ----- Parameters -----
@@ -54,11 +54,11 @@ module instr_cache_set_multi #(
     logic [$clog2(E)-1:0]  next_fill;
     logic [$clog2(E)-1:0]  removed_block;
     logic [$clog2(words)-1:0] rep_counter; 
-    logic                  rep_active;
+    logic                  rep_enable;
     logic                  rep_complete;
     logic                  rep_begin;
 
-    // ----- Data storage -----
+    // ----- data storage -----
     (* ram_style = "distributed" *)
     logic [63:0] set_data [(words*E)/2-1:0];
 
@@ -70,16 +70,16 @@ module instr_cache_set_multi #(
     integer i;
     genvar n;
     
-    assign rep_active = CacheSetMiss && ActiveSet && rep_active_i;
+    assign rep_enable = cache_set_miss_o && active_set_i && rep_active_i;
 
     //tag_i and valid comparison logic
     always @(*) begin
     
         matched_block = 0;
-        CacheSetMiss = 1;
+        cache_set_miss_o = 1;
         last_lru_status = 0;
         
-        if (ActiveSet) begin
+        if (active_set_i) begin
              //Determine if a block matches
             for (i = 0; i < E; i = i + 1) begin
                 if (valid_bits[i] == 1 && tag_i == block_tags[i]) begin
@@ -91,15 +91,15 @@ module instr_cache_set_multi #(
             end
         
             //Declare a miss
-            if (matched_block == 0) CacheSetMiss = 1;
-            else CacheSetMiss = 0;
+            if (matched_block == 0) cache_set_miss_o = 1;
+            else cache_set_miss_o = 0;
             
         end
     end
     
     //block_i to remove logic
     always @(posedge clk_i) begin
-        if (CacheSetMiss && ActiveSet && ~rep_begin) begin
+        if (cache_set_miss_o && active_set_i && ~rep_begin) begin
             if (valid_bits == {E{1'b1}}) begin
                 for (i = 0; i < E; i = i + 1) begin
                     if (lru_bits[i] == E-1) begin              
@@ -125,7 +125,7 @@ module instr_cache_set_multi #(
             end
         
         //Handle block_i Replacement LRU and ValidBit updates
-        end else if (rep_active && ~rep_begin) begin
+        end else if (rep_enable && ~rep_begin) begin
             rep_begin <= 1;
             
             //Replace when sets full of valid data
@@ -151,7 +151,7 @@ module instr_cache_set_multi #(
             end
         
         //Handle LRU updates on non-replacing accesses
-        end else  if (ActiveSet && ~CacheSetMiss) begin
+        end else if (active_set_i && ~cache_set_miss_o) begin
             rep_begin <= 0;
             for (i = 0; i < E; i = i + 1) begin
                 if (~matched_block[i] && valid_bits[i] && lru_bits[i] < last_lru_status) begin
@@ -169,7 +169,7 @@ module instr_cache_set_multi #(
     
     //Replacement logic
     always @(posedge clk_i) begin
-        if (rep_active) begin
+        if (rep_enable) begin
             set_data[(removed_block*words/2) + rep_counter] <= rep_word_i;
             //Replace tag and reset_i counter when replacement complete
             if (rep_complete) begin
@@ -192,10 +192,9 @@ module instr_cache_set_multi #(
         end else begin
             out_set = 0;
         end
-
     end
 
     assign block_offset = block_i[b-1:3];
-    assign Data = block_i[2] ? set_data[(out_set*words)/2 + block_offset][63:32] : set_data[(out_set*words)/2 + block_offset][31:0];
+    assign data_o = block_i[2] ? set_data[(out_set*words)/2 + block_offset][63:32] : set_data[(out_set*words)/2 + block_offset][31:0];
     
 endmodule

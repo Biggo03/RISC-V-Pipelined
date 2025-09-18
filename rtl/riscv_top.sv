@@ -18,10 +18,6 @@ module riscv_top (
     input  logic        clk_i,
     input  logic        reset_i,
 
-    // Temporary L1 instruction cache inputs
-    input  logic        rep_ready_i,
-    input  logic [63:0] rep_word_i,
-
     // Memory outputs
     output logic [31:0] write_data_m_o,
     output logic [31:0] alu_result_m_o,
@@ -37,10 +33,14 @@ module riscv_top (
     // ----- Cache control -----
     logic        instr_miss_f;
     logic        instr_cache_rep_en;
+    logic        rep_ready;
+    logic [63:0] rep_word;
 
     // ----- Branch/control -----
     logic [1:0]  pc_src_reg;
     logic [1:0]  branch_op_e;
+    
+
     
     
     pipelined_riscv_core u_pipelined_riscv_core (
@@ -81,27 +81,41 @@ module riscv_top (
         .reset_i                        (reset_i),
 
         // Control inputs
-        .rep_ready_i                    (rep_ready_i),
+        .rep_ready_i                    (rep_ready),
         .pc_src_reg_i                   (pc_src_reg),
         .branch_op_e_i                  (branch_op_e),
 
         // Address & data inputs
         .pc_f_i                         (pc_f),
-        .rep_word_i                     (rep_word_i),
+        .rep_word_i                     (rep_word),
 
-        // Data outputs
+        // data outputs
         .instr_f_o                      (instr_f),
 
         // Status outputs
         .instr_miss_f_o                 (instr_miss_f),
         .instr_cache_rep_en_o           (instr_cache_rep_en)
     );
+
+    `ifdef SIM
+        main_mem_model u_main_mem (
+            .clk_i                          (clk_i),
+            .reset_i                        (reset_i),
+
+            .addr_i                         (pc_f),
+            .cache_hit_i                    (~instr_miss_f),
+
+            .rep_ready_o                    (rep_ready),
+            .rep_word_o                     (rep_word)
+        );
+    `endif
+
 `else
     instr_mem u_instr_mem (
         // Address & data inputs
         .addr                           (pc_f),
 
-        // Data outputs
+        // data outputs
         .rd_o                           (instr_f),
 
         // Status outputs

@@ -24,10 +24,6 @@
     logic        clk;
     logic        reset;
 
-    logic rep_ready;
-    logic [63:0] rep_word;
-    
-
     logic [31:0] write_data_m;
     logic [31:0] alu_result_m;
     logic        mem_write_m;
@@ -39,10 +35,6 @@
         // Clock & reset
         .clk_i                          (clk),
         .reset_i                        (reset),
-
-        // Temporary L1 instruction cache inputs
-        .rep_ready_i                    (rep_ready),
-        .rep_word_i                     (rep_word),
 
         // Memory outputs
         .write_data_m_o                 (write_data_m),
@@ -77,7 +69,6 @@
             end else if (alu_result_m !== 96) begin
             $display("Failed.");
             $finish;
-            
             end
         end
    

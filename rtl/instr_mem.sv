@@ -24,7 +24,7 @@ module instr_mem (
     // Address & data inputs
     input  logic [31:0] addr,
 
-    // Data outputs
+    // data outputs
     output logic [31:0] rd_o,
 
     // Status outputs

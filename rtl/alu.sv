@@ -20,11 +20,11 @@ module alu #(
     // Control inputs
     input  logic [3:0]         alu_control_i,
 
-    // Data inputs
+    // data inputs
     input  logic [WIDTH-1:0]   A,
     input  logic [WIDTH-1:0]   B,
 
-    // Data outputs
+    // data outputs
     output logic [WIDTH-1:0]   alu_result_o,
 
     // Status flag outputs

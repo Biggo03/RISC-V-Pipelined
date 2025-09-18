@@ -47,10 +47,10 @@ module reg_file #(
         .en                             (1'b0),
         .reset                          (reset_i),
 
-        // Data input
+        // data_i input
         .D                              (32'b0),
 
-        // Data output
+        // data_i output
         .Q                              (RegisterArray[0])
     );
 
@@ -63,10 +63,10 @@ module reg_file #(
             .en                             (en[i]),
             .reset                          (reset_i),
 
-            // Data input
+            // data_i input
             .D                              (wd3_i),
 
-            // Data output
+            // data_i output
             .Q                              (RegisterArray[i])
             );
         end

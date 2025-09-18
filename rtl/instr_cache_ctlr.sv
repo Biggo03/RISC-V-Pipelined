@@ -60,7 +60,7 @@ module instr_cache_ctlr #(
     always_comb begin
         next_state = present_state;
         case (present_state)
-            READY_TO_DELAY: if (~instr_cache_rep_en_o)         next_state = DELAYING;
+            READY_TO_DELAY: if (~instr_cache_rep_en_o)             next_state = DELAYING;
             DELAYING: if (~instr_miss_f_o | pc_src_reg_i[1])       next_state = READY_TO_DELAY;
         endcase
     end

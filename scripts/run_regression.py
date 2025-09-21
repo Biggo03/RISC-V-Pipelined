@@ -121,11 +121,15 @@ def resolve_target(target, test_data, single):
             categories = test_data["TEST_GROUPS"][target]["modules"]
 
             for category, tests in test_data["TESTS"].items():
-
                 if (category in categories):
                     for test in tests.keys():
                         run_info[test] = test_data["TESTS"][category][test]
-                    
+
+        for test in run_info.keys():
+            if ("system" in run_info[test]["tags"]):
+                run_info["programs"] = test_data["RISCV_PROGRAMS"]
+                break
+
     except Exception as e:
         print(f"Unable to find test in yaml file: {e}")
 
@@ -161,12 +165,12 @@ def get_module_paths(rtl_dir, module_path, module_paths=None):
 
     return module_paths
 
-def run_test(test, config, test_out_dir, result_info, test_program=None):
+def run_test(test_name, config, test_out_dir, result_info, program=None):
     """
     Runs a specific testbench using Icarus Verilog
 
     Args:
-        test: Name of the test
+        test_name: Name of the test
         tb_file: Name of the testbench file
         test_out_dir: Where the outputs of the test are placed
     """
@@ -176,30 +180,38 @@ def run_test(test, config, test_out_dir, result_info, test_program=None):
 
     regression_logger = logging.getLogger("regression_logger")
     # --- Project directories ---
-    proj_dir     = Path(__file__).resolve().parent.parent
-    rtl_dir      = proj_dir / "rtl"
-    include_dir  = proj_dir / "common" / "includes"
-    filelist_dir = proj_dir / "filelists"
-    tb_path      = proj_dir / "tb" / tb_file
+    proj_dir       = Path(__file__).resolve().parent.parent
+    rtl_dir        = proj_dir / "rtl"
+    include_dir    = proj_dir / "common" / "includes"
+    filelist_dir   = proj_dir / "filelists"
+    tb_path        = proj_dir / "tb" / tb_file
     tb_include_dir = proj_dir.joinpath("tb", "common")
-    common_tb    = list(proj_dir.joinpath("tb", "common").rglob("*v*"))
+    common_tb      = list(proj_dir.joinpath("tb", "common").rglob("*v*"))
 
     os.makedirs(filelist_dir, exist_ok=True)
-
-
-    if test_program:
-        test = f"{test}_{test_program.removesuffix('.txt')}"
-        test_program = str(proj_dir / 'test_inputs' / 'riscvprograms' / test_program)
-        defines.append(f"TEST_FILE=\"{test_program}\"")
 
     # --- Source files ---
     source_files = [tb_path, *common_tb]
 
     # --- Defines ---
-    defines.append(f'DUMP_PATH="{test_out_dir}/{test}.vcd"')
+    defines.append(f'DUMP_PATH="{test_out_dir}/{test_name}.vcd"')
     defines.append(f'SIM')
 
+    if program:
+        search_path = proj_dir / 'test_inputs' /'compiled_programs'
+        instr_match = next(search_path.rglob(f"{program}.text.hex"), None)
+        data_match = next(search_path.rglob(f"{program}.data.hex"), None)
 
+        if (instr_match):
+            instr_path = instr_match.resolve()
+            defines.append(f"INSTR_HEX_FILE=\"{instr_path}\"")
+        else:
+            regression_logger.error(f"Could not find instruction file for program: {program}")
+            return
+        
+        if (data_match):
+            data_path = data_match.resolve()
+            defines.append(f"DATA_HEX_FILE=\"{data_path}\"")
 
     # --- Build compile command ---
     run_cmd = [
@@ -214,7 +226,7 @@ def run_test(test, config, test_out_dir, result_info, test_program=None):
 
     # Write filelist for RTL modules
     module_paths = get_module_paths(rtl_dir, tb_path)
-    filelist = filelist_dir / f"{test}.f"
+    filelist = filelist_dir / f"{test_name}.f"
     with open (filelist, "w") as f:
         f.write("\n".join(map(str, module_paths)) + "\n")
 
@@ -222,13 +234,13 @@ def run_test(test, config, test_out_dir, result_info, test_program=None):
     run_cmd.extend([
         "-f", str(filelist),
         *map(str, source_files),
-        "-o", f"{test_out_dir}/{test}.vvp"
+        "-o", f"{test_out_dir}/{test_name}.vvp"
     ])
 
     # --- Run compilation and simulation ---
     test_passed = False
     warning_present = False
-    log_path = Path(test_out_dir) / f"{test}.log"
+    log_path = Path(test_out_dir) / f"{test_name}.log"
     with open(log_path, "w") as log_file:
 
         try:
@@ -236,12 +248,12 @@ def run_test(test, config, test_out_dir, result_info, test_program=None):
             process = subprocess.Popen(run_cmd, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
             for line in process.stdout:
                 log_file.write(f"{line}\n")
-            log_file.write(f"Compilation of {test} complete\n")
+            log_file.write(f"Compilation of {test_name} complete\n")
 
             process.wait()
 
-            log_file.write(f"Beginning simulation of test: {test}...\n")
-            process = subprocess.Popen([f"{test_out_dir}/{test}.vvp"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
+            log_file.write(f"Beginning simulation of test: {test_name}...\n")
+            process = subprocess.Popen([f"{test_out_dir}/{test_name}.vvp"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=proj_dir)
             for line in process.stdout:
                 log_file.write(f"{line}\n")
                 if "TEST PASSED" in line:
@@ -254,42 +266,43 @@ def run_test(test, config, test_out_dir, result_info, test_program=None):
             test_passed = False
 
     if (test_passed == True):
-        result_info["PASSED_TESTS"][test] = test_out_dir
-        regression_logger.info(f"{test} PASSED")
+        result_info["PASSED_TESTS"][test_name] = test_out_dir
+        regression_logger.info(f"{test_name} PASSED")
     else:
-        result_info["FAILED_TESTS"][test] = test_out_dir
-        regression_logger.info(f"{test} FAILED")
+        result_info["FAILED_TESTS"][test_name] = test_out_dir
+        regression_logger.info(f"{test_name} FAILED")
     if (warning_present == True):
-        result_info["WARNING_TESTS"][test] = test_out_dir
-        regression_logger.info(f"{test} CONTAINS WARNINGS")
+        result_info["WARNING_TESTS"][test_name] = test_out_dir
+        regression_logger.info(f"{test_name} CONTAINS WARNINGS")
 
     return
 
-def main():
-
-    args, regression_logger, test_data = setup("regression_tests.yml")
-    run_info = resolve_target(args.target, test_data, args.single)
-
-    top_out_dir = Path(os.path.abspath(args.output_dir))
-    result_info = {"PASSED_TESTS": {}, "FAILED_TESTS": {}, "WARNING_TESTS": {}}
-
-    regression_logger.info(f"Beginning regression for {args.target}")
-
+def run_all_tests(run_info, result_info, top_out_dir):
     # Run all tests
     for test, config in run_info.items():
-        test_out_dir = top_out_dir / test
-        test_out_dir.mkdir(parents=True, exist_ok=True)
-        subprocess.run(f"rm -rf {test_out_dir}/*", shell=True)
-
+        #Will want to add more specifiers later
+        if (test == "programs"):
+            continue
+        
         if ("system" in config["tags"]):
-            test_programs = test_data["RISCV_PROGRAMS"]
-
+            test_programs = run_info["programs"]["basic_asm_tests"]
             for program in test_programs:
-                run_test(test, config, test_out_dir, result_info, program)
+                test_out_dir = top_out_dir / test / program
+                test_out_dir.mkdir(parents=True, exist_ok=True)
+                subprocess.run(f"rm -rf {test_out_dir}/*", shell=True)
+
+                test_name = f"{test}_{program}"
+
+                run_test(test_name, config, test_out_dir, result_info, program)
         else:
+            test_out_dir = top_out_dir / test
+            test_out_dir.mkdir(parents=True, exist_ok=True)
+
+            subprocess.run(f"rm -rf {test_out_dir}/*", shell=True)
+
             run_test(test, config, test_out_dir, result_info)
 
-
+def generate_report(result_info, regression_logger):
     # Report results
     passed_tests = result_info["PASSED_TESTS"]
     failed_tests = result_info["FAILED_TESTS"]
@@ -317,6 +330,19 @@ def main():
     regression_logger.info(f"==================== SUMMARY ====================")
     regression_logger.info(f"Total PASSED tests: {len(passed_tests)}")
     regression_logger.info(f"Total FAILED tests: {len(failed_tests)}")
+
+def main():
+
+    args, regression_logger, test_data = setup("regression_tests.yml")
+    run_info = resolve_target(args.target, test_data, args.single)
+
+    top_out_dir = Path(os.path.abspath(args.output_dir))
+    result_info = {"PASSED_TESTS": {}, "FAILED_TESTS": {}, "WARNING_TESTS": {}}
+
+    regression_logger.info(f"Beginning regression for {args.target}")
+
+    run_all_tests(run_info, result_info, top_out_dir)
+    generate_report(result_info, regression_logger)
 
 if __name__ == "__main__":
     main()

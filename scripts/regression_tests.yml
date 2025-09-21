@@ -24,13 +24,17 @@ TEST_GROUPS:
   control:
     modules: [control]
 
+
 RISCV_PROGRAMS:
-  - riscvprogram_2.txt
-  - riscvprogram_3.txt
-  - riscvprogram_4.txt
-  - riscvprogram_5.txt
-  - riscvprogram_6.txt
-  - riscvprogram_7.txt
+  basic_asm_tests:
+    - alu_branch_jalr_test
+    - branch_shift_test
+    - branch_shiftu_test
+    - mem_ext_logic_test
+    - branch_cache_stress_test
+    - bp_rollback_icache_overlap
+    - full_test_one
+    - full_test_two
 
 #Contains each possible test
 TESTS:
@@ -44,12 +48,12 @@ TESTS:
     riscv_top_simple_mem:
       tb: riscv_top_tb.sv
       defines: [NO_ICACHE]
-      tags: [system, slow]
+      tags: [system, basic_asm, slow]
 
     riscv_top_icache:
       tb: riscv_top_tb.sv
       defines: [ICACHE]
-      tags: [system, slow]
+      tags: [system, basic_asm, slow]
 
   control:
 

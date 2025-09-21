@@ -43,13 +43,11 @@
     );
     
     initial begin
-
         dump_setup;
 
         cycle_cnt = 0;
         clk = 0; 
         reset = 1; #20; reset = 0;
-
     end
     
     always begin
@@ -61,16 +59,18 @@
     always @(negedge clk) begin
 
         if (cycle_cnt > 10000) $finish;
-        
-        if (mem_write_m & alu_result_m > 90 & alu_result_m < 120) begin
-            if (alu_result_m === 100 & write_data_m === 25) begin
-                $display("TEST PASSED");
+
+        `ifndef C_PROGRAMS
+            if (mem_write_m & alu_result_m > 90 & alu_result_m < 120) begin
+                if (alu_result_m === 100 & write_data_m === 25) begin
+                    $display("TEST PASSED");
+                    $finish;
+                end else if (alu_result_m !== 96) begin
+                $display("Failed.");
                 $finish;
-            end else if (alu_result_m !== 96) begin
-            $display("Failed.");
-            $finish;
+                end
             end
-        end
+        `endif
    
     end
     

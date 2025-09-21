@@ -37,7 +37,7 @@ module instr_mem (
     
     //Initialize instruction memory with given file
     initial begin
-       $readmemh(`TEST_FILE, RAM);
+       $readmemh(`INSTR_HEX_FILE, RAM);
     end
     
     //[31:2] as to maintain word alignment

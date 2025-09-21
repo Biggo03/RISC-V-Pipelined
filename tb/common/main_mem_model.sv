@@ -25,7 +25,7 @@ module main_mem_model (
     logic [31:0] mem_array [511:0];
 
     initial begin
-        $readmemh(`TEST_FILE, mem_array);
+        $readmemh(`INSTR_HEX_FILE, mem_array);
     end
 
     always_ff @(posedge clk_i) begin

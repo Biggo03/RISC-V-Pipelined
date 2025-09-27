@@ -18,7 +18,8 @@ module execute_stage (
     input  logic        clk_i,
     input  logic        reset_i,
 
-    // data inputs
+    // Data inputs
+    input  logic [31:0] instr_d_i,
     input  logic [31:0] rd1_d_i,
     input  logic [31:0] rd2_d_i,
     input  logic [31:0] result_w_i,
@@ -33,6 +34,7 @@ module execute_stage (
     input  logic [4:0]  rs2_d_i,
 
     // Control inputs
+    input  logic        valid_d_i,
     input  logic [3:0]  alu_control_d_i,
     input  logic [2:0]  width_src_d_i,
     input  logic [2:0]  result_src_d_i,
@@ -47,7 +49,8 @@ module execute_stage (
     input  logic        stall_e_i,
     input  logic        pc_src_pred_d_i,
 
-    // data outputs
+    // Data outputs
+    output logic [31:0] instr_e_o,
     output logic [31:0] alu_result_e_o,
     output logic [31:0] write_data_e_o,
     output logic [31:0] pc_target_e_o,
@@ -64,6 +67,7 @@ module execute_stage (
     output logic        v_flag_o,
 
     // Control outputs
+    output logic        valid_e_o,
     output logic [2:0]  width_src_e_o,
     output logic [2:0]  result_src_e_o,
     output logic [1:0]  branch_op_e_o,
@@ -72,13 +76,38 @@ module execute_stage (
     output logic        pc_src_pred_e_o,
     output logic        target_match_e_o
 );
-     
-    localparam REG_WIDTH = 227;
+
+    // ----- Pipeline data type -----
+    typedef struct packed {
+        logic [31:0] instr;
+        logic        valid;
+        logic [1:0]  branch_op;
+        logic [2:0]  width_src;
+        logic [2:0]  result_src;
+        logic        mem_write;
+        logic [3:0]  alu_control;
+        logic        pc_base_src;
+        logic        alu_src;
+        logic        reg_write;
+        logic [4:0]  rd;
+        logic [4:0]  rs1;
+        logic [4:0]  rs2;
+        logic [2:0]  funct3;
+        logic [31:0] rd1;
+        logic [31:0] rd2;
+        logic [31:0] imm_ext;
+        logic [31:0] pc;
+        logic [31:0] pc_plus4;
+        logic [31:0] pred_pc_target;
+        logic        pc_src_pred;
+    } execution_signals_t;
+
+    // ----- Parameters -----
+    localparam REG_WIDTH = $bits(execution_signals_t);
                     
     // ----- Execute pipeline register -----
-    logic [REG_WIDTH-1:0] inputs_e;
-    logic [REG_WIDTH-1:0] outputs_e;
-    logic                 reset_e;
+    execution_signals_t inputs_e;
+    execution_signals_t outputs_e;
 
     // ----- Execute stage outputs -----
     logic [31:0] rd1_e;
@@ -93,10 +122,29 @@ module execute_stage (
     logic [31:0] src_b_e;
     logic [31:0] pc_base_e;
 
-    assign inputs_e = {branch_op_d_i, width_src_d_i, result_src_d_i, mem_write_d_i, alu_control_d_i, pc_base_src_d_i, alu_src_d_i, reg_write_d_i,
-                      funct3_d_i, rd1_d_i, rd2_d_i, pc_d_i, rd_d_i, imm_ext_d_i, rs1_d_i, rs2_d_i, pc_plus4_d_i, pred_pc_target_d_i, pc_src_pred_d_i};
-                      
-    assign reset_e = (reset_i | flush_e_i);
+    assign inputs_e = {
+        instr_d_i,
+        valid_d_i,
+        branch_op_d_i,
+        width_src_d_i,
+        result_src_d_i,
+        mem_write_d_i,
+        alu_control_d_i,
+        pc_base_src_d_i,
+        alu_src_d_i,
+        reg_write_d_i,
+        rd_d_i,
+        rs1_d_i,
+        rs2_d_i,
+        funct3_d_i,
+        rd1_d_i,
+        rd2_d_i,
+        imm_ext_d_i,
+        pc_d_i,
+        pc_plus4_d_i,
+        pred_pc_target_d_i,
+        pc_src_pred_d_i
+    };
     
     flop #(
         .WIDTH                          (REG_WIDTH)
@@ -104,7 +152,7 @@ module execute_stage (
         // Clock & reset_i
         .clk_i                          (clk_i),
         .en                             (~stall_e_i),
-        .reset                          (reset_e),
+        .reset                          (reset_i | flush_e_i),
 
         // data input
         .D                              (inputs_e),
@@ -113,10 +161,31 @@ module execute_stage (
         .Q                              (outputs_e)
     );
     
-    assign {branch_op_e_o, width_src_e_o, result_src_e_o, mem_write_e_o, alu_control_e, pc_base_src_e, alu_src_e, reg_write_e_o, 
-            funct3_e_o, rd1_e, rd2_e, pc_e_o, rd_e_o, imm_ext_e_o, rs1_e_o, rs2_e_o, pc_plus4_e_o, pred_pc_target_e, pc_src_pred_e_o} = outputs_e;
+    assign {
+        instr_e_o,
+        valid_e_o,
+        branch_op_e_o,
+        width_src_e_o,
+        result_src_e_o,
+        mem_write_e_o,
+        alu_control_e,
+        pc_base_src_e,
+        alu_src_e,
+        reg_write_e_o,
+        rd_e_o,
+        rs1_e_o,
+        rs2_e_o,
+        funct3_e_o,
+        rd1_e,
+        rd2_e,
+        imm_ext_e_o,
+        pc_e_o,
+        pc_plus4_e_o,
+        pred_pc_target_e,
+        pc_src_pred_e_o
+    } = outputs_e;
    
-   //Test Branch Prediction
+   // Check Branch Prediction
     always @(*) begin
         if (pc_target_e_o == pred_pc_target_e) target_match_e_o = 1;
         else                                   target_match_e_o = 0;

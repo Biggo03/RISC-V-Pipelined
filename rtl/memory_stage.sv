@@ -20,6 +20,7 @@ module memory_stage (
     input  logic        reset_i,
 
     // data inputs
+    input  logic [31:0] instr_e_i,
     input  logic [31:0] alu_result_e_i,
     input  logic [31:0] write_data_e_i,
     input  logic [31:0] pc_target_e_i,
@@ -29,6 +30,7 @@ module memory_stage (
     input  logic [4:0]  rd_e_i,
 
     // Control inputs
+    input  logic        valid_e_i,
     input  logic [2:0]  width_src_e_i,
     input  logic [2:0]  result_src_e_i,
     input  logic        mem_write_e_i,
@@ -36,6 +38,7 @@ module memory_stage (
     input  logic        stall_m_i,
 
     // data outputs
+    output logic [31:0] instr_m_o,
     output logic [31:0] reduced_data_m_o,
     output logic [31:0] alu_result_m_o,
     output logic [31:0] write_data_m_o,
@@ -46,21 +49,50 @@ module memory_stage (
     output logic [4:0]  rd_m_o,
 
     // Control outputs
+    output logic        valid_m_o,
     output logic [2:0]  result_src_m_o,
     output logic [2:0]  width_src_m_o,
     output logic        mem_write_m_o,
     output logic        reg_write_m_o
 );
     
+    // ----- Pipeline data type -----
+    typedef struct packed {
+        logic [31:0] instr;
+        logic        valid;
+        logic [31:0] alu_result;
+        logic [31:0] write_data;
+        logic [31:0] pc_target;
+        logic [31:0] pc_plus4;
+        logic [31:0] imm_ext;
+        logic [4:0]  rd;
+        logic [2:0]  width_src;
+        logic [2:0]  result_src;
+        logic        mem_write;
+        logic        reg_write;
+    } memory_signals_t;
+
     // ----- Parameters -----
-    localparam REG_WIDTH = 173;
+    localparam REG_WIDTH = $bits(memory_signals_t);
 
     // ----- Memory pipeline register -----
-    logic [REG_WIDTH-1:0] inputs_m;
-    logic [REG_WIDTH-1:0] outputs_m;
+    memory_signals_t inputs_m;
+    memory_signals_t outputs_m;
     
-    assign inputs_m = {alu_result_e_i, write_data_e_i, pc_target_e_i, pc_plus4_e_i, imm_ext_e_i, rd_e_i, 
-                      width_src_e_i, result_src_e_i, mem_write_e_i, reg_write_e_i};
+    assign inputs_m = {
+        instr_e_i,
+        valid_e_i,
+        alu_result_e_i,
+        write_data_e_i,
+        pc_target_e_i,
+        pc_plus4_e_i,
+        imm_ext_e_i,
+        rd_e_i,
+        width_src_e_i,
+        result_src_e_i,
+        mem_write_e_i,
+        reg_write_e_i
+    };
     
     flop #(
         .WIDTH                          (REG_WIDTH)
@@ -77,8 +109,20 @@ module memory_stage (
         .Q                              (outputs_m)
     );
     
-    assign {alu_result_m_o, write_data_m_o, pc_target_m_o, pc_plus4_m_o, imm_ext_m_o, rd_m_o, 
-            width_src_m_o, result_src_m_o, mem_write_m_o, reg_write_m_o} = outputs_m;
+    assign {
+        instr_m_o,
+        valid_m_o,
+        alu_result_m_o,
+        write_data_m_o,
+        pc_target_m_o,
+        pc_plus4_m_o,
+        imm_ext_m_o,
+        rd_m_o,
+        width_src_m_o,
+        result_src_m_o,
+        mem_write_m_o,
+        reg_write_m_o
+    } = outputs_m;
     
     // Forwarding mux
     always_comb begin

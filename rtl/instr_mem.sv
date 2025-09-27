@@ -33,7 +33,7 @@ module instr_mem (
 );
     
     //Initialize a RAM array (32-bit words, store 64 words)
-    (* ram_style = "block" *) logic [31:0] RAM [127:0];
+    (* ram_style = "block" *) logic [31:0] RAM [8195:0];
     
     //Initialize instruction memory with given file
     initial begin

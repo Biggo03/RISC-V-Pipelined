@@ -1,35 +1,43 @@
 ENTRY(_start)
 
-MEMORY
-{
-  IMEM (rx)  : ORIGIN = 0x00000000, LENGTH = 32K   /* instruction memory */
-  DMEM (rwx) : ORIGIN = 0x10000000, LENGTH = 32K   /* data memory */
+MEMORY {
+  IMEM (rx)  : ORIGIN = 0x00000000, LENGTH = 32K
+  DMEM (rwx) : ORIGIN = 0x20000000, LENGTH = 32K
 }
 
-SECTIONS
-{
-  /* Code + constants → IMEM */
+/* Define stack pointer at the very top of DMEM */
+__stack_top = ORIGIN(DMEM) + LENGTH(DMEM);
+
+SECTIONS {
+  /* Code lives in IMEM */
   .text : {
-    *(.text*)
-    *(.rodata*)
+    KEEP(*(.text._start))   /* don’t strip your reset/entry */
+    *(.init)                /* startup sections */
+    *(.text .text.*)        /* all other code */
   } > IMEM
 
-  /* Initialized globals → DMEM */
-  .data : {
-    *(.data*)
+    /* --- Constants --- */
+  .rodata : {
+    *(.rodata .rodata.*)
   } > DMEM
 
-  /* Uninitialized globals (zeroed at startup) → DMEM */
-  .bss : {
+  /* --- Initialized variables --- */
+  .data : {
+    __data_start = .;
+    *(.data .data.*)
+    __data_end = .;
+  } > DMEM
+
+  /* --- Zero-init variables --- */
+  .bss (NOLOAD) : {
     __bss_start = .;
-    *(.bss*)
+    *(.bss .bss.*)
     *(COMMON)
     __bss_end = .;
   } > DMEM
 
-  /* Stack region → DMEM */
-  .stack (NOLOAD) : {
-    . = ALIGN(16);
-    _stack_top = . + 4K;  /* 4 KB stack */
-  } > DMEM
+  /* --- Heap region --- */
+  . = ALIGN(8);
+  __heap_start = .;
+  __heap_end   = __stack_top;
 }

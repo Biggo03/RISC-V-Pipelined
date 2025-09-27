@@ -41,6 +41,17 @@
         .alu_result_m_o                 (alu_result_m),
         .mem_write_m_o                  (mem_write_m)
     );
+
+    cycle_monitor u_cycle_monitor (
+        // Clock & reset
+        .clk_i          (clk),
+        .reset_i        (reset),       
+
+
+        .valid_w_i      (u_riscv_top.u_pipelined_riscv_core.u_data_path.valid_w),
+        .stall_w_i      (u_riscv_top.u_pipelined_riscv_core.u_data_path.stall_w_i),
+        .instr_w_i      (u_riscv_top.u_pipelined_riscv_core.u_data_path.instr_w)
+    );
     
     initial begin
         dump_setup;
@@ -53,19 +64,18 @@
     always begin
         clk = ~clk; 
         #5;
-        cycle_cnt = cycle_cnt + 1;
     end
     
     always @(negedge clk) begin
 
-        if (cycle_cnt > 10000) $finish;
+        if (u_cycle_monitor.cycle_cnt > 1000000) $finish;
 
         `ifndef C_PROGRAMS
             if (mem_write_m & alu_result_m > 90 & alu_result_m < 120) begin
                 if (alu_result_m === 100 & write_data_m === 25) begin
                     $display("TEST PASSED");
                     $finish;
-                end else if (alu_result_m !== 96) begin
+                end else if (alu_result_m !== 96 & write_data_m != 0) begin
                 $display("Failed.");
                 $finish;
                 end

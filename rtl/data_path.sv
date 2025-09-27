@@ -88,14 +88,17 @@ module data_path (
     logic [31:0] pc_plus4_f;
 
     // ----- Decode stage -----
+    logic [31:0] instr_d;
     logic [31:0] imm_ext_d;
     logic [31:0] pc_d;
     logic [31:0] pc_plus4_d;
     logic [31:0] pred_pc_target_d;
     logic [4:0]  rd_d;
     logic        pc_src_pred_d;
+    logic        valid_d;
 
     // ----- Execute stage -----
+    logic [31:0] instr_e;
     logic [31:0] alu_result_e;
     logic [31:0] write_data_e;
     logic [31:0] pc_plus4_e;
@@ -103,17 +106,22 @@ module data_path (
     logic [2:0]  width_src_e;
     logic        mem_write_e;
     logic        reg_write_e;
+    logic        valid_e;
 
     // ----- Memory stage -----
+    logic [31:0] instr_m;
     logic [31:0] reduced_data_m;
     logic [31:0] pc_target_m;
     logic [31:0] pc_plus4_m;
     logic [31:0] imm_ext_m;
     logic [31:0] forward_data_m;
     logic [2:0]  result_src_m;
+    logic        valid_m;
 
     // ----- Writeback stage -----
+    logic [31:0] instr_w;
     logic [31:0] result_w;
+    logic        valid_w;
 
     // ----- Register file -----
     logic [31:0] rd1_d;
@@ -156,6 +164,7 @@ module data_path (
         .flush_d_i                      (flush_d_i),
 
         // data outputs
+        .instr_d_o                      (instr_d),
         .imm_ext_d_o                    (imm_ext_d),
         .pred_pc_target_d_o             (pred_pc_target_d),
         .pc_d_o                         (pc_d),
@@ -166,7 +175,10 @@ module data_path (
         .op_d_o                         (op_d_o),
         .funct3_d_o                     (funct3_d_o),
         .funct7_d_o                     (funct7_d_o),
-        .pc_src_pred_d_o                (pc_src_pred_d)
+        .pc_src_pred_d_o                (pc_src_pred_d),
+
+        // Control Outputs
+        .valid_d_o                      (valid_d)
     );
 
     execute_stage u_execute_stage (
@@ -175,6 +187,7 @@ module data_path (
         .reset_i                        (reset_i),
 
         // data inputs
+        .instr_d_i                      (instr_d),
         .rd1_d_i                        (rd1_d),
         .rd2_d_i                        (rd2_d),
         .result_w_i                     (result_w),
@@ -185,6 +198,7 @@ module data_path (
         .pred_pc_target_d_i             (pred_pc_target_d),
 
         // Control inputs
+        .valid_d_i                      (valid_d),
         .funct3_d_i                     (funct3_d_o),
         .rd_d_i                         (rd_d),
         .rs1_d_i                        (rs1_d_o),
@@ -204,6 +218,7 @@ module data_path (
         .pc_src_pred_d_i                (pc_src_pred_d),
 
         // data outputs
+        .instr_e_o                      (instr_e),
         .alu_result_e_o                 (alu_result_e),
         .write_data_e_o                 (write_data_e),
         .pc_target_e_o                  (pc_target_e_o),
@@ -215,6 +230,7 @@ module data_path (
         .rd_e_o                         (rd_e_o),
 
         // Control outputs
+        .valid_e_o                      (valid_e),
         .funct3_e_o                     (funct3_e_o),
         .neg_flag_o                     (neg_flag_o),
         .zero_flag_o                    (zero_flag_o),
@@ -235,6 +251,7 @@ module data_path (
         .reset_i                        (reset_i),
 
         // data inputs
+        .instr_e_i                      (instr_e),
         .alu_result_e_i                 (alu_result_e),
         .write_data_e_i                 (write_data_e),
         .pc_target_e_i                  (pc_target_e_o),
@@ -244,6 +261,7 @@ module data_path (
         .rd_e_i                         (rd_e_o),
 
         // Control inputs
+        .valid_e_i                      (valid_e),
         .width_src_e_i                  (width_src_e),
         .result_src_e_i                 (result_src_e_o),
         .mem_write_e_i                  (mem_write_e),
@@ -251,6 +269,7 @@ module data_path (
         .stall_m_i                      (stall_m_i),
 
         // data outputs
+        .instr_m_o                      (instr_m),
         .reduced_data_m_o               (reduced_data_m),
         .alu_result_m_o                 (alu_result_m_o),
         .write_data_m_o                 (write_data_m_o),
@@ -261,6 +280,7 @@ module data_path (
         .rd_m_o                         (rd_m_o),
 
         // Control outputs
+        .valid_m_o                      (valid_m),
         .result_src_m_o                 (result_src_m),
         .width_src_m_o                  (width_src_m_o),
         .mem_write_m_o                  (mem_write_m_o),
@@ -273,6 +293,7 @@ module data_path (
         .reset_i                        (reset_i),
 
         // data inputs
+        .instr_m_i                      (instr_m),
         .alu_result_m_i                 (alu_result_m_o),
         .reduced_data_m_i               (reduced_data_m),
         .pc_target_m_i                  (pc_target_m),
@@ -281,15 +302,18 @@ module data_path (
         .rd_m_i                         (rd_m_o),
 
         // Control inputs
+        .valid_m_i                      (valid_m),
         .result_src_m_i                 (result_src_m),
         .reg_write_m_i                  (reg_write_m_o),
         .stall_w_i                      (stall_w_i),
 
         // data outputs
+        .instr_w_o                      (instr_w),
         .result_w_o                     (result_w),
         .rd_w_o                         (rd_w_o),
 
         // Control outputs
+        .valid_w_o                      (valid_w),
         .reg_write_w_o                  (reg_write_w_o)
     );
 

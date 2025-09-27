@@ -1,23 +1,20 @@
-    .section .text
+    .section .text._start
     .globl _start
 _start:
-    # Set stack pointer
-    la sp, _stack_top
+    # set up stack
+    la sp, __stack_top
 
-    # Clear .bss
-    la a0, __bss_start   # start of bss
-    la a1, __bss_end     # end of bss
-    li a2, 0             # zero value
-bss_clear:
-    bgeu a0, a1, bss_done
-    sw a2, 0(a0)
-    addi a0, a0, 4
-    j bss_clear
-bss_done:
-
-    # Call main()
+    # zero out .bss
+    la t0, __bss_start
+    la t1, __bss_end
+1:  beq t0, t1, 2f
+    sw x0, 0(t0)
+    addi t0, t0, 4
+    j 1b
+2:
+    # call main
     call main
 
-    # If main returns, spin forever
-1:  j 1b
-
+    # if main ever returns, hang
+hang:
+    j hang

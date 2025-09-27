@@ -1,0 +1,88 @@
+
+Discarded input sections
+
+ .comment       0x00000000       0x1b sum.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+IMEM             0x00000000         0x00008000         xr
+DMEM             0x20000000         0x00008000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD /home/wozniak/projects/riscv_pipelined/test_inputs/compiled_programs/_start.o
+LOAD sum.o
+LOAD /home/wozniak/riscv_toolchain_repos/riscv32i/lib/gcc/riscv32-unknown-elf/15.1.0/libgcc.a
+                0x00008000                        IMEM_LEN = 0x8000
+                0x00008000                        DMEM_LEN = 0x8000
+                0x00000000                        __imem_start = ORIGIN (IMEM)
+                0x00008000                        __imem_end = (ORIGIN (IMEM) + LENGTH (IMEM))
+                0x20000000                        __dmem_start = ORIGIN (DMEM)
+                0x20008000                        __dmem_end = (ORIGIN (DMEM) + LENGTH (DMEM))
+                0x20008000                        __stack_top = __dmem_end
+                0x20000000                        PROVIDE (__sdata_start = __dmem_start)
+                [!provide]                        PROVIDE (__sbss_end = __dmem_start)
+                0x20000000                        PROVIDE (__global_pointer$ = (__sdata_start + ((__sbss_end - __sdata_start) / 0x2)))
+
+.text           0x00000000       0x44
+ *(.text._start .text.start .init)
+ .text._start   0x00000000       0x38 /home/wozniak/projects/riscv_pipelined/test_inputs/compiled_programs/_start.o
+                0x00000000                _start
+ *(.text .text.*)
+ .text          0x00000038        0x0 /home/wozniak/projects/riscv_pipelined/test_inputs/compiled_programs/_start.o
+ .text          0x00000038        0x0 sum.o
+ .text.startup  0x00000038        0xc sum.o
+                0x00000038                main
+
+.rela.dyn       0x00000044        0x0
+ .rela.text._start
+                0x00000044        0x0 /home/wozniak/projects/riscv_pipelined/test_inputs/compiled_programs/_start.o
+
+.tb_hooks       0x20000000        0x0
+                0x20000064                        tohost = (ORIGIN (DMEM) + 0x64)
+
+.rodata
+ *(.rodata .rodata.*)
+ *(.srodata .srodata.*)
+
+.data           0x20000000        0x0
+                0x20000000                        __data_start = .
+ *(.data .data.*)
+ .data          0x20000000        0x0 /home/wozniak/projects/riscv_pipelined/test_inputs/compiled_programs/_start.o
+ .data          0x20000000        0x0 sum.o
+ *(.sdata .sdata.*)
+                0x20000000                        __data_end = .
+
+.bss            0x20000000        0x0
+                0x20000000                        __bss_start = .
+ *(.bss .bss.*)
+ .bss           0x20000000        0x0 /home/wozniak/projects/riscv_pipelined/test_inputs/compiled_programs/_start.o
+ .bss           0x20000000        0x0 sum.o
+ *(.sbss .sbss.*)
+ *(COMMON)
+                0x20000000                        __bss_end = .
+                0x20000000                        __sbss_end = .
+                0x20000000                        __heap_start = ALIGN (0x4)
+                0x20008000                        __heap_end = __stack_top
+
+/DISCARD/
+ *(.comment .note .eh_frame .eh_frame_hdr .gcc_except_table .gnu.build.attributes)
+                0x00000001                        ASSERT (((ADDR (.text) + SIZEOF (.text)) <= __imem_end), IMEM overflow: .text too large)
+                0x00000001                        ASSERT ((__heap_start <= __stack_top), DMEM overflow: data/rodata/bss exceed DMEM)
+                0x00000001                        ASSERT ((__sbss_end >= __sdata_start), gp window is inverted (sdata/sbss bounds))
+                0x20000000                        PROVIDE (__global_pointer$ = (__sdata_start + ((__sbss_end - __sdata_start) / 0x2)))
+OUTPUT(sum.elf elf32-littleriscv)
+
+.riscv.attributes
+                0x00000000       0x1c
+ .riscv.attributes
+                0x00000000       0x1a /home/wozniak/projects/riscv_pipelined/test_inputs/compiled_programs/_start.o
+ .riscv.attributes
+                0x0000001a       0x1c sum.o
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 sum.o

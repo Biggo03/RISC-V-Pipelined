@@ -22,7 +22,7 @@ module main_mem_model (
 
     logic [31:0] fetch_addr;
     integer cycle_cnt;
-    logic [31:0] mem_array [511:0];
+    logic [31:0] mem_array [4095:0];
 
     initial begin
         $readmemh(`INSTR_HEX_FILE, mem_array);

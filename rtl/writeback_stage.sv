@@ -20,6 +20,7 @@ module writeback_stage (
     input  logic        reset_i,
 
     // data inputs
+    input  logic [31:0] instr_m_i, 
     input  logic [31:0] alu_result_m_i,
     input  logic [31:0] reduced_data_m_i,
     input  logic [31:0] pc_target_m_i,
@@ -28,24 +29,41 @@ module writeback_stage (
     input  logic [4:0]  rd_m_i,
 
     // Control inputs
+    input  logic        valid_m_i,
     input  logic [2:0]  result_src_m_i,
     input  logic        reg_write_m_i,
     input  logic        stall_w_i,
 
     // data outputs
+    output logic [31:0] instr_w_o,
     output logic [31:0] result_w_o,
     output logic [4:0]  rd_w_o,
 
     // Control outputs
+    output logic        valid_w_o,
     output logic        reg_write_w_o
 );
 
+    // ----- Pipeline data type -----
+    typedef struct packed {
+        logic [31:0] instr;
+        logic        valid;
+        logic [31:0] alu_result;
+        logic [31:0] reduced_data;
+        logic [31:0] pc_target;
+        logic [31:0] pc_plus4;
+        logic [31:0] imm_ext;
+        logic [4:0]  rd;
+        logic [2:0]  result_src;
+        logic        reg_write;
+    } writeback_signals_t;
+
     // ----- Parameters -----
-    localparam REG_WIDTH = 169;
+    localparam REG_WIDTH = $bits(writeback_signals_t);
 
     // ----- Writeback pipeline register -----
-    logic [REG_WIDTH-1:0] inputs_w;
-    logic [REG_WIDTH-1:0] outputs_w;
+    writeback_signals_t inputs_w;
+    writeback_signals_t outputs_w;
 
     // ----- Writeback stage outputs -----
     logic [31:0] imm_ext_w;
@@ -55,7 +73,18 @@ module writeback_stage (
     logic [31:0] alu_result_w;
     logic [2:0]  result_src_w;
     
-    assign inputs_w = {alu_result_m_i, reduced_data_m_i, pc_target_m_i, pc_plus4_m_i, imm_ext_m_i, rd_m_i, result_src_m_i, reg_write_m_i};
+    assign inputs_w = {
+        instr_m_i,
+        valid_m_i,
+        alu_result_m_i,
+        reduced_data_m_i,
+        pc_target_m_i,
+        pc_plus4_m_i,
+        imm_ext_m_i,
+        rd_m_i,
+        result_src_m_i,
+        reg_write_m_i
+    };
     
     flop #(
         .WIDTH                          (REG_WIDTH)
@@ -72,7 +101,18 @@ module writeback_stage (
         .Q                              (outputs_w)
     );
     
-    assign {alu_result_w, reduced_data_w, pc_target_w, pc_plus4_w, imm_ext_w, rd_w_o, result_src_w, reg_write_w_o} = outputs_w;
+    assign {
+        instr_w_o,
+        valid_w_o,
+        alu_result_w,
+        reduced_data_w,
+        pc_target_w,
+        pc_plus4_w,
+        imm_ext_w,
+        rd_w_o,
+        result_src_w,
+        reg_write_w_o
+    } = outputs_w;
     
     // result mux
     always_comb begin

@@ -41,6 +41,7 @@ module writeback_stage (
 
     // Control outputs
     output logic        valid_w_o,
+    output logic        retire_w_o,
     output logic        reg_write_w_o
 );
 
@@ -125,5 +126,7 @@ module writeback_stage (
             default:          result_w_o = '0;
         endcase
     end
+
+    assign retire_w_o = valid_w_i & ~stall_w_i;
 
 endmodule

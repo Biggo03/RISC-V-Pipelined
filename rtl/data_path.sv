@@ -122,6 +122,7 @@ module data_path (
     logic [31:0] instr_w;
     logic [31:0] result_w;
     logic        valid_w;
+    logic        retire_w;
 
     // ----- Register file -----
     logic [31:0] rd1_d;
@@ -314,6 +315,7 @@ module data_path (
 
         // Control outputs
         .valid_w_o                      (valid_w),
+        .retire_w_o                     (retire_w),
         .reg_write_w_o                  (reg_write_w_o)
     );
 
@@ -335,5 +337,20 @@ module data_path (
         .rd1_o                          (rd1_d),
         .rd2_o                          (rd2_d)
     );
+
+    `ifdef TEST_CSR
+        csr_reg_file u_csr_reg_file (
+            .clk_i                      (clk_i),
+            .reset_i                    (reset_i),
+
+            .csr_we_i                   (),
+            .csr_addr_i                 (),
+            .csr_wdata_i                (),
+
+            .retire_w_i                 (retire_w),
+
+            .csr_rdata_o                ()
+        );
+    `endif
                          
 endmodule

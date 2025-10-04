@@ -38,8 +38,8 @@ module instr_mem_tb();
         .rd_o                           (instr_f),
 
         // Status outputs
-        .instr_miss_f_o                 (instr_miss_f),
-        .instr_cache_rep_en_o           (instr_cache_rep_en)
+        .instr_hit_f_o                  (instr_hit_f),
+        .ic_repl_permit_o               (ic_repl_permit)
     );
     
     initial begin
@@ -55,8 +55,8 @@ module instr_mem_tb();
             #10;
             
             assert (instr_f === RAM[i]) else $fatal(1, "Error");
-            assert (instr_miss_f === 1'b0) else $fatal(1, "Error");
-            assert (instr_cache_rep_en === 1'b1) else $fatal(1, "Error");
+            assert (instr_hit_f === 1'b1) else $fatal(1, "Error");
+            assert (ic_repl_permit === 1'b1) else $fatal(1, "Error");
             
         end
         

@@ -340,16 +340,16 @@ module data_path (
 
     `ifdef TEST_CSR
         csr_reg_file u_csr_reg_file (
-            .clk_i                      (clk_i),
-            .reset_i                    (reset_i),
+            .clk_i                          (clk_i),
+            .reset_i                        (reset_i),
 
-            .csr_we_i                   (),
-            .csr_addr_i                 (),
-            .csr_wdata_i                (),
+            .csr_we_i                       (),
+            .csr_addr_i                     (),
+            .csr_wdata_i                    (),
 
-            .retire_w_i                 (retire_w),
+            .retire_w_i                     (retire_w),
 
-            .csr_rdata_o                ()
+            .csr_rdata_o                    ()
         );
     `endif
                          

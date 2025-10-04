@@ -36,14 +36,14 @@ module icache_l1_dir_tb();
     // DUT signals
     logic        clk;
     logic        reset;
-    logic        rep_ready;
+    logic        l2_repl_ready;
     logic [31:0] pc_f;
     logic [31:0] instr_f;
     logic [63:0] rep_word;
     logic [1:0]  pc_src_reg;
     logic [1:0]  branch_op_e;
-    logic        instr_miss_f;
-    logic        instr_cache_rep_en;
+    logic        instr_hit_f;
+    logic        ic_repl_permit;
 
     // Signals to make addressing more intuitive
     logic [b-1:0] ByteAddr;
@@ -64,14 +64,14 @@ module icache_l1_dir_tb();
     ) u_DUT (
         .clk_i                          (clk),
         .reset_i                        (reset),
-        .rep_ready_i                    (rep_ready),
+        .l2_repl_ready_i                (l2_repl_ready),
         .pc_f_i                         (pc_f),
         .rep_word_i                     (rep_word),
         .pc_src_reg_i                   (pc_src_reg),
         .branch_op_e_i                  (branch_op_e),
         .instr_f_o                      (instr_f),
-        .instr_miss_f_o                 (instr_miss_f),
-        .instr_cache_rep_en_o           (instr_cache_rep_en)
+        .instr_hit_f_o                  (instr_hit_f),
+        .ic_repl_permit_o               (ic_repl_permit)
     );
 
     always begin
@@ -95,7 +95,7 @@ module icache_l1_dir_tb();
                 pc_f[31:s+b] = (i * 8) + n**3;
                 Tags[i][n] = pc_f[31:s+b];
                 #10;
-                rep_ready = 1;
+                l2_repl_ready = 1;
                 
                 //Do replacement
                 for (int k = 0; k < RepCycles; k = k + 1) begin
@@ -110,14 +110,14 @@ module icache_l1_dir_tb();
                     RepBlocks[i][n][k*64 +: 64] = rep_word;
                     #10;
                 end
-                rep_ready = 0;
+                l2_repl_ready = 0;
                 
                 //Check 
                 for (int k = 0; k < words; k = k + 1) begin
                     ByteAddr = k * 4;
                     pc_f[b-1:0] = ByteAddr;
                     #10;
-                    `CHECK(instr_f === RepBlocks[i][n][k*32 +: 32] && instr_miss_f === 0, "[%t] Population Read Error", $time)
+                    `CHECK(instr_f === RepBlocks[i][n][k*32 +: 32] && instr_hit_f === 1, "[%t] Population Read Error", $time)
                 end
             end
         end
@@ -133,7 +133,7 @@ module icache_l1_dir_tb();
                     ByteAddr = k * 4;
                     pc_f[b-1:0] = ByteAddr;
                     #10;
-                    `CHECK(instr_f === RepBlocks[i][n][k*32 +: 32] && instr_miss_f === 0, "[%t] Reread Read Error", $time)
+                    `CHECK(instr_f === RepBlocks[i][n][k*32 +: 32] && instr_hit_f === 1, "[%t] Reread Read Error", $time)
                 end
             end
             

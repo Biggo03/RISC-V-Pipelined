@@ -31,9 +31,9 @@ module riscv_top (
     logic [2:0]  width_src_m;
 
     // ----- Cache control -----
-    logic        instr_miss_f;
-    logic        instr_cache_rep_en;
-    logic        rep_ready;
+    logic        instr_hit_f;
+    logic        ic_repl_permit;
+    logic        l2_repl_ready;
     logic [63:0] rep_word;
 
     // ----- Branch/control -----
@@ -50,8 +50,8 @@ module riscv_top (
 
         // Instruction fetch inputs
         .instr_f_i                      (instr_f),
-        .instr_miss_f_i                 (instr_miss_f),
-        .instr_cache_rep_en_i           (instr_cache_rep_en),
+        .instr_hit_f_i                  (instr_hit_f),
+        .ic_repl_permit_i               (ic_repl_permit),
 
         // Memory inputs
         .read_data_m_i                  (read_data_m),
@@ -81,7 +81,7 @@ module riscv_top (
         .reset_i                        (reset_i),
 
         // Control inputs
-        .rep_ready_i                    (rep_ready),
+        .l2_repl_ready_i                (l2_repl_ready),
         .pc_src_reg_i                   (pc_src_reg),
         .branch_op_e_i                  (branch_op_e),
 
@@ -93,8 +93,8 @@ module riscv_top (
         .instr_f_o                      (instr_f),
 
         // Status outputs
-        .instr_miss_f_o                 (instr_miss_f),
-        .instr_cache_rep_en_o           (instr_cache_rep_en)
+        .instr_hit_f_o                  (instr_hit_f),
+        .ic_repl_permit_o               (ic_repl_permit)
     );
 
     `ifdef SIM
@@ -103,9 +103,9 @@ module riscv_top (
             .reset_i                        (reset_i),
 
             .addr_i                         (pc_f),
-            .cache_hit_i                    (~instr_miss_f),
+            .cache_hit_i                    (instr_hit_f),
 
-            .rep_ready_o                    (rep_ready),
+            .rep_ready_o                    (l2_repl_ready),
             .rep_word_o                     (rep_word)
         );
     `endif
@@ -119,8 +119,8 @@ module riscv_top (
         .rd_o                           (instr_f),
 
         // Status outputs
-        .instr_miss_f_o                 (instr_miss_f),
-        .instr_cache_rep_en_o           (instr_cache_rep_en)
+        .instr_hit_f_o                  (instr_hit_f),
+        .ic_repl_permit_o               (ic_repl_permit)
     );
 `endif
         

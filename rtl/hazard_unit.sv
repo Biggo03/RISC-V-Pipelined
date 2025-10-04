@@ -16,7 +16,7 @@
 
 module hazard_unit (
     // Fetch stage inputs
-    input  logic        instr_miss_f_i,
+    input  logic        instr_hit_f_i,
 
     // Decode stage inputs
     input  logic [4:0]  rs1_d_i,
@@ -39,7 +39,7 @@ module hazard_unit (
 
     // Branch predictor / cache inputs
     input  logic [1:0]  pc_src_reg_i,
-    input  logic        instr_cache_rep_en_i,
+    input  logic        ic_repl_permit_i,
 
     // stall outputs
     output logic        stall_f_o,
@@ -84,14 +84,14 @@ module hazard_unit (
     assign LoadStall = (result_src_e_i == `RESULT_MEM_DATA) & ((rs1_d_i == rd_e_i) | (rs2_d_i == rd_e_i));
     
     //Stalls
-    assign stall_f_o = (LoadStall | instr_miss_f_i) & ~pc_src_reg_i[1];
-    assign stall_d_o = LoadStall | instr_miss_f_i;
-    assign stall_e_o = instr_miss_f_i;
-    assign stall_m_o = instr_miss_f_i;
-    assign stall_w_o = instr_miss_f_i;
+    assign stall_f_o = (LoadStall | ~instr_hit_f_i) & ~pc_src_reg_i[1];
+    assign stall_d_o = LoadStall | ~instr_hit_f_i;
+    assign stall_e_o = ~instr_hit_f_i;
+    assign stall_m_o = ~instr_hit_f_i;
+    assign stall_w_o = ~instr_hit_f_i;
     
     //Flushes
-    assign flush_e_o = (pc_src_i[1] & (instr_cache_rep_en_i | pc_src_reg_i[1])) | LoadStall;
+    assign flush_e_o = (pc_src_i[1] & (ic_repl_permit_i | pc_src_reg_i[1])) | LoadStall;
     assign flush_d_o = pc_src_i[1];
 
 endmodule

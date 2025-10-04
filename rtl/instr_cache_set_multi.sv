@@ -17,9 +17,9 @@
 //==============================================================//
 
 module instr_cache_set_multi #(
-    parameter int B          = 64,
-    parameter int num_tag_bits = 20,
-    parameter int E          = 4
+    parameter int B             = 64,
+    parameter int num_tag_bits  = 20,
+    parameter int E             = 4
 ) (
     // Clock & reset_i
     input  logic                    clk_i,
@@ -27,7 +27,7 @@ module instr_cache_set_multi #(
 
     // Control inputs
     input  logic                    active_set_i,
-    input  logic                    rep_active_i,
+    input  logic                    ic_repl_grant_i,
 
     // Address & data inputs
     input  logic [$clog2(B)-1:0]    block_i,
@@ -45,18 +45,18 @@ module instr_cache_set_multi #(
 
     // ----- tag_i + validity -----
     logic [num_tag_bits-1:0] block_tags   [E-1:0];
-    logic [E-1:0]          valid_bits;
-    logic [E-1:0]          matched_block;
+    logic [E-1:0]            valid_bits;
+    logic [E-1:0]            matched_block;
 
     // ----- Replacement policy -----
-    logic [$clog2(E)-1:0]  lru_bits      [E-1:0];
-    logic [$clog2(E)-1:0]  last_lru_status;
-    logic [$clog2(E)-1:0]  next_fill;
-    logic [$clog2(E)-1:0]  removed_block;
-    logic [$clog2(words)-1:0] rep_counter; 
-    logic                  rep_enable;
-    logic                  rep_complete;
-    logic                  rep_begin;
+    logic [$clog2(E)-1:0]       lru_bits      [E-1:0];
+    logic [$clog2(E)-1:0]       last_lru_status;
+    logic [$clog2(E)-1:0]       next_fill;
+    logic [$clog2(E)-1:0]       removed_block;
+    logic [$clog2(words)-1:0]   rep_counter; 
+    logic                       ic_rep_active;
+    logic                       rep_complete;
+    logic                       rep_begin;
 
     // ----- data storage -----
     (* ram_style = "distributed" *)
@@ -70,7 +70,7 @@ module instr_cache_set_multi #(
     integer i;
     genvar n;
     
-    assign rep_enable = cache_set_miss_o && active_set_i && rep_active_i;
+    assign ic_rep_active = cache_set_miss_o && active_set_i && ic_repl_grant_i;
 
     //tag_i and valid comparison logic
     always @(*) begin
@@ -125,7 +125,7 @@ module instr_cache_set_multi #(
             end
         
         //Handle block_i Replacement LRU and ValidBit updates
-        end else if (rep_enable && ~rep_begin) begin
+        end else if (ic_rep_active && ~rep_begin) begin
             rep_begin <= 1;
             
             //Replace when sets full of valid data
@@ -169,7 +169,7 @@ module instr_cache_set_multi #(
     
     //Replacement logic
     always @(posedge clk_i) begin
-        if (rep_enable) begin
+        if (ic_rep_active) begin
             set_data[(removed_block*words/2) + rep_counter] <= rep_word_i;
             //Replace tag and reset_i counter when replacement complete
             if (rep_complete) begin

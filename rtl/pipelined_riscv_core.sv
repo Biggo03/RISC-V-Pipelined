@@ -20,8 +20,8 @@ module pipelined_riscv_core (
 
     // Instruction fetch inputs
     input  logic [31:0] instr_f_i,
-    input  logic        instr_miss_f_i,
-    input  logic        instr_cache_rep_en_i,
+    input  logic        instr_hit_f_i,
+    input  logic        ic_repl_permit_i,
 
     // Memory data inputs
     input  logic [31:0] read_data_m_i,
@@ -115,7 +115,7 @@ module pipelined_riscv_core (
         
     hazard_unit u_hazard_unit (
         // Fetch stage inputs
-        .instr_miss_f_i                 (instr_miss_f_i),
+        .instr_hit_f_i                 (instr_hit_f_i),
 
         // Decode stage inputs
         .rs1_d_i                        (rs1_d),
@@ -138,7 +138,7 @@ module pipelined_riscv_core (
 
         // Branch predictor / cache inputs
         .pc_src_reg_i                   (pc_src_reg_o),
-        .instr_cache_rep_en_i           (instr_cache_rep_en_i),
+        .ic_repl_permit_i               (ic_repl_permit_i),
 
         // stall outputs
         .stall_f_o                      (stall_f),

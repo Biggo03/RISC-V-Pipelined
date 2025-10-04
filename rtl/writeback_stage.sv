@@ -127,6 +127,6 @@ module writeback_stage (
         endcase
     end
 
-    assign retire_w_o = valid_w_i & ~stall_w_i;
+    assign retire_w_o = valid_w_o & ~stall_w_i;
 
 endmodule

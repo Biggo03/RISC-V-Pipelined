@@ -24,7 +24,7 @@ module icache_l1 #(
     input  logic        reset_i,
 
     // Control inputs
-    input  logic        rep_ready_i,
+    input  logic        l2_repl_ready_i,
     input  logic [1:0]  pc_src_reg_i,
     input  logic [1:0]  branch_op_e_i,
 
@@ -36,8 +36,8 @@ module icache_l1 #(
     output logic [31:0] instr_f_o,
 
     // Status outputs
-    output logic        instr_miss_f_o,
-    output logic        instr_cache_rep_en_o
+    output logic        instr_hit_f_o,
+    output logic        ic_repl_permit_o
 );
     
     // ----- Parameters -----
@@ -56,13 +56,13 @@ module icache_l1 #(
     logic [31:0]   data_array [S-1:0];
 
     // ----- Replacement control -----
-    logic rep_active;
+    logic ic_repl_grant;
 
     assign block = pc_f_i[b-1:0];
     assign set = pc_f_i[s+b-1:b]; 
     assign tag = pc_f_i[31:s+b]; 
     
-    assign rep_active = instr_cache_rep_en_o & rep_ready_i;
+    assign ic_repl_grant = ic_repl_permit_o & l2_repl_ready_i;
     
     //Generate Sets
     genvar i;
@@ -79,7 +79,7 @@ module icache_l1 #(
 
                 // Control inputs
                 .active_set_i                   (active_array[i]),
-                .rep_active_i                   (rep_active),
+                .ic_repl_grant_i                (ic_repl_grant),
 
                 // Address inputs
                 .block_i                        (block),
@@ -113,8 +113,8 @@ module icache_l1 #(
 
         // Control outputs
         .active_array_o                 (active_array),
-        .instr_miss_f_o                 (instr_miss_f_o),
-        .instr_cache_rep_en_o           (instr_cache_rep_en_o)
+        .instr_hit_f_o                  (instr_hit_f_o),
+        .ic_repl_permit_o               (ic_repl_permit_o)
     );
     
     //Assign output

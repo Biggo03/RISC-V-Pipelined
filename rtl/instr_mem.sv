@@ -28,8 +28,8 @@ module instr_mem (
     output logic [31:0] rd_o,
 
     // Status outputs
-    output logic        instr_miss_f_o,
-    output logic        instr_cache_rep_en_o
+    output logic        instr_hit_f_o,
+    output logic        ic_repl_permit_o
 );
     
     //Initialize a RAM array (32-bit words, store 64 words)
@@ -43,7 +43,7 @@ module instr_mem (
     //[31:2] as to maintain word alignment
     assign rd_o = RAM[addr[31:2]];
 
-    assign instr_miss_f_o = 1'b0;
-    assign instr_cache_rep_en_o = 1'b1;
+    assign instr_hit_f_o = 1'b1;
+    assign ic_repl_permit_o = 1'b1;
 
 endmodule

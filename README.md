@@ -1,28 +1,61 @@
-# RISC-V Pipelined
-A pipelined implementation of a RISC-V microprocessor in Verilog
+# RISC-V Processor Project
+A from-scratch RISC-V RV32I processor implemented in SystemVerilog, developed to explore computer architecture, pipelining, caching, and performance monitoring through hands-on design.
 
-## Introduction
-This project implements a pipelined RISC-V microprocessor using Verilog, building on the single-cycle design from my previous project, which can be found here: [Single-Cycle-Processor](https://github.com/Biggo03/RISC-V-Single-Cycle). The processor aims to achieve approximately 1 instruction per cycle (IPC), although inefficiencies due to hazards may affect overall performance. It implements the RV32I instruction set architecture (ISA). This compact yet powerful architecture is widely used in both academia and industry for building RISC processors.
+---
 
-Pipelined processors boast a higher clock speed when compared to single-cycle processors, which is due to splitting the design up into sections called pipeline stages. Having less combinational logic between registers is what allows for the higher clock speed. Because of these pipeline registers, multiple instructions can run in parallel to each other, one in each pipeline stage. This processor contains 5 pipeline stages fetch, decode, execute, memory, and writeback. These pipeline stages cause both control and RAW hazards, which are handled by a Hazard Control Unit, another feature of this processor.
+## Overview
+This project implements a five-stage pipelined RISC-V processor with branch prediction, instruction caching, and an extensible verification and benchmarking framework.  
+It serves as both a learning platform and a demonstration of practical digital design.
 
-This project demonstrates a deeper understanding of complex processor architectures and the ability to manage increasingly sophisticated designs.
+**Key architectural components include:**
+- Five-stage pipeline with hazard detection and forwarding  
+- Two-level branch prediction (local and global predictors)  
+- Instruction cache with LRU replacement  
+- Benchmark support (Dhrystone) and cycle-accurate performance measurement  
+- Python-based test framework for regression and benchmark automation  
 
-The working schematic of the microarchitecture, as well as a project development log, and technical documentation will be found in the "Documentation" folder.
+The design targets FPGA implementation and is developed with synthesis compatibility in mind.
 
-## Planned Key Features
-- Improved memory system
-  - Main memory using Zybo boards 1GB DDR3 off chip memory
-  - Turn instruction and data memory into L1 instruction and data caches
-  - Larger shared L2 cache
+---
 
-## Implemented Key Features
-- 5-stage pipelined architecture
-- Branch prediction for reduced control hazards
-- RV32I ISA implementation
-- Hazard detection and forwarding logic
-- Separate Instruction and data memories
-- Testbenches for hardware validation
+## Current Stage
 
-## Technical Details
-For a detailed explanation of the architecture, supported instructions, control signals, testing procedures, and hazard handeling information, please refer to [Technical_Documentation.md](Documentation/Technical_Documentation.md).
+The project is in a **Consolidation and Alignment** phase, focusing on documentation consistency, CSR implementation, and expanded performance monitoring.  
+See the [project roadmap](docs/roadmap.md) for an up-to-date view of active work and future plans.
+
+---
+
+## Repository Structure
+
+- **rtl/** – Processor source files (SystemVerilog)  
+- **tb/** – Testbenches and verification infrastructure  
+- **common/** – Global macro definitions used across RTL and testbench code  
+- **docs/** – Comprehensive project documentation and specifications  
+  - **core_docs/** – High-level specifications (architecture, pipeline, memory, etc.)  
+  - **blocks/** – Module-level overviews for major RTL components  
+  - **spreadsheets/** – Signal, CSR, and instruction decode reference data  
+  - **devlogs/** – Chronological development logs  
+  - **roadmap.md** – Current development focus and long-term plans  
+  - **style_guide.md** – Naming, formatting, and documentation conventions  
+- **scripts/** – Build, simulation, and automation scripts  
+- **test_inputs/** – Software toolchain and test programs for the processor, including:  
+  - RISC-V C/assembly compilation flow and programs
+  - Custom linker script and startup code  
+  - Makefile for building and running programs  
+  - Compiled binaries, and input/output vectors used for simulation and benchmarking  
+- **archive/** – Legacy or deprecated files retained for reference  
+- **README.md** – Repository overview (this file)  
+
+For detailed technical documentation, see the [documentation index](docs/README.md).
+
+---
+
+## Goals
+- Build a modular, readable RISC-V processor with emphasis on correctness and clarity  
+- Develop a strong verification infrastructure supporting benchmarking and analysis  
+- Gradually expand toward realistic architectural features such as caching, CSRs, and I/O peripherals
+
+---
+
+*This repository is an ongoing development effort intended to showcase digital design methodology, and continuous architectural improvement.*
+

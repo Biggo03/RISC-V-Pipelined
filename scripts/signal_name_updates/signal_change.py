@@ -60,10 +60,10 @@ def parse_module(module_path, rename_map):
                     new_base = rename_map[old_name]
                     if input_pattern.search(line):
                         new_name = f"{new_base}{suffix}_i"
-                        #old_suffix += "_i"
+                        old_suffix += "_i"
                     elif output_pattern.search(line):
                         new_name = f"{new_base}{suffix}_o"
-                        #old_suffix += "_o"
+                        old_suffix += "_o"
                     else:
                         new_name = f"{new_base}{suffix}"
 
@@ -183,5 +183,8 @@ def pad_ports(line, padding_base=32):
 
 if __name__ == "__main__":
 
-    module_rename_maps = parse_directory("../rtl", "../tb", "./signal_change_list.csv")
+    module_rename_maps = parse_directory("../rtl", "../tb", "./sig_change_lists/instr_cache_sig_change_list.csv")
+    for module in module_rename_maps.keys():
+        if module_rename_maps[module]["rename_map"]:
+            print(module_rename_maps[module])
     rename_apply(module_rename_maps, "../rtl", "../tb")

@@ -10,7 +10,7 @@ from pathlib import Path
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Run regression tests based on YAML-defined test groups."
+        description="Run tests based on YAML-defined test groups."
     )
 
     # Positional argument: test group
@@ -31,8 +31,8 @@ def parse_args():
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="../sim_results",
-        help="Directory to write test outputs (default: ../sim_results)"
+        default="../../sim_results",
+        help="Directory to write test outputs (default: ../../sim_results)"
     )
 
     # Optional flag: verbose output
@@ -49,7 +49,7 @@ def setup_logger(log_name, log_file_path, level=logging.INFO):
     Creates and returns a logger with console and file output.
 
     Args:
-        log_name: Unique name for the logger (e.g., "regression", "alu_tb").
+        log_name: Unique name for the logger (e.g., "test", "alu_tb").
         log_file_path: Path to the log file to write to.
         level: Logging level (default: logging.INFO)
 
@@ -94,7 +94,7 @@ def setup(yaml_path):
         yaml_data: Data contained within the yaml    
     """
     args = parse_args()
-    regression_logger = setup_logger("regression_logger", f"{args.output_dir}/regression.log")
+    test_logger = setup_logger("test_logger", f"{args.output_dir}/test_run.log")
 
     try:
         with open(yaml_path, "r") as f:
@@ -104,7 +104,7 @@ def setup(yaml_path):
     except yaml.YAMLError as e:
         print(f"Error parsing YAML: {e}")
     
-    return args, regression_logger, yaml_data
+    return args, test_logger, yaml_data
 
 def resolve_target(target, test_data, single):
 
@@ -178,9 +178,9 @@ def run_test(test_name, config, test_out_dir, result_info, program=None):
     tb_file = config["tb"]
     defines = config["defines"]
 
-    regression_logger = logging.getLogger("regression_logger")
+    test_logger = logging.getLogger("test_logger")
     # --- Project directories ---
-    proj_dir       = Path(__file__).resolve().parent.parent
+    proj_dir       = Path(__file__).resolve().parent.parent.parent
     rtl_dir        = proj_dir / "rtl"
     include_dir    = proj_dir / "common" / "includes"
     filelist_dir   = proj_dir / "filelists"
@@ -198,7 +198,7 @@ def run_test(test_name, config, test_out_dir, result_info, program=None):
     defines.append(f'SIM')
 
     if program:
-        search_path = proj_dir / 'test_inputs' /'compiled_programs'
+        search_path = proj_dir / 'test_inputs' / 'compiled_programs'
         instr_match = next(search_path.rglob(f"{program}.text.hex"), None)
         data_match = next(search_path.rglob(f"{program}.data.hex"), None)
 
@@ -206,7 +206,7 @@ def run_test(test_name, config, test_out_dir, result_info, program=None):
             instr_path = instr_match.resolve()
             defines.append(f"INSTR_HEX_FILE=\"{instr_path}\"")
         else:
-            regression_logger.error(f"Could not find instruction file for program: {program}")
+            test_logger.error(f"Could not find instruction file for program: {program}")
             return
         
         if (data_match):
@@ -226,7 +226,10 @@ def run_test(test_name, config, test_out_dir, result_info, program=None):
 
     # Write filelist for RTL modules
     module_paths = get_module_paths(rtl_dir, tb_path)
-    filelist = filelist_dir / f"{test_name}.f"
+    if ("system" in config["tags"]): 
+        filelist = filelist_dir / "top.f"
+    else:
+        filelist = filelist_dir / f"{test_name}.f"
     with open (filelist, "w") as f:
         f.write("\n".join(map(str, module_paths)) + "\n")
 
@@ -267,13 +270,13 @@ def run_test(test_name, config, test_out_dir, result_info, program=None):
 
     if (test_passed == True):
         result_info["PASSED_TESTS"][test_name] = test_out_dir
-        regression_logger.info(f"{test_name} PASSED")
+        test_logger.info(f"{test_name} PASSED")
     else:
         result_info["FAILED_TESTS"][test_name] = test_out_dir
-        regression_logger.info(f"{test_name} FAILED")
+        test_logger.info(f"{test_name} FAILED")
     if (warning_present == True):
         result_info["WARNING_TESTS"][test_name] = test_out_dir
-        regression_logger.info(f"{test_name} CONTAINS WARNINGS")
+        test_logger.info(f"{test_name} CONTAINS WARNINGS")
 
     return
 
@@ -285,7 +288,12 @@ def run_all_tests(run_info, result_info, top_out_dir):
             continue
         
         if ("system" in config["tags"]):
-            test_programs = run_info["programs"]["basic_asm_tests"]
+            if ("basic_asm" in config["tags"]):
+                test_programs = run_info["programs"]["basic_asm_tests"]
+            elif ("benchmark" in config["tags"]):
+                test_programs = run_info["programs"]["benchmark"]
+            elif ("c_programs" in config["tags"]):
+                test_programs = run_info["programs"]["c_programs"]
             for program in test_programs:
                 test_out_dir = top_out_dir / test / program
                 test_out_dir.mkdir(parents=True, exist_ok=True)
@@ -302,47 +310,47 @@ def run_all_tests(run_info, result_info, top_out_dir):
 
             run_test(test, config, test_out_dir, result_info)
 
-def generate_report(result_info, regression_logger):
+def generate_report(result_info, test_logger):
     # Report results
     passed_tests = result_info["PASSED_TESTS"]
     failed_tests = result_info["FAILED_TESTS"]
     warning_tests = result_info["WARNING_TESTS"]
 
     if (len(passed_tests) != 0):
-        regression_logger.info("====================PASSED TESTS ====================")
+        test_logger.info("====================PASSED TESTS ====================")
         for test in passed_tests.keys():
-            regression_logger.info(f"{test}: {passed_tests[test]}")
+            test_logger.info(f"{test}: {passed_tests[test]}")
     else:
-        regression_logger.info("==================== NO TESTS PASS====================")
+        test_logger.info("==================== NO TESTS PASS====================")
 
     if (len(failed_tests) != 0):
-        regression_logger.info("====================FAILED TESTS ====================")
+        test_logger.info("====================FAILED TESTS ====================")
         for test in failed_tests.keys():
-            regression_logger.info(f"{test}: {failed_tests[test]}")
+            test_logger.info(f"{test}: {failed_tests[test]}")
     else:
-        regression_logger.info("==================== NO TESTS FAILED ====================")
+        test_logger.info("==================== NO TESTS FAILED ====================")
     
     if (len(warning_tests) != 0):
-        regression_logger.info("==================== TESTS WITH WARNINGS ====================")
+        test_logger.info("==================== TESTS WITH WARNINGS ====================")
         for test in warning_tests.keys():
-            regression_logger.info(f"{test}: {warning_tests[test]}")
+            test_logger.info(f"{test}: {warning_tests[test]}")
     
-    regression_logger.info(f"==================== SUMMARY ====================")
-    regression_logger.info(f"Total PASSED tests: {len(passed_tests)}")
-    regression_logger.info(f"Total FAILED tests: {len(failed_tests)}")
+    test_logger.info(f"==================== SUMMARY ====================")
+    test_logger.info(f"Total PASSED tests: {len(passed_tests)}")
+    test_logger.info(f"Total FAILED tests: {len(failed_tests)}")
 
 def main():
 
-    args, regression_logger, test_data = setup("regression_tests.yml")
+    args, test_logger, test_data = setup("test_list.yml")
     run_info = resolve_target(args.target, test_data, args.single)
 
     top_out_dir = Path(os.path.abspath(args.output_dir))
     result_info = {"PASSED_TESTS": {}, "FAILED_TESTS": {}, "WARNING_TESTS": {}}
 
-    regression_logger.info(f"Beginning regression for {args.target}")
+    test_logger.info(f"Beginning test for {args.target}")
 
     run_all_tests(run_info, result_info, top_out_dir)
-    generate_report(result_info, regression_logger)
+    generate_report(result_info, test_logger)
 
 if __name__ == "__main__":
     main()

@@ -17,7 +17,7 @@
 module mux5 #(
     parameter int WIDTH = 32
 ) (
-    // Data inputs
+    // data inputs
     input  logic [WIDTH-1:0] d0,
     input  logic [WIDTH-1:0] d1,
     input  logic [WIDTH-1:0] d2,
@@ -27,7 +27,7 @@ module mux5 #(
     // Select input
     input  logic [2:0]       s,
 
-    // Data output
+    // data output
     output logic [WIDTH-1:0] y
 );
          

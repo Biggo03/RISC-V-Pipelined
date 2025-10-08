@@ -9,6 +9,9 @@ TEST_GROUPS:
   default:
     modules: [building_blocks, branching, memory, control]
 
+  benchmark:
+    modules: [benchmark]
+
   integration:
     modules: [integration]
 
@@ -36,6 +39,12 @@ RISCV_PROGRAMS:
     - full_test_one
     - full_test_two
 
+  c_programs:
+    - sum
+
+  benchmark:
+    - dhrystone
+
 #Contains each possible test
 TESTS:
 # Tagging Rules
@@ -43,17 +52,29 @@ TESTS:
 # - Only unit tests may be tagged as [sequential]
 # - [fast] and [slow] refer to simulation runtime, not design type
 
+  benchmark:
+
+    riscv_top_simple_mem:
+      tb: riscv_top_tb.sv
+      defines: [NO_ICACHE]
+      tags: [system, benchmark, slow]
+
+    riscv_top_icache:
+      tb: riscv_top_tb.sv
+      defines: [ICACHE]
+      tags: [system, benchmark, slow]
+
   integration:
 
     riscv_top_simple_mem:
       tb: riscv_top_tb.sv
       defines: [NO_ICACHE]
-      tags: [system, basic_asm, slow]
+      tags: [system, basic_asm, fast]
 
     riscv_top_icache:
       tb: riscv_top_tb.sv
       defines: [ICACHE]
-      tags: [system, basic_asm, slow]
+      tags: [system, basic_asm, fast]
 
   control:
 
@@ -167,23 +188,3 @@ TESTS:
       tb: reg_file_tb.sv
       defines: []
       tags: [unit, sequential, fast]
-    
-    mux2:
-      tb: mux2_tb.sv
-      defines: []
-      tags: [unit, fast]
-    
-    mux3:
-      tb: mux3_tb.sv
-      defines: []
-      tags: [unit, fast]
-
-    mux4:
-      tb: mux4_tb.sv
-      defines: []
-      tags: [unit, fast]
-
-    mux5:
-      tb: mux5_tb.sv
-      defines: []
-      tags: [unit, fast]

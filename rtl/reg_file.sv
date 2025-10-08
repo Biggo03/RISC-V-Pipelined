@@ -31,16 +31,17 @@ module reg_file #(
     input  logic             we3_i,
 
     // Read ports
-    output logic [WIDTH-1:0] rd1_o,
-    output logic [WIDTH-1:0] rd2_o
+    output logic [WIDTH-1:0] reg_data_1_o,
+    output logic [WIDTH-1:0] reg_data_2_o
 );
     
     // ----- Register file storage -----
     logic [WIDTH-1:0] RegisterArray [31:0];
-
+    
     // ----- Write enables -----
     logic [31:0] en;
-    
+
+
     flop u_zero_reg (
         // Clock & reset_i
         .clk_i                          (clk_i),
@@ -73,11 +74,11 @@ module reg_file #(
     endgenerate
     
     always @(*) begin
-        if (a1_i == a3_i & we3_i & a1_i != 0) rd1_o = wd3_i;
-        else rd1_o = RegisterArray[a1_i];
+        if (a1_i == a3_i & we3_i & a1_i != 0) reg_data_1_o = wd3_i;
+        else reg_data_1_o = RegisterArray[a1_i];
         
-        if (a2_i == a3_i & we3_i & a2_i != 0) rd2_o = wd3_i;
-        else rd2_o = RegisterArray[a2_i]; 
+        if (a2_i == a3_i & we3_i & a2_i != 0) reg_data_2_o = wd3_i;
+        else reg_data_2_o = RegisterArray[a2_i]; 
     end
     
     write_decoder u_write_decoder (

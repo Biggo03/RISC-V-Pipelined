@@ -29,8 +29,8 @@ module reg_file_tb();
     logic [4:0]  a1;
     logic [4:0]  a2;
     logic [4:0]  a3;
-    logic [31:0] rd1;
-    logic [31:0] rd2;
+    logic [31:0] reg_data_1;
+    logic [31:0] reg_data_2;
     logic [31:0] wd3;
 
     // File reading signals
@@ -46,8 +46,8 @@ module reg_file_tb();
         .a3_i                           (a3),
         .wd3_i                          (wd3),
         .we3_i                          (we3),
-        .rd1_o                          (rd1),
-        .rd2_o                          (rd2)
+        .reg_data_1_o                   (reg_data_1),
+        .reg_data_2_o                   (reg_data_2)
     );
     
     always begin
@@ -66,7 +66,7 @@ module reg_file_tb();
         for (int i = 0; i < 32; i++) begin
             a1 = i; a2 = i; #10;
             
-            assert (rd1 == 0 & rd2 == 0) else $fatal(1, "Error: Initialization failed");
+            assert (reg_data_1 == 0 & reg_data_2 == 0) else $fatal(1, "Error: Initialization failed");
             
         end
         
@@ -81,7 +81,7 @@ module reg_file_tb();
                 for (int i = 0; i < 32; i++) begin
                     a1 = i; a2 = i; a3 = i; wd3 = i; #10;
             
-                    assert (rd1 == i & rd2 == i) else $fatal(1, "Error: Writing error");
+                    assert (reg_data_1 == i & reg_data_2 == i) else $fatal(1, "Error: Writing error");
             
                 end
                 
@@ -92,7 +92,7 @@ module reg_file_tb();
                 for (int i = 0; i < 32; i++) begin
                     a1 = i; a2 = i; a3 = i; wd3 = 100; #10;
 
-                    assert (rd1 == i & rd2 == i) else $display("Error: Register written when we3 = 0");
+                    assert (reg_data_1 == i & reg_data_2 == i) else $display("Error: Register written when we3 = 0");
             
                 end
             
@@ -102,7 +102,7 @@ module reg_file_tb();
         
         //Ensure writing to 0 register not possible
         we3 = 1; a1 = 0; a2 = 0; a3 = 0; wd3 = 1; #10;
-        assert (rd1 == 0 & rd2 == 0) else $fatal(1, "Error: Zero register updated");
+        assert (reg_data_1 == 0 & reg_data_2 == 0) else $fatal(1, "Error: Zero register updated");
         
         $display("TEST PASSED");
         $finish;

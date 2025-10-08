@@ -95,3 +95,11 @@
 `define PC_BASE_PC      1'b0
 `define PC_BASE_SRCA    1'b1
 `define PC_BASE_NA      1'b0 // fallback
+
+
+//////////////////////////////////////////////
+//               forward_a                  //
+//////////////////////////////////////////////
+`define NO_FORWARD      2'b00
+`define WB_FORWARD      2'b01
+`define MEM_FORWARD     2'b10

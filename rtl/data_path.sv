@@ -125,8 +125,8 @@ module data_path (
     logic        retire_w;
 
     // ----- Register file -----
-    logic [31:0] rd1_d;
-    logic [31:0] rd2_d;
+    logic [31:0] reg_data_1_d;
+    logic [31:0] reg_data_2_d;
     
     fetch_stage u_fetch_stage (
         // Clock & reset_i
@@ -189,8 +189,8 @@ module data_path (
 
         // data inputs
         .instr_d_i                      (instr_d),
-        .rd1_d_i                        (rd1_d),
-        .rd2_d_i                        (rd2_d),
+        .reg_data_1_d_i                 (reg_data_1_d),
+        .reg_data_2_d_i                 (reg_data_2_d),
         .result_w_i                     (result_w),
         .forward_data_m_i               (forward_data_m),
         .pc_d_i                         (pc_d),
@@ -334,8 +334,8 @@ module data_path (
         .we3_i                          (reg_write_w_o),
 
         // Read ports
-        .rd1_o                          (rd1_d),
-        .rd2_o                          (rd2_d)
+        .reg_data_1_o                  (reg_data_1_d),
+        .reg_data_2_o                  (reg_data_2_d)
     );
 
     `ifdef TEST_CSR

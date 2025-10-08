@@ -10,6 +10,7 @@
 `define JALR_OP         7'b1100111
 `define LUI_OP          7'b0110111
 `define AUIPC_OP        7'b0010111
+`define CSR_OP          7'b1110011
 
 //////////////////////////////////////////////
 //              FUNCT7 CODES                //
@@ -46,3 +47,16 @@
 `define F3_BYTE     3'b000
 `define F3_HALF_U   3'b101
 `define F3_BYTE_U   3'b100
+
+// CSR
+`define F3_CSRRW    3'b001
+`define F3_CSRRS    3'b010
+`define F3_CSRRC    3'b110
+`define F3_CSRRWI   3'b101
+`define F3_CSRRSI   3'b110
+`define F3_CSRRCI   3'b111
+
+//////////////////////////////////////////////
+//                   OTHER                  //
+//////////////////////////////////////////////
+`define NOP_INSTR 32'h00000013

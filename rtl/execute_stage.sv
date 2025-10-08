@@ -12,6 +12,7 @@
 //
 //  Notes:        N/A
 //==============================================================//
+`include "control_macros.sv"
 
 module execute_stage (
     // Clock & reset_i
@@ -20,8 +21,8 @@ module execute_stage (
 
     // Data inputs
     input  logic [31:0] instr_d_i,
-    input  logic [31:0] rd1_d_i,
-    input  logic [31:0] rd2_d_i,
+    input  logic [31:0] reg_data_1_d_i,
+    input  logic [31:0] reg_data_2_d_i,
     input  logic [31:0] result_w_i,
     input  logic [31:0] forward_data_m_i,
     input  logic [31:0] pc_d_i,
@@ -93,8 +94,8 @@ module execute_stage (
         logic [4:0]  rs1;
         logic [4:0]  rs2;
         logic [2:0]  funct3;
-        logic [31:0] rd1;
-        logic [31:0] rd2;
+        logic [31:0] reg_data_1;
+        logic [31:0] reg_data_2;
         logic [31:0] imm_ext;
         logic [31:0] pc;
         logic [31:0] pc_plus4;
@@ -110,8 +111,8 @@ module execute_stage (
     execution_signals_t outputs_e;
 
     // ----- Execute stage outputs -----
-    logic [31:0] rd1_e;
-    logic [31:0] rd2_e;
+    logic [31:0] reg_data_1_e;
+    logic [31:0] reg_data_2_e;
     logic [31:0] pred_pc_target_e;
     logic [3:0]  alu_control_e;
     logic        pc_base_src_e;
@@ -137,8 +138,8 @@ module execute_stage (
         rs1_d_i,
         rs2_d_i,
         funct3_d_i,
-        rd1_d_i,
-        rd2_d_i,
+        reg_data_1_d_i,
+        reg_data_2_d_i,
         imm_ext_d_i,
         pc_d_i,
         pc_plus4_d_i,
@@ -176,8 +177,8 @@ module execute_stage (
         rs1_e_o,
         rs2_e_o,
         funct3_e_o,
-        rd1_e,
-        rd2_e,
+        reg_data_1_e,
+        reg_data_2_e,
         imm_ext_e_o,
         pc_e_o,
         pc_plus4_e_o,
@@ -186,62 +187,44 @@ module execute_stage (
     } = outputs_e;
    
    // Check Branch Prediction
-    always @(*) begin
+    always_comb begin
         if (pc_target_e_o == pred_pc_target_e) target_match_e_o = 1;
         else                                   target_match_e_o = 0;
     end
    
-    //Stage multiplexers:
-    mux3 u_forward_mux_a (
-        // data inputs
-        .d0                             (rd1_e),
-        .d1                             (result_w_i),
-        .d2                             (forward_data_m_i),
+    // Multiplexer Logic
+    always_comb begin
+        // a forward mux
+        case (forward_a_e_i)
+            `NO_FORWARD:     src_a_e = reg_data_1_e;
+            `WB_FORWARD:     src_a_e = result_w_i;
+            `MEM_FORWARD:    src_a_e = forward_data_m_i;
+            default:         src_a_e = 0;
+        endcase
 
-        // Select input
-        .s                              (forward_a_e_i),
+        // b forward mux 
+        case (forward_b_e_i)
+            `NO_FORWARD:     write_data_e_o = reg_data_2_e;
+            `WB_FORWARD:     write_data_e_o = result_w_i;
+            `MEM_FORWARD:    write_data_e_o = forward_data_m_i;
+            default:         write_data_e_o = 0; 
+        endcase
 
-        // data output
-        .y                              (src_a_e)
-    );
-        
-    mux3 u_forward_mux_b (
-        // data inputs
-        .d0                             (rd2_e),
-        .d1                             (result_w_i),
-        .d2                             (forward_data_m_i),
+        //src b mux
+        case (alu_src_e)
+            `ALU_SRC_WD:     src_b_e = write_data_e_o;
+            `ALU_SRC_IMM:    src_b_e = imm_ext_e_o;
+            default:         src_b_e = 0;
+        endcase
 
-        // Select input
-        .s                              (forward_b_e_i),
-
-        // data output
-        .y                              (write_data_e_o)
-    );
-        
-    mux2 u_src_b_mux (
-        // data inputs
-        .d0                             (write_data_e_o),
-        .d1                             (imm_ext_e_o),
-
-        // Select input
-        .s                              (alu_src_e),
-
-        // data output
-        .y                              (src_b_e)
-    );
-        
-    mux2 u_pc_target_mux (
-        // data inputs
-        .d0                             (pc_e_o),
-        .d1                             (src_a_e),
-
-        // Select input
-        .s                              (pc_base_src_e),
-
-        // data output
-        .y                              (pc_base_e)
-    );
-        
+        // pc_target mux
+        case (pc_base_src_e)
+            `PC_BASE_PC:     pc_base_e = pc_e_o;
+            `PC_BASE_SRCA:   pc_base_e = src_a_e;
+            default:         pc_base_e = 0;
+        endcase
+    end
+     
     //Arithmetic units:
     alu u_alu (
         // Control inputs

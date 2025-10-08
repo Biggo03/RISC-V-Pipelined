@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+
 from bitstring import BitArray
 import random
 
